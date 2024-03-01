@@ -1,44 +1,57 @@
 import 'dart:typed_data';
 
 import 'package:ctracker/constant/color.dart';
+import 'package:ctracker/constant/string.dart';
 import 'package:ctracker/constant/values.dart';
+import 'package:ctracker/models/difficulties.dart';
+import 'package:ctracker/models/idea_categories.dart';
+import 'package:ctracker/models/item_types.dart';
+import 'package:ctracker/models/projects.dart';
+import 'package:ctracker/models/reminder_categories.dart';
+import 'package:ctracker/models/tags.dart';
+import 'package:ctracker/models/task_categories.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-enum Sentiment { happy, sad, neutral }
+enum Effort { mucho, medio, poco }
 
-class MyDialog extends StatefulWidget {
-  const MyDialog({super.key});
+class AddDialog extends StatefulWidget {
+  const AddDialog({super.key});
 
   @override
-  _MyDialogState createState() => _MyDialogState();
+  _AddDialogState createState() => _AddDialogState();
 }
 
-class _MyDialogState extends State<MyDialog> {
+class _AddDialogState extends State<AddDialog> {
   final _formKey = GlobalKey<FormState>();
 
-  String dropdownValue = 'Ideas';
+  ItemType dropdownValue = ItemTypeData.getAllItemType().first;
 
-  String _ideaTag = 'Innovative';
-  final List<String> _ideaTags = ['Innovative', 'Clever', 'House', 'Project'];
+  List<ItemType> types = ItemTypeData.getAllItemType();
 
-  String _ideaCategory = 'Blue';
-  final List<String> _ideaCategories = ['Blue', 'Green', 'Red', 'Yellow'];
+  Tag _ideaTag = TagData.getAllItemType().first;
+  final List<Tag> _ideaTags = TagData.getAllItemType();
 
-  String _reminderCategory = 'Blue';
-  final List<String> _reminderCategories = ['Blue', 'Green', 'Red', 'Yellow'];
+  final List<IdeaCategory> _ideaCategories = IdeaCategoryData.getAllItemType();
+  IdeaCategory _ideaCategory = IdeaCategoryData.getAllItemType().first;
 
-  String _taskrCategory = 'Blue';
-  final List<String> _taskCategories = ['Blue', 'Green', 'Red', 'Yellow'];
+  ReminderCategory _reminderCategory =
+      ReminderCategoryData.getAllItemType().first;
 
-  String _taskProject = 'Project 1';
-  final List<String> _taskProjecets = ['Project 1', 'Project 2', 'Project 3'];
+  final List<ReminderCategory> _reminderCategories =
+      ReminderCategoryData.getAllItemType();
 
-  String _taskDifficulty = 'easy';
-  final List<String> _taskDifficulties = ['easy', 'medium', 'hard'];
+  TaskCategory _taskrCategory = TaskCategoryData.getAllItemType().first;
+  final List<TaskCategory> _taskCategories = TaskCategoryData.getAllItemType();
 
-  Sentiment _selectedSentiment = Sentiment.happy;
+  Projects _taskProject = ProjectsData.getAllItemType().first;
+  final List<Projects> _taskProjecets = ProjectsData.getAllItemType();
+
+  Difficulty _taskDifficulty = DifficultyData.getAllItemType().first;
+  final List<Difficulty> _taskDifficulties = DifficultyData.getAllItemType();
+
+  Effort _selectedSentiment = Effort.poco;
 
   TextEditingController _dateController = TextEditingController();
   TextEditingController _textFieldController = TextEditingController();
@@ -48,27 +61,27 @@ class _MyDialogState extends State<MyDialog> {
     return Dialog(
       child: SingleChildScrollView(
         child: Container(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(ValuesConst.boxSeparatorSize),
           child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
-                DropdownButton<String>(
+                DropdownButton<ItemType>(
                   value: dropdownValue,
                   isExpanded: true,
                   dropdownColor: ColorConst.drawerBG,
                   borderRadius: BorderRadius.circular(ValuesConst.borderRadius),
-                  onChanged: (String? newValue) {
+                  onChanged: (ItemType? newValue) {
                     setState(() {
-                      dropdownValue = newValue ?? "";
+                      dropdownValue = newValue ?? ItemType(id: -1, name: "");
                     });
                   },
-                  items: <String>['Ideas', 'Reminders', 'Tasks']
-                      .map<DropdownMenuItem<String>>((String value) {
+                  items:
+                      types.map<DropdownMenuItem<ItemType>>((ItemType value) {
                     IconData iconData;
                     Color iconColor;
                     // Assigning icons based on the value
-                    switch (value) {
+                    switch (value.name) {
                       case 'Ideas':
                         iconData = Icons.lightbulb;
                         iconColor = ColorConst.chartColorYellow;
@@ -85,14 +98,14 @@ class _MyDialogState extends State<MyDialog> {
                         iconData = Icons.error;
                         iconColor = ColorConst.lightRed;
                     }
-                    return DropdownMenuItem<String>(
+                    return DropdownMenuItem<ItemType>(
                       value: value,
                       child: Row(
                         children: [
                           Icon(iconData, color: iconColor), // Icon
                           const SizedBox(
                               width: 10), // Adjust as needed for spacing
-                          Text(value,
+                          Text(value.name,
                               style: const TextStyle(
                                   color: ColorConst.textColor)), // Text
                         ],
@@ -101,7 +114,7 @@ class _MyDialogState extends State<MyDialog> {
                   }).toList(),
                 ),
                 const SizedBox(height: 10),
-                if (dropdownValue == 'Ideas') ...[
+                if (dropdownValue.name == 'Ideas') ...[
                   Form(
                     key: _formKey,
                     child: Column(
@@ -109,83 +122,85 @@ class _MyDialogState extends State<MyDialog> {
                         TextFormField(
                           decoration: const InputDecoration(
                             icon: Icon(Icons.text_fields_outlined),
-                            hintText: 'Título de la idea',
-                            labelText: 'Título *',
+                            hintText: Strings.ideaHintTitle,
+                            labelText: Strings.ideaLabeltTitle,
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Entre un título';
+                              return Strings.ideaValidationtTitle;
                             }
                             return null;
                           },
                         ),
-                        const SizedBox(height: 20.0),
+                        const SizedBox(height: ValuesConst.boxSeparatorSize),
                         TextFormField(
                           decoration: const InputDecoration(
                             icon: Icon(Icons.text_fields_outlined),
-                            hintText: 'Descripción de la idea',
-                            labelText: 'Descripción *',
+                            hintText: Strings.ideaHintDescription,
+                            labelText: Strings.ideaLabelDescription,
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Entre una descripción';
+                              return Strings.ideaValidationDescription;
                             }
                             return null;
                           },
                         ),
-                        const SizedBox(height: 20.0),
+                        const SizedBox(height: ValuesConst.boxSeparatorSize),
                         TextFormField(
                           decoration: const InputDecoration(
                             icon: Icon(Icons.text_fields_outlined),
-                            hintText: 'Nota extra',
-                            labelText: 'Nota *',
+                            hintText: Strings.ideaHintNote,
+                            labelText: Strings.ideaLabelNote,
                           ),
                         ),
-                        const SizedBox(height: 20.0),
+                        const SizedBox(height: ValuesConst.boxSeparatorSize),
                         DropdownButtonFormField(
                           value: _ideaTag,
                           onChanged: (newValue) {
                             setState(() {
-                              _ideaTag = newValue ?? "";
+                              _ideaTag = newValue ?? Tag(id: -1, name: "");
                             });
                           },
-                          items: _ideaTags
-                              .map<DropdownMenuItem<String>>((String value) {
-                            return DropdownMenuItem<String>(
+                          items:
+                              _ideaTags.map<DropdownMenuItem<Tag>>((Tag value) {
+                            return DropdownMenuItem<Tag>(
                               value: value,
-                              child: Text(value,
+                              child: Text(value.name,
                                   style: const TextStyle(
                                       color: ColorConst.textColor)),
                             );
                           }).toList(),
                           decoration: const InputDecoration(
-                            labelText: 'Tags',
+                            labelText: Strings.tags,
                             border: OutlineInputBorder(),
                           ),
                         ),
-                        const SizedBox(height: 20.0),
+                        const SizedBox(height: ValuesConst.boxSeparatorSize),
                         DropdownButtonFormField(
                           value: _ideaCategory,
                           onChanged: (newValue) {
                             setState(() {
-                              _ideaCategory = newValue ?? "";
+                              _ideaCategory =
+                                  newValue ?? IdeaCategory(id: -1, name: "");
                             });
                           },
                           items: _ideaCategories
-                              .map<DropdownMenuItem<String>>((String value) {
-                            return DropdownMenuItem<String>(
+                              .map<DropdownMenuItem<IdeaCategory>>(
+                                  (IdeaCategory value) {
+                            return DropdownMenuItem<IdeaCategory>(
                               value: value,
-                              child: Text(value,
+                              child: Text(value.name,
                                   style: const TextStyle(
                                       color: ColorConst.textColor)),
                             );
                           }).toList(),
                           decoration: const InputDecoration(
-                            labelText: 'Categories',
+                            labelText: Strings.category,
                             border: OutlineInputBorder(),
                           ),
                         ),
-                        const SizedBox(height: 20.0),
+                        const SizedBox(height: ValuesConst.boxSeparatorSize),
                         ElevatedButton(
                           style: ButtonStyle(
                             backgroundColor: const MaterialStatePropertyAll(
@@ -207,28 +222,24 @@ class _MyDialogState extends State<MyDialog> {
                               SizedBox(
                                 width: 10,
                               ),
-                              Text("Añadir imagen!",
+                              Text(Strings.addImage,
                                   style: TextStyle(color: ColorConst.white)),
                             ],
                           ),
                           onPressed: () async {
                             _selectFile(true);
-                            // _showPicker(context);
                           },
                         ),
-                        const SizedBox(height: 20.0),
+                        const SizedBox(height: ValuesConst.boxSeparatorSize),
                         Align(
                           alignment: Alignment.centerRight,
                           child: ElevatedButton(
                             onPressed: () {
-                              // Validate returns true if the form is valid, or false otherwise.
                               if (_formKey.currentState!.validate()) {
                                 Navigator.pop(context);
-                                // If the form is valid, display a snackbar. In the real world,
-                                // you'd often call a server or save the information in a database.
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                      content: Text('Processing Data',
+                                      content: Text(Strings.processingEntry,
                                           style: TextStyle(
                                               color: ColorConst.textColor))),
                                 );
@@ -240,18 +251,18 @@ class _MyDialogState extends State<MyDialog> {
                               overlayColor: const MaterialStatePropertyAll(
                                   ColorConst.sendButtonColor),
                               elevation: const MaterialStatePropertyAll(10),
-                              minimumSize: MaterialStateProperty.all(const Size(
-                                  150, 50)), // Adjust the size as needed
+                              minimumSize: MaterialStateProperty.all(
+                                  const Size(150, 50)),
                             ),
-                            child: const Text('Submit',
+                            child: const Text(Strings.submit,
                                 style: TextStyle(color: ColorConst.white)),
                           ),
                         )
                       ],
                     ),
-                  ), // Add more form fields as needed
+                  ),
                 ],
-                if (dropdownValue == 'Reminders') ...[
+                if (dropdownValue.name == 'Reminders') ...[
                   Form(
                     key: _formKey,
                     child: Column(
@@ -259,61 +270,63 @@ class _MyDialogState extends State<MyDialog> {
                         TextFormField(
                           decoration: const InputDecoration(
                             icon: Icon(Icons.text_fields_outlined),
-                            hintText: 'Título del recordatorio',
-                            labelText: 'Título *',
+                            hintText: Strings.reminderHintTitle,
+                            labelText: Strings.reminderLabeltTitle,
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Entre un título';
+                              return Strings.reminderValidationtTitle;
                             }
                             return null;
                           },
                         ),
-                        const SizedBox(height: 20.0),
+                        const SizedBox(height: ValuesConst.boxSeparatorSize),
                         TextFormField(
                           decoration: const InputDecoration(
                             icon: Icon(Icons.text_fields_outlined),
-                            hintText: 'Descripción del recordatorio',
-                            labelText: 'Descripción *',
+                            hintText: Strings.reminderHintDescription,
+                            labelText: Strings.reminderLabelDescription,
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Entre una descripción';
+                              return Strings.reminderValidationDescription;
                             }
                             return null;
                           },
                         ),
-                        const SizedBox(height: 20.0),
+                        const SizedBox(height: ValuesConst.boxSeparatorSize),
                         TextFormField(
                           decoration: const InputDecoration(
                             icon: Icon(Icons.text_fields_outlined),
-                            hintText: 'Nota extra',
-                            labelText: 'Nota *',
+                            hintText: Strings.reminderHintNote,
+                            labelText: Strings.reminderLabelNote,
                           ),
                         ),
-                        const SizedBox(height: 20.0),
+                        const SizedBox(height: ValuesConst.boxSeparatorSize),
                         DropdownButtonFormField(
                           value: _reminderCategory,
                           onChanged: (newValue) {
                             setState(() {
-                              _reminderCategory = newValue ?? "";
+                              _reminderCategory = newValue ??
+                                  ReminderCategory(id: -1, name: "");
                             });
                           },
                           items: _reminderCategories
-                              .map<DropdownMenuItem<String>>((String value) {
-                            return DropdownMenuItem<String>(
+                              .map<DropdownMenuItem<ReminderCategory>>(
+                                  (ReminderCategory value) {
+                            return DropdownMenuItem<ReminderCategory>(
                               value: value,
-                              child: Text(value,
+                              child: Text(value.name,
                                   style: const TextStyle(
                                       color: ColorConst.textColor)),
                             );
                           }).toList(),
                           decoration: const InputDecoration(
-                            labelText: 'Categories',
+                            labelText: Strings.category,
                             border: OutlineInputBorder(),
                           ),
                         ),
-                        const SizedBox(height: 20.0),
+                        const SizedBox(height: ValuesConst.boxSeparatorSize),
                         ElevatedButton(
                           style: ButtonStyle(
                             backgroundColor: const MaterialStatePropertyAll(
@@ -335,7 +348,7 @@ class _MyDialogState extends State<MyDialog> {
                               SizedBox(
                                 width: 10,
                               ),
-                              Text("Añadir imagen!",
+                              Text(Strings.addImage,
                                   style: TextStyle(color: ColorConst.white)),
                             ],
                           ),
@@ -343,7 +356,7 @@ class _MyDialogState extends State<MyDialog> {
                             _selectFile(true);
                           },
                         ),
-                        const SizedBox(height: 20.0),
+                        const SizedBox(height: ValuesConst.boxSeparatorSize),
                         TextField(
                           controller: _dateController,
                           decoration: const InputDecoration(
@@ -376,17 +389,14 @@ class _MyDialogState extends State<MyDialog> {
                               minimumSize: MaterialStateProperty.all(const Size(
                                   150, 50)), // Adjust the size as needed
                             ),
-                            child: const Text('Submit',
+                            child: const Text(Strings.submit,
                                 style: TextStyle(color: ColorConst.white)),
                             onPressed: () {
-                              // Validate returns true if the form is valid, or false otherwise.
                               if (_formKey.currentState!.validate()) {
                                 Navigator.pop(context);
-                                // If the form is valid, display a snackbar. In the real world,
-                                // you'd often call a server or save the information in a database.
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                      content: Text('Processing Data',
+                                      content: Text(Strings.processingEntry,
                                           style: TextStyle(
                                               color: ColorConst.textColor))),
                                 );
@@ -396,9 +406,9 @@ class _MyDialogState extends State<MyDialog> {
                         )
                       ],
                     ),
-                  ), // Add more form fields as needed
+                  ),
                 ],
-                if (dropdownValue == 'Tasks') ...[
+                if (dropdownValue.name == 'Tasks') ...[
                   Form(
                     key: _formKey,
                     child: Column(
@@ -406,163 +416,145 @@ class _MyDialogState extends State<MyDialog> {
                         TextFormField(
                           decoration: const InputDecoration(
                             icon: Icon(Icons.text_fields_outlined),
-                            hintText: 'Título de la tarea',
-                            labelText: 'Título *',
+                            hintText: Strings.taskHintTitle,
+                            labelText: Strings.taskLabeltTitle,
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Entre un título';
+                              return Strings.taskValidationtTitle;
                             }
                             return null;
                           },
                         ),
-                        const SizedBox(height: 20.0),
+                        const SizedBox(height: ValuesConst.boxSeparatorSize),
                         TextFormField(
                           decoration: const InputDecoration(
                             icon: Icon(Icons.text_fields_outlined),
-                            hintText: 'Descripción del recordatorio',
-                            labelText: 'Descripción *',
+                            hintText: Strings.taskHintDescription,
+                            labelText: Strings.taskLabelDescription,
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Entre una descripción';
+                              return Strings.taskValidationDescription;
                             }
                             return null;
                           },
                         ),
-                        const SizedBox(height: 20.0),
+                        const SizedBox(height: ValuesConst.boxSeparatorSize),
                         TextFormField(
                           decoration: const InputDecoration(
                             icon: Icon(Icons.text_fields_outlined),
-                            hintText: 'Nota extra',
-                            labelText: 'Nota *',
+                            hintText: Strings.taskHintNote,
+                            labelText: Strings.taskLabelNote,
                           ),
                         ),
-                        const SizedBox(height: 20.0),
+                        const SizedBox(height: ValuesConst.boxSeparatorSize),
                         DropdownButtonFormField(
                           value: _taskrCategory,
                           onChanged: (newValue) {
                             setState(() {
-                              _taskrCategory = newValue ?? "";
+                              _taskrCategory =
+                                  newValue ?? TaskCategory(id: -1, name: "");
                             });
                           },
                           items: _taskCategories
-                              .map<DropdownMenuItem<String>>((String value) {
-                            return DropdownMenuItem<String>(
+                              .map<DropdownMenuItem<TaskCategory>>(
+                                  (TaskCategory value) {
+                            return DropdownMenuItem<TaskCategory>(
                               value: value,
-                              child: Text(value,
+                              child: Text(value.name,
                                   style: const TextStyle(
                                       color: ColorConst.textColor)),
                             );
                           }).toList(),
                           decoration: const InputDecoration(
-                            labelText: 'Categorias',
+                            labelText: Strings.category,
                             border: OutlineInputBorder(),
                           ),
                         ),
-                        const SizedBox(height: 20.0),
+                        const SizedBox(height: ValuesConst.boxSeparatorSize),
                         DropdownButtonFormField(
                           value: _taskProject,
                           onChanged: (newValue) {
                             setState(() {
-                              _taskProject = newValue ?? "";
+                              _taskProject =
+                                  newValue ?? Projects(id: -1, name: "");
                             });
                           },
-                          items: _taskProjecets
-                              .map<DropdownMenuItem<String>>((String value) {
-                            return DropdownMenuItem<String>(
+                          items: _taskProjecets.map<DropdownMenuItem<Projects>>(
+                              (Projects value) {
+                            return DropdownMenuItem<Projects>(
                               value: value,
-                              child: Text(value,
+                              child: Text(value.name,
                                   style: const TextStyle(
                                       color: ColorConst.textColor)),
                             );
                           }).toList(),
                           decoration: const InputDecoration(
-                            labelText: 'Projects',
+                            labelText: Strings.projects,
                             border: OutlineInputBorder(),
                           ),
                         ),
-                        const SizedBox(height: 20.0),
+                        const SizedBox(height: ValuesConst.boxSeparatorSize),
                         DropdownButtonFormField(
                           value: _taskDifficulty,
                           onChanged: (newValue) {
                             setState(() {
-                              _taskDifficulty = newValue ?? "";
+                              _taskDifficulty =
+                                  newValue ?? Difficulty(id: -1, name: "");
                             });
                           },
                           items: _taskDifficulties
-                              .map<DropdownMenuItem<String>>((String value) {
-                            return DropdownMenuItem<String>(
+                              .map<DropdownMenuItem<Difficulty>>(
+                                  (Difficulty value) {
+                            return DropdownMenuItem<Difficulty>(
                               value: value,
-                              child: Text(value,
+                              child: Text(value.name,
                                   style: const TextStyle(
                                       color: ColorConst.textColor)),
                             );
                           }).toList(),
                           decoration: const InputDecoration(
-                            labelText: 'Dificultad',
+                            labelText: Strings.difficulty,
                             border: OutlineInputBorder(),
                           ),
                         ),
-                        const SizedBox(height: 20.0),
-                        DropdownButtonFormField(
-                          value: _taskDifficulty,
-                          onChanged: (newValue) {
-                            setState(() {
-                              _taskDifficulty = newValue ?? "";
-                            });
-                          },
-                          items: _taskDifficulties
-                              .map<DropdownMenuItem<String>>((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value,
-                                  style: const TextStyle(
-                                      color: ColorConst.textColor)),
-                            );
-                          }).toList(),
-                          decoration: const InputDecoration(
-                            labelText: 'Dificultad',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 20.0),
-                        DropdownButtonFormField<Sentiment>(
+                        const SizedBox(height: ValuesConst.boxSeparatorSize),
+                        DropdownButtonFormField<Effort>(
                           value: _selectedSentiment,
                           onChanged: (newValue) {
                             setState(() {
                               _selectedSentiment = newValue!;
                             });
                           },
-                          items: Sentiment.values
-                              .map<DropdownMenuItem<Sentiment>>(
-                                  (Sentiment sentiment) {
+                          items: Effort.values.map<DropdownMenuItem<Effort>>(
+                              (Effort sentiment) {
                             String text = '';
                             IconData icon;
                             Color color;
                             switch (sentiment) {
-                              case Sentiment.happy:
+                              case Effort.poco:
                                 text = 'Poco';
                                 icon = Icons.sentiment_very_satisfied_outlined;
                                 color = Colors.green;
                                 break;
-                              case Sentiment.sad:
+                              case Effort.mucho:
                                 text = 'Mucho';
                                 icon = Icons.sentiment_dissatisfied_outlined;
                                 color = Colors.red;
                                 break;
-                              case Sentiment.neutral:
+                              case Effort.medio:
                                 text = 'Mas o menos';
                                 color = Colors.yellow;
                                 icon = Icons.sentiment_neutral_outlined;
                                 break;
                             }
-                            return DropdownMenuItem<Sentiment>(
+                            return DropdownMenuItem<Effort>(
                               value: sentiment,
                               child: Row(
                                 children: [
                                   Icon(icon),
-                                  SizedBox(width: 8),
+                                  const SizedBox(width: 8),
                                   Text(
                                     text,
                                     style: TextStyle(
@@ -574,27 +566,27 @@ class _MyDialogState extends State<MyDialog> {
                             );
                           }).toList(),
                           decoration: const InputDecoration(
-                            labelText: 'Esfuerzo',
+                            labelText: Strings.effort,
                             border: OutlineInputBorder(),
                           ),
                         ),
-                        const SizedBox(height: 20.0),
+                        const SizedBox(height: ValuesConst.boxSeparatorSize),
                         TextFormField(
                           decoration: const InputDecoration(
                             icon: Icon(Icons.text_fields_outlined),
-                            hintText: 'Prioridad',
-                            labelText: 'Prioridad *',
+                            hintText: Strings.taskHintPriority,
+                            labelText: Strings.taskLabelPriority,
                           ),
                           validator: (value) {
                             if (value == null ||
                                 value.isEmpty ||
                                 int.tryParse(value) != null) {
-                              return 'Entre una número';
+                              return Strings.taskValidationPriority;
                             }
                             return null;
                           },
                         ),
-                        const SizedBox(height: 20.0),
+                        const SizedBox(height: ValuesConst.boxSeparatorSize),
                         ElevatedButton(
                           style: ButtonStyle(
                             backgroundColor: const MaterialStatePropertyAll(
@@ -616,37 +608,15 @@ class _MyDialogState extends State<MyDialog> {
                               SizedBox(
                                 width: 10,
                               ),
-                              Text("Añadir imagen!",
+                              Text(Strings.addImage,
                                   style: TextStyle(color: ColorConst.white)),
                             ],
                           ),
                           onPressed: () async {
                             _selectFile(true);
-                            // _showPicker(context);
                           },
                         ),
-                        const SizedBox(height: 20.0),
-                        TextField(
-                          controller: _dateController,
-                          decoration: const InputDecoration(
-                              icon: Icon(Icons.calendar_today_rounded),
-                              labelText: "Selecciona fecha"),
-                          onTap: () async {
-                            DateTime? pickeddate = await showDatePicker(
-                                context: context,
-                                initialDate: DateTime.now(),
-                                firstDate: DateTime(2000),
-                                lastDate: DateTime(2101));
-
-                            if (pickeddate != null) {
-                              setState(() {
-                                _dateController.text =
-                                    DateFormat('yyyy-MM-dd').format(pickeddate);
-                              });
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 20.0),
+                        const SizedBox(height: ValuesConst.boxSeparatorSize),
                         Align(
                           alignment: Alignment.centerRight,
                           child: ElevatedButton(
@@ -656,20 +626,17 @@ class _MyDialogState extends State<MyDialog> {
                               overlayColor: const MaterialStatePropertyAll(
                                   ColorConst.sendButtonColor),
                               elevation: const MaterialStatePropertyAll(10),
-                              minimumSize: MaterialStateProperty.all(const Size(
-                                  150, 50)), // Adjust the size as needed
+                              minimumSize: MaterialStateProperty.all(
+                                  const Size(150, 50)),
                             ),
-                            child: const Text('Submit',
+                            child: const Text(Strings.submit,
                                 style: TextStyle(color: ColorConst.white)),
                             onPressed: () {
-                              // Validate returns true if the form is valid, or false otherwise.
                               if (_formKey.currentState!.validate()) {
                                 Navigator.pop(context);
-                                // If the form is valid, display a snackbar. In the real world,
-                                // you'd often call a server or save the information in a database.
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                      content: Text('Processing Data',
+                                      content: Text(Strings.processingEntry,
                                           style: TextStyle(
                                               color: ColorConst.textColor))),
                                 );
@@ -679,7 +646,7 @@ class _MyDialogState extends State<MyDialog> {
                         )
                       ],
                     ),
-                  ), // Add more form fields as needed
+                  ),
                 ],
               ]),
         ),
@@ -696,14 +663,13 @@ class _MyDialogState extends State<MyDialog> {
 
     if (fileResult != null) {
       selectedFile = fileResult.files.first.name;
-      fileResult.files.forEach((element) {
+      for (var element in fileResult.files) {
         setState(() {
           pickedImagesInBytes.add(element.bytes ?? Uint8List(1));
           //selectedImageInBytes = fileResult.files.first.bytes;
           imageCounts += 1;
         });
-      });
+      }
     }
-    print(selectedFile);
   }
 }

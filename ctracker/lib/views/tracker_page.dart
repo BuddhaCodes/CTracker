@@ -1,20 +1,21 @@
 import 'package:ctracker/constant/color.dart';
+import 'package:ctracker/constant/string.dart';
 import 'package:ctracker/constant/values.dart';
 import 'package:ctracker/models/idea.dart';
+import 'package:ctracker/models/item_types.dart';
 import 'package:ctracker/models/reminder.dart';
 import 'package:ctracker/models/task.dart';
+import 'package:ctracker/utils/utils.dart';
 import 'package:flutter/material.dart';
 
 class TrackerPage extends StatefulWidget {
-  const TrackerPage({Key? key}) : super(key: key);
+  const TrackerPage({super.key});
 
   @override
   _TrackerPageState createState() => _TrackerPageState();
 }
 
 class _TrackerPageState extends State<TrackerPage> {
-  String _selectedTable = 'Ideas';
-
   bool _sortAscending = true;
   int _sortColumnIndex = 0;
 
@@ -24,9 +25,12 @@ class _TrackerPageState extends State<TrackerPage> {
   bool _sortAscendingrem = true;
   int _sortColumnIndexrem = 0;
 
+  List<ItemType> types = ItemTypeData.getAllItemType();
   List<Task> tasks = TaskData.getAllTasks();
   List<Idea> ideas = IdeaData.getAllIdeas();
   List<Reminder> reminders = ReminderData.getAllReminders();
+
+  ItemType _selectedTable = ItemTypeData.getAllItemType().first;
 
   @override
   Widget build(BuildContext context) {
@@ -41,23 +45,22 @@ class _TrackerPageState extends State<TrackerPage> {
                 alignment: Alignment.centerLeft,
                 child: SizedBox(
                   width: MediaQuery.of(context).size.width * 0.30,
-                  child: DropdownButton<String>(
+                  child: DropdownButton<ItemType>(
                     value: _selectedTable,
                     isExpanded: true,
                     dropdownColor: ColorConst.drawerBG,
                     borderRadius:
                         BorderRadius.circular(ValuesConst.borderRadius),
-                    onChanged: (String? newValue) {
+                    onChanged: (ItemType? newValue) {
                       setState(() {
-                        _selectedTable = newValue ?? "";
+                        _selectedTable = newValue ?? ItemType(id: -1, name: "");
                       });
                     },
-                    items: <String>['Ideas', 'Reminders', 'Tasks']
-                        .map<DropdownMenuItem<String>>((String value) {
+                    items:
+                        types.map<DropdownMenuItem<ItemType>>((ItemType value) {
                       IconData iconData;
                       Color iconColor;
-                      // Assigning icons based on the value
-                      switch (value) {
+                      switch (value.name) {
                         case 'Ideas':
                           iconData = Icons.lightbulb;
                           iconColor = ColorConst.chartColorYellow;
@@ -74,16 +77,15 @@ class _TrackerPageState extends State<TrackerPage> {
                           iconData = Icons.error;
                           iconColor = ColorConst.lightRed;
                       }
-                      return DropdownMenuItem<String>(
+                      return DropdownMenuItem<ItemType>(
                         value: value,
                         child: Row(
                           children: [
-                            Icon(iconData, color: iconColor), // Icon
-                            const SizedBox(
-                                width: 10), // Adjust as needed for spacing
-                            Text(value,
+                            Icon(iconData, color: iconColor),
+                            const SizedBox(width: 10),
+                            Text(value.name,
                                 style: const TextStyle(
-                                    color: ColorConst.textColor)), // Text
+                                    color: ColorConst.textColor)),
                           ],
                         ),
                       );
@@ -95,10 +97,10 @@ class _TrackerPageState extends State<TrackerPage> {
                 height: 30,
                 width: 30,
               ),
-              if (_selectedTable == 'Ideas') _buildDataTable(ideas),
-              if (_selectedTable == 'Reminders')
+              if (_selectedTable.name == 'Ideas') _buildDataTable(ideas),
+              if (_selectedTable.name == 'Reminders')
                 _buildDataTableReminder(reminders),
-              if (_selectedTable == 'Tasks') _buildDataTableTask(tasks),
+              if (_selectedTable.name == 'Tasks') _buildDataTableTask(tasks),
             ],
           ),
         ),
@@ -106,20 +108,9 @@ class _TrackerPageState extends State<TrackerPage> {
     );
   }
 
-  DataCell buildCell(String item) {
-    return DataCell(
-        Text(item, style: const TextStyle(color: ColorConst.textColor)));
-  }
-
-  DataColumn buildColumn(String item) {
-    return DataColumn(
-      label: Text(item, style: const TextStyle(color: ColorConst.textColor)),
-    );
-  }
-
   Widget _buildDataTableReminder(List<Reminder> data) {
     return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.85,
+      width: MediaQuery.of(context).size.width * ValuesConst.tableWidth,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Center(
@@ -128,58 +119,45 @@ class _TrackerPageState extends State<TrackerPage> {
                 minWidth: MediaQuery.of(context).size.width * 0.82),
             child: DataTable(
               border: TableBorder.all(
-                  width: 1,
+                  width: ValuesConst.tableBorderWidth,
                   color: ColorConst.chartBorderColor,
-                  borderRadius: BorderRadius.circular(20)),
+                  borderRadius: BorderRadius.circular(ValuesConst.tableRadius)),
               sortAscending: _sortAscendingrem,
               sortColumnIndex: _sortColumnIndexrem,
               columns: [
-                DataColumn(
-                  label: const Text('Title',
-                      style: TextStyle(color: ColorConst.textColor)),
-                  onSort: (columnIndex, ascending) {
-                    setState(() {
-                      _sortAscendingrem = ascending;
-                      _sortColumnIndexrem = columnIndex;
-                      if (ascending) {
-                        data.sort((a, b) => a.title.compareTo(b.title));
-                      } else {
-                        data.sort((a, b) => b.title.compareTo(a.title));
-                      }
-                    });
-                  },
-                ),
-                buildColumn('Due date'),
-                buildColumn('Description'),
-                buildColumn('Category'),
-                buildColumn('Actions'),
+                Utils.buildColumn(Strings.title,
+                    onSort: (columnIndex, ascending) => setState(() {
+                          _sortAscendingrem = ascending;
+                          _sortColumnIndexrem = columnIndex;
+                          if (ascending) {
+                            data.sort((a, b) => a.title.compareTo(b.title));
+                          } else {
+                            data.sort((a, b) => b.title.compareTo(a.title));
+                          }
+                        })),
+                Utils.buildColumn(Strings.duedate),
+                Utils.buildColumn(Strings.description),
+                Utils.buildColumn(Strings.category),
+                Utils.buildColumn(Strings.actions),
               ],
               rows: data.map((item) {
                 return DataRow(
                   cells: [
-                    buildCell(item.title),
-                    buildCell(item.duedate.toString()),
-                    buildCell(item.description),
-                    buildCell(item.categories.join(', ')),
+                    Utils.buildCell(item.title),
+                    Utils.buildCell(item.duedate.toString()),
+                    Utils.buildCell(item.description),
+                    Utils.buildCell(item.categories.join(', ')),
                     DataCell(Row(
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit,
-                              color: ColorConst.sendButtonColor),
-                          onPressed: () {
-                            // Implement update functionality
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete,
-                              color: ColorConst.lightRed),
-                          onPressed: () {
-                            setState(() {
-                              ReminderData.delete(item.id);
-                              reminders = ReminderData.getAllReminders();
-                            });
-                          },
-                        ),
+                        Utils.updateIcon(onPressed: () {
+                          // Implement update functionality
+                        }),
+                        Utils.deleteIcon(onPressed: () {
+                          setState(() {
+                            ReminderData.delete(item.id);
+                            reminders = ReminderData.getAllReminders();
+                          });
+                        }),
                       ],
                     )),
                   ],
@@ -194,8 +172,8 @@ class _TrackerPageState extends State<TrackerPage> {
 
   Widget _buildDataTableTask(List<Task> data) {
     return Container(
-      width: MediaQuery.of(context).size.width * 0.85,
-      padding: const EdgeInsets.all(16.0),
+      width: MediaQuery.of(context).size.width * ValuesConst.tableWidth,
+      padding: const EdgeInsets.all(ValuesConst.tablePadding),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: ConstrainedBox(
@@ -203,78 +181,60 @@ class _TrackerPageState extends State<TrackerPage> {
               minWidth: MediaQuery.of(context).size.width * 0.82),
           child: DataTable(
             border: TableBorder.all(
-                width: 1,
+                width: ValuesConst.tableBorderWidth,
                 color: ColorConst.chartBorderColor,
-                borderRadius: BorderRadius.circular(20)),
+                borderRadius: BorderRadius.circular(ValuesConst.tableRadius)),
             sortAscending: _sortAscendingtask,
             sortColumnIndex: _sortColumnIndextaks,
             columns: [
-              DataColumn(
-                label: const Text('Title',
-                    style: TextStyle(color: ColorConst.textColor)),
-                onSort: (columnIndex, ascending) {
-                  setState(() {
-                    _sortAscendingtask = ascending;
-                    _sortColumnIndextaks = columnIndex;
-                    if (ascending) {
-                      data.sort((a, b) => a.title.compareTo(b.title));
-                    } else {
-                      data.sort((a, b) => b.title.compareTo(a.title));
-                    }
-                  });
-                },
-              ),
-              DataColumn(
-                label: const Text('Difficulty',
-                    style: TextStyle(color: ColorConst.textColor)),
-                onSort: (columnIndex, ascending) {
-                  setState(() {
-                    _sortAscendingtask = ascending;
-                    _sortColumnIndextaks = columnIndex;
-                    if (ascending) {
-                      data.sort((a, b) => a.difficulty.compareTo(b.difficulty));
-                    } else {
-                      data.sort((a, b) => b.difficulty.compareTo(a.difficulty));
-                    }
-                  });
-                },
-              ),
-              buildColumn('Priority'),
-              buildColumn('Effort'),
-              buildColumn('Category'),
-              buildColumn('Description'),
-              buildColumn('Project'),
-              buildColumn('Actions')
+              Utils.buildColumn(Strings.title,
+                  onSort: (columnIndex, ascending) => setState(() {
+                        _sortAscendingtask = ascending;
+                        _sortColumnIndextaks = columnIndex;
+                        if (ascending) {
+                          data.sort((a, b) => a.title.compareTo(b.title));
+                        } else {
+                          data.sort((a, b) => b.title.compareTo(a.title));
+                        }
+                      })),
+              Utils.buildColumn(Strings.difficulty,
+                  onSort: (columnIndex, ascending) => setState(() {
+                        _sortAscendingtask = ascending;
+                        _sortColumnIndextaks = columnIndex;
+                        if (ascending) {
+                          data.sort(
+                              (a, b) => a.difficulty.compareTo(b.difficulty));
+                        } else {
+                          data.sort(
+                              (a, b) => b.difficulty.compareTo(a.difficulty));
+                        }
+                      })),
+              Utils.buildColumn(Strings.priority),
+              Utils.buildColumn(Strings.effort),
+              Utils.buildColumn(Strings.category),
+              Utils.buildColumn(Strings.description),
+              Utils.buildColumn(Strings.effort),
+              Utils.buildColumn(Strings.actions)
             ],
             rows: data.map((item) {
               return DataRow(
                 cells: [
-                  buildCell(item.title),
-                  buildCell(item.difficulty),
-                  buildCell(item.priority),
-                  buildCell(item.effort),
-                  buildCell(item.categories.join(', ')),
-                  buildCell(item.description),
-                  buildCell(item.project),
+                  Utils.buildCell(item.title),
+                  Utils.buildCell(item.difficulty),
+                  Utils.buildCell(item.priority),
+                  Utils.buildCell(item.effort),
+                  Utils.buildCell(item.categories.join(', ')),
+                  Utils.buildCell(item.description),
+                  Utils.buildCell(item.project),
                   DataCell(Row(
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit,
-                            color: ColorConst.sendButtonColor),
-                        onPressed: () {
-                          //
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete,
-                            color: ColorConst.lightRed),
-                        onPressed: () {
-                          setState(() {
-                            TaskData.delete(item.id);
-                            tasks = TaskData.getAllTasks();
-                          });
-                        },
-                      ),
+                      Utils.updateIcon(onPressed: () {}),
+                      Utils.deleteIcon(onPressed: () {
+                        setState(() {
+                          TaskData.delete(item.id);
+                          tasks = TaskData.getAllTasks();
+                        });
+                      }),
                     ],
                   )),
                 ],
@@ -288,8 +248,8 @@ class _TrackerPageState extends State<TrackerPage> {
 
   Widget _buildDataTable(List<Idea> data) {
     return Container(
-      width: MediaQuery.of(context).size.width * 0.85,
-      padding: const EdgeInsets.all(16.0),
+      width: MediaQuery.of(context).size.width * ValuesConst.tableWidth,
+      padding: const EdgeInsets.all(ValuesConst.tablePadding),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: ConstrainedBox(
@@ -299,72 +259,52 @@ class _TrackerPageState extends State<TrackerPage> {
             sortAscending: _sortAscending,
             sortColumnIndex: _sortColumnIndex,
             border: TableBorder.all(
-                width: 1,
+                width: ValuesConst.tableBorderWidth,
                 color: ColorConst.chartBorderColor,
-                borderRadius: BorderRadius.circular(20)),
+                borderRadius: BorderRadius.circular(ValuesConst.tableRadius)),
             columns: [
-              DataColumn(
-                label: const Text('Title',
-                    style: TextStyle(color: ColorConst.textColor)),
-                onSort: (columnIndex, ascending) {
-                  setState(() {
-                    _sortAscending = ascending;
-                    _sortColumnIndex = columnIndex;
-                    if (ascending) {
-                      data.sort((a, b) => a.title.compareTo(b.title));
-                    } else {
-                      data.sort((a, b) => b.title.compareTo(a.title));
-                    }
-                  });
-                },
-              ),
-              DataColumn(
-                label: const Text('Tags',
-                    style: TextStyle(color: ColorConst.textColor)),
-                onSort: (columnIndex, ascending) {
-                  setState(() {
-                    _sortAscending = ascending;
-                    _sortColumnIndex = columnIndex;
-                    if (ascending) {
-                      data.sort(
-                          (a, b) => a.tags.length.compareTo(b.tags.length));
-                    } else {
-                      data.sort(
-                          (a, b) => b.tags.length.compareTo(a.tags.length));
-                    }
-                  });
-                },
-              ),
-              buildColumn('Description'),
-              buildColumn('Category'),
-              buildColumn('Actions'),
+              Utils.buildColumn(Strings.title,
+                  onSort: (columnIndex, ascending) => setState(() {
+                        _sortAscending = ascending;
+                        _sortColumnIndex = columnIndex;
+                        if (ascending) {
+                          data.sort((a, b) => a.title.compareTo(b.title));
+                        } else {
+                          data.sort((a, b) => b.title.compareTo(a.title));
+                        }
+                      })),
+              Utils.buildColumn(Strings.tags,
+                  onSort: (columnIndex, ascending) => setState(() {
+                        _sortAscending = ascending;
+                        _sortColumnIndex = columnIndex;
+                        if (ascending) {
+                          data.sort(
+                              (a, b) => a.tags.length.compareTo(b.tags.length));
+                        } else {
+                          data.sort(
+                              (a, b) => b.tags.length.compareTo(a.tags.length));
+                        }
+                      })),
+              Utils.buildColumn(Strings.description),
+              Utils.buildColumn(Strings.category),
+              Utils.buildColumn(Strings.actions),
             ],
             rows: data.map((item) {
               return DataRow(
                 cells: [
-                  buildCell(item.title),
-                  buildCell(item.tags.join(', ')),
-                  buildCell(item.description),
-                  buildCell(item.category),
+                  Utils.buildCell(item.title),
+                  Utils.buildCell(item.tags.join(', ')),
+                  Utils.buildCell(item.description),
+                  Utils.buildCell(item.category),
                   DataCell(Row(
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit,
-                            color: ColorConst.sendButtonColor),
-                        onPressed: () {
-                          // Implement update functionality
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete,
-                            color: ColorConst.lightRed),
-                        onPressed: () {
-                          setState(() {
-                            IdeaData.delete(item.id);
-                            ideas = IdeaData.getAllIdeas();
-                          });
-                        },
-                      ),
+                      Utils.updateIcon(onPressed: () {}),
+                      Utils.deleteIcon(onPressed: () {
+                        setState(() {
+                          IdeaData.delete(item.id);
+                          ideas = IdeaData.getAllIdeas();
+                        });
+                      }),
                     ],
                   )),
                 ],
