@@ -1,3 +1,4 @@
+import 'package:ctracker/constant/color.dart';
 import 'package:ctracker/constant/string.dart';
 import 'package:flutter/material.dart';
 
@@ -12,10 +13,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: appTitle,
       debugShowCheckedModeBanner: false,
-      home: HomePage(),
+      theme: ThemeData(
+        textTheme: Theme.of(context).textTheme.apply(
+            bodyColor: ColorConst.textColor,
+            displayColor: ColorConst.textColor,
+            fontFamily: 'Poppins'),
+      ),
+      home: const HomePage(),
     );
   }
 }

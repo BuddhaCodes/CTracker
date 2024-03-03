@@ -80,4 +80,5 @@ class Strings {
   static const String close = "Close";
 
   static const String submit = 'Submit';
+  static const String save = 'Save';
 }

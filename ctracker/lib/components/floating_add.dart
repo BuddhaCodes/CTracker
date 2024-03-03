@@ -21,11 +21,11 @@ class FloatingAdd extends StatelessWidget {
       },
       shape: const CircleBorder(),
       tooltip: Strings.add,
-      hoverColor: ColorConst.sendButtonColor,
-      backgroundColor: ColorConst.primary,
+      hoverColor: ColorConst.buttonColor,
+      backgroundColor: ColorConst.buttonHoverColor,
       child: const Icon(
         Icons.add,
-        color: ColorConst.white,
+        color: Colors.white,
       ),
     );
   }

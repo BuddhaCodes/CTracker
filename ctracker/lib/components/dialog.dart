@@ -53,12 +53,12 @@ class _AddDialogState extends State<AddDialog> {
 
   Effort _selectedSentiment = Effort.poco;
 
-  TextEditingController _dateController = TextEditingController();
-  TextEditingController _textFieldController = TextEditingController();
+  final TextEditingController _dateController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      backgroundColor: ColorConst.background,
       child: SingleChildScrollView(
         child: Container(
           padding: const EdgeInsets.all(ValuesConst.boxSeparatorSize),
@@ -69,7 +69,7 @@ class _AddDialogState extends State<AddDialog> {
                 DropdownButton<ItemType>(
                   value: dropdownValue,
                   isExpanded: true,
-                  dropdownColor: ColorConst.drawerBG,
+                  dropdownColor: ColorConst.background,
                   borderRadius: BorderRadius.circular(ValuesConst.borderRadius),
                   onChanged: (ItemType? newValue) {
                     setState(() {
@@ -80,34 +80,32 @@ class _AddDialogState extends State<AddDialog> {
                       types.map<DropdownMenuItem<ItemType>>((ItemType value) {
                     IconData iconData;
                     Color iconColor;
-                    // Assigning icons based on the value
                     switch (value.name) {
                       case 'Ideas':
                         iconData = Icons.lightbulb;
-                        iconColor = ColorConst.chartColorYellow;
+                        iconColor = ColorConst.idea;
                         break;
                       case 'Reminders':
                         iconData = Icons.notification_important;
-                        iconColor = ColorConst.chartColorGreen;
+                        iconColor = ColorConst.reminder;
                         break;
                       case 'Tasks':
                         iconData = Icons.assignment;
-                        iconColor = ColorConst.chartColorBlue;
+                        iconColor = ColorConst.task;
                         break;
                       default:
                         iconData = Icons.error;
-                        iconColor = ColorConst.lightRed;
+                        iconColor = Colors.black;
                     }
                     return DropdownMenuItem<ItemType>(
                       value: value,
                       child: Row(
                         children: [
-                          Icon(iconData, color: iconColor), // Icon
-                          const SizedBox(
-                              width: 10), // Adjust as needed for spacing
+                          Icon(iconData, color: iconColor),
+                          const SizedBox(width: 10),
                           Text(value.name,
-                              style: const TextStyle(
-                                  color: ColorConst.textColor)), // Text
+                              style:
+                                  const TextStyle(color: ColorConst.textColor)),
                         ],
                       ),
                     );
@@ -204,9 +202,9 @@ class _AddDialogState extends State<AddDialog> {
                         ElevatedButton(
                           style: ButtonStyle(
                             backgroundColor: const MaterialStatePropertyAll(
-                                ColorConst.primary),
+                                ColorConst.buttonColor),
                             overlayColor: const MaterialStatePropertyAll(
-                                ColorConst.sendButtonColor),
+                                ColorConst.buttonHoverColor),
                             elevation: const MaterialStatePropertyAll(10),
                             minimumSize:
                                 MaterialStateProperty.all(const Size(150, 50)),
@@ -216,14 +214,14 @@ class _AddDialogState extends State<AddDialog> {
                             children: <Widget>[
                               Icon(
                                 Icons.file_upload_rounded,
-                                color: ColorConst.drawerIcon,
+                                color: ColorConst.background,
                                 size: 24.0,
                               ),
                               SizedBox(
                                 width: 10,
                               ),
                               Text(Strings.addImage,
-                                  style: TextStyle(color: ColorConst.white)),
+                                  style: TextStyle(color: Colors.white)),
                             ],
                           ),
                           onPressed: () async {
@@ -247,15 +245,15 @@ class _AddDialogState extends State<AddDialog> {
                             },
                             style: ButtonStyle(
                               backgroundColor: const MaterialStatePropertyAll(
-                                  ColorConst.primary),
+                                  ColorConst.buttonColor),
                               overlayColor: const MaterialStatePropertyAll(
-                                  ColorConst.sendButtonColor),
+                                  ColorConst.buttonHoverColor),
                               elevation: const MaterialStatePropertyAll(10),
                               minimumSize: MaterialStateProperty.all(
                                   const Size(150, 50)),
                             ),
                             child: const Text(Strings.submit,
-                                style: TextStyle(color: ColorConst.white)),
+                                style: TextStyle(color: Colors.white)),
                           ),
                         )
                       ],
@@ -330,9 +328,9 @@ class _AddDialogState extends State<AddDialog> {
                         ElevatedButton(
                           style: ButtonStyle(
                             backgroundColor: const MaterialStatePropertyAll(
-                                ColorConst.primary),
+                                ColorConst.buttonColor),
                             overlayColor: const MaterialStatePropertyAll(
-                                ColorConst.sendButtonColor),
+                                ColorConst.buttonHoverColor),
                             elevation: const MaterialStatePropertyAll(10),
                             minimumSize:
                                 MaterialStateProperty.all(const Size(150, 50)),
@@ -342,14 +340,15 @@ class _AddDialogState extends State<AddDialog> {
                             children: <Widget>[
                               Icon(
                                 Icons.file_upload_rounded,
-                                color: ColorConst.drawerIcon,
+                                color: ColorConst.background,
                                 size: 24.0,
                               ),
                               SizedBox(
                                 width: 10,
                               ),
                               Text(Strings.addImage,
-                                  style: TextStyle(color: ColorConst.white)),
+                                  style:
+                                      TextStyle(color: ColorConst.textColor)),
                             ],
                           ),
                           onPressed: () async {
@@ -377,20 +376,22 @@ class _AddDialogState extends State<AddDialog> {
                             }
                           },
                         ),
+                        const SizedBox(height: ValuesConst.boxSeparatorSize),
                         Align(
                           alignment: Alignment.centerRight,
                           child: ElevatedButton(
                             style: ButtonStyle(
                               backgroundColor: const MaterialStatePropertyAll(
-                                  ColorConst.primary),
+                                  ColorConst.buttonColor),
                               overlayColor: const MaterialStatePropertyAll(
-                                  ColorConst.sendButtonColor),
+                                  ColorConst.buttonHoverColor),
                               elevation: const MaterialStatePropertyAll(10),
-                              minimumSize: MaterialStateProperty.all(const Size(
-                                  150, 50)), // Adjust the size as needed
+                              minimumSize: MaterialStateProperty.all(
+                                  const Size(150, 50)),
                             ),
                             child: const Text(Strings.submit,
-                                style: TextStyle(color: ColorConst.white)),
+                                style: TextStyle(
+                                    color: ColorConst.contrastedTextColor)),
                             onPressed: () {
                               if (_formKey.currentState!.validate()) {
                                 Navigator.pop(context);
@@ -590,9 +591,9 @@ class _AddDialogState extends State<AddDialog> {
                         ElevatedButton(
                           style: ButtonStyle(
                             backgroundColor: const MaterialStatePropertyAll(
-                                ColorConst.primary),
+                                ColorConst.buttonColor),
                             overlayColor: const MaterialStatePropertyAll(
-                                ColorConst.sendButtonColor),
+                                ColorConst.buttonHoverColor),
                             elevation: const MaterialStatePropertyAll(10),
                             minimumSize:
                                 MaterialStateProperty.all(const Size(150, 50)),
@@ -602,14 +603,14 @@ class _AddDialogState extends State<AddDialog> {
                             children: <Widget>[
                               Icon(
                                 Icons.file_upload_rounded,
-                                color: ColorConst.drawerIcon,
+                                color: ColorConst.background,
                                 size: 24.0,
                               ),
                               SizedBox(
                                 width: 10,
                               ),
                               Text(Strings.addImage,
-                                  style: TextStyle(color: ColorConst.white)),
+                                  style: TextStyle(color: Colors.white)),
                             ],
                           ),
                           onPressed: () async {
@@ -622,15 +623,15 @@ class _AddDialogState extends State<AddDialog> {
                           child: ElevatedButton(
                             style: ButtonStyle(
                               backgroundColor: const MaterialStatePropertyAll(
-                                  ColorConst.primary),
+                                  ColorConst.buttonColor),
                               overlayColor: const MaterialStatePropertyAll(
-                                  ColorConst.sendButtonColor),
+                                  ColorConst.buttonHoverColor),
                               elevation: const MaterialStatePropertyAll(10),
                               minimumSize: MaterialStateProperty.all(
                                   const Size(150, 50)),
                             ),
                             child: const Text(Strings.submit,
-                                style: TextStyle(color: ColorConst.white)),
+                                style: TextStyle(color: Colors.white)),
                             onPressed: () {
                               if (_formKey.currentState!.validate()) {
                                 Navigator.pop(context);

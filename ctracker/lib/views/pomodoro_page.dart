@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'package:ctracker/constant/color.dart';
 import 'package:ctracker/constant/string.dart';
 import 'package:ctracker/constant/values.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class PomodoroPage extends StatelessWidget {
   @override
@@ -17,17 +19,17 @@ class PomodoroScreen extends StatefulWidget {
 
 class _PomodoroScreenState extends State<PomodoroScreen>
     with SingleTickerProviderStateMixin {
-  int workTime = ValuesConst.WorkingMinutes; // Default work time in minutes
+  int workTime = ValuesConst.workingMinutes; // Default work time in minutes
   int shortRestTime =
-      ValuesConst.ShortRestMinutes; // Default short rest time in minutes
+      ValuesConst.shortRestMinutes; // Default short rest time in minutes
   int longRestTime =
-      ValuesConst.LongRestMinutes; // Default long rest time in minutes
+      ValuesConst.longRestMinutes; // Default long rest time in minutes
 
   int remainingWorkTime =
-      ValuesConst.WorkingMinutes * 60; // Initial remaining work time in seconds
-  int remainingShortRestTime = ValuesConst.ShortRestMinutes *
+      ValuesConst.workingMinutes * 60; // Initial remaining work time in seconds
+  int remainingShortRestTime = ValuesConst.shortRestMinutes *
       60; // Initial remaining short rest time in seconds
-  int remainingLongRestTime = ValuesConst.LongRestMinutes *
+  int remainingLongRestTime = ValuesConst.longRestMinutes *
       60; // Initial remaining long rest time in seconds
 
   bool isWorkTimerRunning = false;
@@ -50,16 +52,15 @@ class _PomodoroScreenState extends State<PomodoroScreen>
     setState(() {
       isWorkTimerRunning = true;
     });
-    workTimer =
-        Timer.periodic(const Duration(seconds: ValuesConst.Second), (timer) {
+    workTimer = Timer.periodic(Duration(seconds: ValuesConst.second), (timer) {
       setState(() {
         if (remainingWorkTime > 0) {
           remainingWorkTime--;
         } else {
           stopWorkTimer();
           _tabController.animateTo(1);
-          workTime = ValuesConst.WorkingMinutes;
-          remainingWorkTime = ValuesConst.WorkingMinutes * 60;
+          workTime = ValuesConst.workingMinutes;
+          remainingWorkTime = ValuesConst.workingMinutes * 60;
         }
       });
     });
@@ -77,15 +78,15 @@ class _PomodoroScreenState extends State<PomodoroScreen>
       isShortRestTimerRunning = true;
     });
     shortRestTimer =
-        Timer.periodic(const Duration(seconds: ValuesConst.Second), (timer) {
+        Timer.periodic(Duration(seconds: ValuesConst.second), (timer) {
       setState(() {
         if (remainingShortRestTime > 0) {
           remainingShortRestTime--;
         } else {
           stopShortRestTimer();
           _tabController.animateTo(1);
-          shortRestTime = ValuesConst.ShortRestMinutes;
-          remainingShortRestTime = ValuesConst.ShortRestMinutes * 60;
+          shortRestTime = ValuesConst.shortRestMinutes;
+          remainingShortRestTime = ValuesConst.shortRestMinutes * 60;
         }
       });
     });
@@ -103,7 +104,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
       isLongRestTimerRunning = true;
     });
     longRestTimer =
-        Timer.periodic(const Duration(seconds: ValuesConst.Second), (timer) {
+        Timer.periodic(Duration(seconds: ValuesConst.second), (timer) {
       setState(() {
         if (remainingLongRestTime > 0) {
           remainingLongRestTime--;
@@ -147,18 +148,39 @@ class _PomodoroScreenState extends State<PomodoroScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => openSettingsDialog(),
-          ),
-        ],
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: Strings.work),
-            Tab(text: Strings.shortRest),
-            Tab(text: Strings.longRest),
+          tabs: [
+            Tab(
+              text: Strings.work,
+              icon: SvgPicture.asset(
+                'assets/icons/work.svg',
+                width: 36, // Adjust the size as needed
+                height: 36,
+                colorFilter:
+                    const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+              ),
+            ),
+            Tab(
+              text: Strings.shortRest,
+              icon: SvgPicture.asset(
+                'assets/icons/rest.svg',
+                width: 36, // Adjust the size as needed
+                height: 36,
+                colorFilter:
+                    const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+              ),
+            ),
+            Tab(
+              text: Strings.longRest,
+              icon: SvgPicture.asset(
+                'assets/icons/longrest.svg',
+                width: 36, // Adjust the size as needed
+                height: 36,
+                colorFilter:
+                    const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+              ),
+            ),
           ],
         ),
       ),
@@ -176,89 +198,75 @@ class _PomodoroScreenState extends State<PomodoroScreen>
   Widget buildTimer(int remainingTime) {
     return Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
+          const SizedBox(
+            width: ValuesConst.boxSeparatorSize * 4,
+            height: ValuesConst.boxSeparatorSize * 4,
+          ),
           Text(
             '${(remainingTime ~/ 60).toString().padLeft(2, '0')}:${(remainingTime % 60).toString().padLeft(2, '0')}',
-            style: const TextStyle(fontSize: 48),
+            style: const TextStyle(fontSize: 140),
           ),
           const SizedBox(height: ValuesConst.boxSeparatorSize),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               ElevatedButton(
-                onPressed: isWorkTimerRunning ? null : startWorkTimer,
-                child: const Text(Strings.start),
-              ),
+                  onPressed: isWorkTimerRunning ? null : startWorkTimer,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 45, vertical: 20), // button padding
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(20), // rounded corners
+                    ),
+                    elevation: 5,
+                  ),
+                  child: const Text(
+                    Strings.start,
+                    style: TextStyle(
+                        fontSize: 24, color: ColorConst.contrastedTextColor),
+                  )),
               ElevatedButton(
                 onPressed: isWorkTimerRunning ? stopWorkTimer : null,
-                child: const Text(Strings.stop),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 45, vertical: 20), // button padding
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20), // rounded corners
+                  ),
+                  elevation: 5,
+                ),
+                child: const Text(
+                  Strings.stop,
+                  style: TextStyle(
+                      fontSize: 24, color: ColorConst.contrastedTextColor),
+                ),
               ),
               ElevatedButton(
                 onPressed: resetTimers,
-                child: const Text(Strings.reset),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 45, vertical: 20), // button padding
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20), // rounded corners
+                  ),
+                  elevation: 5,
+                ),
+                child: const Text(
+                  Strings.reset,
+                  style: TextStyle(
+                      fontSize: 24, color: ColorConst.contrastedTextColor),
+                ),
               ),
             ],
           ),
         ],
       ),
-    );
-  }
-
-  void openSettingsDialog() async {
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text(Strings.settings),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                decoration:
-                    const InputDecoration(labelText: Strings.workTimeMessage),
-                keyboardType: TextInputType.number,
-                onChanged: (value) {
-                  setState(() {
-                    workTime = int.tryParse(value) ?? workTime;
-                    remainingWorkTime = workTime * 60;
-                  });
-                },
-              ),
-              TextField(
-                decoration:
-                    const InputDecoration(labelText: Strings.sRestTimeMessage),
-                keyboardType: TextInputType.number,
-                onChanged: (value) {
-                  setState(() {
-                    shortRestTime = int.tryParse(value) ?? shortRestTime;
-                    remainingShortRestTime = shortRestTime * 60;
-                  });
-                },
-              ),
-              TextField(
-                decoration:
-                    const InputDecoration(labelText: Strings.lRestTimeMessage),
-                keyboardType: TextInputType.number,
-                onChanged: (value) {
-                  setState(() {
-                    longRestTime = int.tryParse(value) ?? longRestTime;
-                    remainingLongRestTime = longRestTime * 60;
-                  });
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text(Strings.close),
-            ),
-          ],
-        );
-      },
     );
   }
 }

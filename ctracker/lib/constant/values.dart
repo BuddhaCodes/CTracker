@@ -1,3 +1,5 @@
+import 'package:shared_preferences/shared_preferences.dart';
+
 class ValuesConst {
   static const double borderRadius = 10.0;
   static const double boxSeparatorSize = 20.0;
@@ -14,8 +16,24 @@ class ValuesConst {
   static const double tableWidth = 0.85;
 
   //Pomodoro
-  static const int WorkingMinutes = 25;
-  static const int ShortRestMinutes = 25;
-  static const int LongRestMinutes = 25;
-  static const int Second = 1;
+  static int workingMinutes = 25;
+  static int shortRestMinutes = 25;
+  static int longRestMinutes = 25;
+  static int second = 1;
+
+  static Future<void> loadSettings() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    workingMinutes = prefs.getInt('workingMinutes') ?? 25;
+    shortRestMinutes = prefs.getInt('shortRestMinutes') ?? 5;
+    longRestMinutes = prefs.getInt('longRestMinutes') ?? 15;
+    second = prefs.getInt('second') ?? 1;
+  }
+
+  static Future<void> saveSettings() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('workingMinutes', workingMinutes);
+    await prefs.setInt('shortRestMinutes', shortRestMinutes);
+    await prefs.setInt('longRestMinutes', longRestMinutes);
+    await prefs.setInt('second', second);
+  }
 }

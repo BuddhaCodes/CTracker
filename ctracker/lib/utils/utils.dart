@@ -13,7 +13,7 @@ class Utils {
         Navigator.pop(context);
       },
       child: Container(
-        color: ColorConst.primary,
+        color: ColorConst.background,
         padding: const EdgeInsets.symmetric(vertical: 20),
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -37,10 +37,10 @@ class Utils {
           horizontal: ValuesConst.tilePaddingHorizontal,
           vertical: ValuesConst.tilePaddingVertical),
       child: ListTile(
-        selectedColor: ColorConst.primary,
+        selectedColor: ColorConst.textColor,
         title: Text(
           title,
-          selectionColor: ColorConst.drawerTextColor,
+          selectionColor: ColorConst.textColor,
         ),
         leading: SizedBox(
           height: ValuesConst.tileSeparatorSize,
@@ -68,14 +68,14 @@ class Utils {
 
   static IconButton deleteIcon({Function()? onPressed}) {
     return IconButton(
-      icon: const Icon(Icons.delete, color: ColorConst.lightRed),
+      icon: const Icon(Icons.delete, color: ColorConst.delete),
       onPressed: onPressed,
     );
   }
 
   static IconButton updateIcon({Function()? onPressed}) {
     return IconButton(
-      icon: const Icon(Icons.edit, color: ColorConst.sendButtonColor),
+      icon: const Icon(Icons.edit, color: ColorConst.update),
       onPressed: onPressed,
     );
   }

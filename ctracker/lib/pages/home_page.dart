@@ -6,6 +6,7 @@ import 'package:ctracker/views/pomodoro_page.dart';
 import 'package:ctracker/views/settings_page.dart';
 import 'package:ctracker/views/tracker_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../components/floating_add.dart';
 
@@ -28,24 +29,36 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     Widget getBodyWidget() {
-      /*Switch para determinar que page se muestra en dependencia 
-      del indice del item seleccionado en el drawer*/
-
       switch (_selectedIndex) {
         case 0:
           return const TrackerPage();
         case 1:
           return PomodoroPage();
         case 2:
-          return SettingsPage();
+          return SettingsView();
         default:
-          return Container(); //Placeholder para que no se queje
+          return Container();
       }
     }
 
     return Scaffold(
-      appBar: AppBar(),
-      backgroundColor: ColorConst.backgroundColor,
+      backgroundColor: ColorConst.background,
+      appBar: AppBar(
+        leading: Builder(builder: (context) {
+          return IconButton(
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+            hoverColor: const Color.fromARGB(48, 255, 255, 255),
+            icon: SvgPicture.asset('assets/icons/drawer.svg',
+                width: 36, // Adjust the size as needed
+                height: 36,
+                colorFilter:
+                    const ColorFilter.mode(Colors.white, BlendMode.srcIn)),
+          );
+        }),
+        backgroundColor: ColorConst.topContainer,
+      ),
       body: getBodyWidget(),
       drawer: cDrawer(context),
       floatingActionButton: _selectedIndex == 0 ? const FloatingAdd() : null,
@@ -53,46 +66,47 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Drawer cDrawer(BuildContext context) {
-    return Drawer(
-      backgroundColor: ColorConst.drawerBG,
-      child: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 40,
+  Widget cDrawer(BuildContext context) {
+    return SafeArea(
+      child: Drawer(
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 40,
+                ),
+                children: [
+                  Utils.buildListTile(
+                    title: Strings.drawerTracker,
+                    icon: _selectedIndex == 0
+                        ? IconlyC.trackerOn
+                        : IconlyC.trackerIdle,
+                    onTap: () => _onItemTapped(0),
+                    selected: _selectedIndex == 0,
+                  ),
+                  Utils.buildListTile(
+                    title: Strings.drawerPomodoro,
+                    icon: _selectedIndex == 1
+                        ? IconlyC.pomodoroOn
+                        : IconlyC.pomodoroIdle,
+                    onTap: () => _onItemTapped(1),
+                    selected: _selectedIndex == 1,
+                  ),
+                  Utils.buildListTile(
+                    title: Strings.drawerSettings,
+                    icon: _selectedIndex == 2
+                        ? IconlyC.settingsOn
+                        : IconlyC.settingsIdle,
+                    onTap: () => _onItemTapped(2),
+                    selected: _selectedIndex == 2,
+                  ),
+                ],
               ),
-              children: [
-                Utils.buildListTile(
-                  title: Strings.drawerTracker,
-                  icon: _selectedIndex == 0
-                      ? IconlyC.trackerOn
-                      : IconlyC.trackerIdle,
-                  onTap: () => _onItemTapped(0),
-                  selected: _selectedIndex == 0,
-                ),
-                Utils.buildListTile(
-                  title: Strings.drawerPomodoro,
-                  icon: _selectedIndex == 1
-                      ? IconlyC.pomodoroOn
-                      : IconlyC.pomodoroIdle,
-                  onTap: () => _onItemTapped(1),
-                  selected: _selectedIndex == 1,
-                ),
-                Utils.buildListTile(
-                  title: Strings.drawerSettings,
-                  icon: _selectedIndex == 2
-                      ? IconlyC.settingsOn
-                      : IconlyC.settingsIdle,
-                  onTap: () => _onItemTapped(2),
-                  selected: _selectedIndex == 2,
-                ),
-              ],
             ),
-          ),
-          Utils.renderGestureDetector(context),
-        ],
+            Utils.renderGestureDetector(context),
+          ],
+        ),
       ),
     );
   }
