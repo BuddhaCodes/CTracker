@@ -1,27 +1,29 @@
+import 'package:ctracker/components/dialog.dart';
+import 'package:ctracker/components/floating_add.dart';
 import 'package:ctracker/components/top_container.dart';
 import 'package:ctracker/constant/color.dart';
-import 'package:ctracker/constant/string.dart';
 import 'package:ctracker/constant/values.dart';
-import 'package:ctracker/models/idea.dart';
 import 'package:ctracker/models/item_types.dart';
 import 'package:ctracker/models/reminder.dart';
 import 'package:ctracker/models/task.dart';
+import 'package:ctracker/utils/localization.dart';
 import 'package:ctracker/utils/utils.dart';
+import 'package:ctracker/views/reminder_details.dart';
+import 'package:ctracker/views/task_details.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:intl/intl.dart';
 
 class TrackerPage extends StatefulWidget {
-  const TrackerPage({super.key});
+  final Function onReminderDeleted;
+  const TrackerPage({super.key, required this.onReminderDeleted});
 
   @override
   _TrackerPageState createState() => _TrackerPageState();
 }
 
 class _TrackerPageState extends State<TrackerPage> {
-  bool _sortAscending = true;
-  int _sortColumnIndex = 0;
-
   bool _sortAscendingtask = true;
   int _sortColumnIndextaks = 0;
 
@@ -30,11 +32,11 @@ class _TrackerPageState extends State<TrackerPage> {
 
   List<ItemType> types = ItemTypeData.getAllItemType();
   List<Task> tasks = TaskData.getAllTasks();
-  List<Idea> ideas = IdeaData.getAllIdeas();
   List<Reminder> reminders = ReminderData.getAllReminders();
 
   ItemType _selectedTable = ItemTypeData.getAllItemType().first;
   int touchedIndex = 0;
+  bool isInitialized = true;
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
@@ -106,51 +108,70 @@ class _TrackerPageState extends State<TrackerPage> {
                                 });
                               },
                               items: types.map<DropdownMenuItem<ItemType>>(
-                                  (ItemType value) {
-                                IconData iconData;
-                                Color iconColor;
-                                switch (value.name) {
-                                  case 'Ideas':
-                                    iconData = Icons.lightbulb;
-                                    iconColor = ColorConst.idea;
-                                    break;
-                                  case 'Reminders':
-                                    iconData = Icons.notification_important;
-                                    iconColor = ColorConst.reminder;
-                                    break;
-                                  case 'Tasks':
-                                    iconData = Icons.assignment;
-                                    iconColor = ColorConst.task;
-                                    break;
-                                  default:
-                                    iconData = Icons.error;
-                                    iconColor = Colors.black;
-                                }
-                                return DropdownMenuItem<ItemType>(
-                                  value: value,
-                                  child: Row(
-                                    children: [
-                                      Icon(iconData, color: iconColor),
-                                      const SizedBox(width: 10),
-                                      Text(value.name)
-                                    ],
-                                  ),
-                                );
-                              }).toList(),
+                                (ItemType value) {
+                                  IconData iconData;
+                                  Color iconColor;
+                                  switch (value.name) {
+                                    case 'Ideas':
+                                      iconData = Icons.lightbulb;
+                                      iconColor = ColorConst.idea;
+                                      break;
+                                    case 'Reminders':
+                                      iconData = Icons.notification_important;
+                                      iconColor = ColorConst.reminder;
+                                      break;
+                                    case 'Tasks':
+                                      iconData = Icons.assignment;
+                                      iconColor = ColorConst.task;
+                                      break;
+                                    case 'All':
+                                      iconData = Icons.apps_outlined;
+                                      iconColor =
+                                          Color.fromARGB(255, 63, 75, 82);
+                                      break;
+                                    default:
+                                      iconData = Icons.error;
+                                      iconColor = ColorConst.black;
+                                  }
+                                  return DropdownMenuItem<ItemType>(
+                                    value: value,
+                                    child: Row(
+                                      children: [
+                                        Icon(iconData, color: iconColor),
+                                        const SizedBox(width: 10),
+                                        Text(value.name)
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ).toList(),
                             ),
                           ),
                         ),
                       ),
                       const SizedBox(
-                        height: 30,
-                        width: 30,
+                        height: ValuesConst.boxSeparatorSize,
+                        width: ValuesConst.boxSeparatorSize,
                       ),
-                      if (_selectedTable.name == 'Ideas')
-                        _buildDataTable(ideas),
-                      if (_selectedTable.name == 'Reminders')
-                        _buildDataTableReminder(reminders),
-                      if (_selectedTable.name == 'Tasks')
-                        _buildDataTableTask(tasks),
+                      Visibility(
+                        visible: _selectedTable.name == 'Reminders',
+                        child: _buildDataTableReminder(reminders),
+                      ),
+                      Visibility(
+                        visible: _selectedTable.name == 'Tasks',
+                        child: isInitialized
+                            ? _buildDataTableTask(tasks)
+                            : const Center(child: CircularProgressIndicator()),
+                      ),
+                      Visibility(
+                        visible: _selectedTable.name == 'All',
+                        child: Column(
+                          children: [
+                            _buildDataTableReminder(reminders),
+                            _buildDataTableTask(tasks),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -159,18 +180,39 @@ class _TrackerPageState extends State<TrackerPage> {
           ],
         ),
       ),
+      floatingActionButton: FloatingAdd(onTaskAdded: handleTaskAdded),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
+  void handleTaskAdded(bool success) {
+    if (success) {
+      setState(() {
+        isInitialized = false;
+        Future.delayed(const Duration(seconds: 3), () {
+          tasks = TaskData.getAllTasks();
+          reminders = ReminderData.getAllReminders();
+        });
+        isInitialized = true;
+      });
+    } else {}
+  }
+
   Widget _buildDataTableReminder(List<Reminder> data) {
-    return SizedBox(
+    final localizations = MyLocalizations.of(context);
+    return Container(
       width: MediaQuery.of(context).size.width * ValuesConst.tableWidth,
+      padding: const EdgeInsets.all(ValuesConst.tablePadding),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-                minWidth: MediaQuery.of(context).size.width * 0.82),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+              minWidth: MediaQuery.of(context).size.width * 0.82),
+          child: Container(
+            clipBehavior: Clip.hardEdge,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(ValuesConst.tableRadius - 1),
+            ),
             child: DataTable(
               border: TableBorder.all(
                   width: ValuesConst.tableBorderWidth,
@@ -178,8 +220,10 @@ class _TrackerPageState extends State<TrackerPage> {
                   borderRadius: BorderRadius.circular(ValuesConst.tableRadius)),
               sortAscending: _sortAscendingrem,
               sortColumnIndex: _sortColumnIndexrem,
+              headingRowColor:
+                  const MaterialStatePropertyAll(ColorConst.reminder),
               columns: [
-                Utils.buildColumn(Strings.title,
+                Utils.buildColumn(localizations.translate("title"),
                     onSort: (columnIndex, ascending) => setState(() {
                           _sortAscendingrem = ascending;
                           _sortColumnIndexrem = columnIndex;
@@ -189,28 +233,46 @@ class _TrackerPageState extends State<TrackerPage> {
                             data.sort((a, b) => b.title.compareTo(a.title));
                           }
                         })),
-                Utils.buildColumn(Strings.duedate),
-                Utils.buildColumn(Strings.description),
-                Utils.buildColumn(Strings.category),
-                Utils.buildColumn(Strings.actions),
+                Utils.buildColumn(localizations.translate("duedate")),
+                Utils.buildColumn(localizations.translate("description")),
+                Utils.buildColumn(localizations.translate("category")),
+                Utils.buildColumn(localizations.translate("actions")),
               ],
-              rows: data.map((item) {
+              rows: List.generate(data.length, (index) {
+                final item = data[index];
+                final color =
+                    index % 2 == 0 ? ColorConst.background : Colors.grey[350];
                 return DataRow(
+                  color: MaterialStateProperty.all(color),
                   cells: [
                     Utils.buildCell(item.title),
-                    Utils.buildCell(item.duedate.toString()),
+                    Utils.buildCell(
+                        DateFormat('yyyy-MM-dd').format(item.duedate)),
                     Utils.buildCell(item.description),
                     Utils.buildCell(item.categories.join(', ')),
                     DataCell(Row(
                       children: [
                         Utils.updateIcon(onPressed: () {
-                          // Implement update functionality
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AddDialog(updateReminder: item);
+                            },
+                          );
                         }),
                         Utils.deleteIcon(onPressed: () {
                           setState(() {
                             ReminderData.delete(item.id);
+                            widget.onReminderDeleted();
                             reminders = ReminderData.getAllReminders();
                           });
+                        }),
+                        Utils.detailsIcon(onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => ReminderDetailsPage(
+                                      reminderId: item.id)));
                         }),
                       ],
                     )),
@@ -225,6 +287,7 @@ class _TrackerPageState extends State<TrackerPage> {
   }
 
   Widget _buildDataTableTask(List<Task> data) {
+    final localizations = MyLocalizations.of(context);
     return Container(
       width: MediaQuery.of(context).size.width * ValuesConst.tableWidth,
       padding: const EdgeInsets.all(ValuesConst.tablePadding),
@@ -233,137 +296,78 @@ class _TrackerPageState extends State<TrackerPage> {
         child: ConstrainedBox(
           constraints: BoxConstraints(
               minWidth: MediaQuery.of(context).size.width * 0.82),
-          child: DataTable(
-            border: TableBorder.all(
-                width: ValuesConst.tableBorderWidth,
-                color: ColorConst.borderTable,
-                borderRadius: BorderRadius.circular(ValuesConst.tableRadius)),
-            sortAscending: _sortAscendingtask,
-            sortColumnIndex: _sortColumnIndextaks,
-            columns: [
-              Utils.buildColumn(Strings.title,
-                  onSort: (columnIndex, ascending) => setState(() {
-                        _sortAscendingtask = ascending;
-                        _sortColumnIndextaks = columnIndex;
-                        if (ascending) {
-                          data.sort((a, b) => a.title.compareTo(b.title));
-                        } else {
-                          data.sort((a, b) => b.title.compareTo(a.title));
-                        }
-                      })),
-              Utils.buildColumn(Strings.difficulty,
-                  onSort: (columnIndex, ascending) => setState(() {
-                        _sortAscendingtask = ascending;
-                        _sortColumnIndextaks = columnIndex;
-                        if (ascending) {
-                          data.sort(
-                              (a, b) => a.difficulty.compareTo(b.difficulty));
-                        } else {
-                          data.sort(
-                              (a, b) => b.difficulty.compareTo(a.difficulty));
-                        }
-                      })),
-              Utils.buildColumn(Strings.priority),
-              Utils.buildColumn(Strings.effort),
-              Utils.buildColumn(Strings.category),
-              Utils.buildColumn(Strings.description),
-              Utils.buildColumn(Strings.effort),
-              Utils.buildColumn(Strings.actions)
-            ],
-            rows: data.map((item) {
-              return DataRow(
-                cells: [
-                  Utils.buildCell(item.title),
-                  Utils.buildCell(item.difficulty),
-                  Utils.buildCell(item.priority),
-                  Utils.buildCell(item.effort),
-                  Utils.buildCell(item.categories.join(', ')),
-                  Utils.buildCell(item.description),
-                  Utils.buildCell(item.project),
-                  DataCell(Row(
-                    children: [
-                      Utils.updateIcon(onPressed: () {}),
-                      Utils.deleteIcon(onPressed: () {
-                        setState(() {
-                          TaskData.delete(item.id);
-                          tasks = TaskData.getAllTasks();
-                        });
-                      }),
-                    ],
-                  )),
-                ],
-              );
-            }).toList(),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDataTable(List<Idea> data) {
-    return Container(
-      width: MediaQuery.of(context).size.width * ValuesConst.tableWidth,
-      padding: const EdgeInsets.all(ValuesConst.tablePadding),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-              minWidth: MediaQuery.of(context).size.width * 0.82),
-          child: DataTable(
-            sortAscending: _sortAscending,
-            sortColumnIndex: _sortColumnIndex,
-            border: TableBorder.all(
-                width: ValuesConst.tableBorderWidth,
-                color: ColorConst.borderTable,
-                borderRadius: BorderRadius.circular(ValuesConst.tableRadius)),
-            columns: [
-              Utils.buildColumn(Strings.title,
-                  onSort: (columnIndex, ascending) => setState(() {
-                        _sortAscending = ascending;
-                        _sortColumnIndex = columnIndex;
-                        if (ascending) {
-                          data.sort((a, b) => a.title.compareTo(b.title));
-                        } else {
-                          data.sort((a, b) => b.title.compareTo(a.title));
-                        }
-                      })),
-              Utils.buildColumn(Strings.tags,
-                  onSort: (columnIndex, ascending) => setState(() {
-                        _sortAscending = ascending;
-                        _sortColumnIndex = columnIndex;
-                        if (ascending) {
-                          data.sort(
-                              (a, b) => a.tags.length.compareTo(b.tags.length));
-                        } else {
-                          data.sort(
-                              (a, b) => b.tags.length.compareTo(a.tags.length));
-                        }
-                      })),
-              Utils.buildColumn(Strings.description),
-              Utils.buildColumn(Strings.category),
-              Utils.buildColumn(Strings.actions),
-            ],
-            rows: data.map((item) {
-              return DataRow(
-                cells: [
-                  Utils.buildCell(item.title),
-                  Utils.buildCell(item.tags.join(', ')),
-                  Utils.buildCell(item.description),
-                  Utils.buildCell(item.category),
-                  DataCell(Row(
-                    children: [
-                      Utils.updateIcon(onPressed: () {}),
-                      Utils.deleteIcon(onPressed: () {
-                        setState(() {
-                          IdeaData.delete(item.id);
-                          ideas = IdeaData.getAllIdeas();
-                        });
-                      }),
-                    ],
-                  )),
-                ],
-              );
-            }).toList(),
+          child: Container(
+            clipBehavior: Clip.hardEdge,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(ValuesConst.tableRadius - 1),
+            ),
+            child: DataTable(
+              border: TableBorder.all(
+                  width: ValuesConst.tableBorderWidth,
+                  color: ColorConst.borderTable,
+                  borderRadius: BorderRadius.circular(ValuesConst.tableRadius)),
+              sortAscending: _sortAscendingtask,
+              sortColumnIndex: _sortColumnIndextaks,
+              headingRowColor: const MaterialStatePropertyAll(ColorConst.task),
+              columns: [
+                Utils.buildColumn(localizations.translate("titles"),
+                    onSort: (columnIndex, ascending) => setState(() {
+                          _sortAscendingtask = ascending;
+                          _sortColumnIndextaks = columnIndex;
+                          if (ascending) {
+                            data.sort((a, b) => a.title.compareTo(b.title));
+                          } else {
+                            data.sort((a, b) => b.title.compareTo(a.title));
+                          }
+                        })),
+                Utils.buildColumn(localizations.translate("category")),
+                Utils.buildColumn(localizations.translate("description")),
+                Utils.buildColumn(localizations.translate("project")),
+                Utils.buildColumn(localizations.translate("status")),
+                Utils.buildColumn(localizations.translate("actions"))
+              ],
+              rows: List.generate(data.length, (index) {
+                final item = data[index];
+                final color =
+                    index % 2 == 0 ? ColorConst.background : Colors.grey[350];
+                return DataRow(
+                  color: MaterialStateProperty.all(color),
+                  cells: [
+                    Utils.buildCell(item.title),
+                    Utils.buildCell(item.categories.join(', ')),
+                    Utils.buildCell(item.description),
+                    Utils.buildCell(item.project),
+                    Utils.buildCell(
+                        item.hasFinished ? "Terminada" : "Sin terminar"),
+                    DataCell(Row(
+                      children: [
+                        Utils.updateIcon(onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AddDialog(updateTask: item);
+                            },
+                          );
+                        }),
+                        Utils.deleteIcon(onPressed: () {
+                          setState(() {
+                            TaskData.delete(item.id);
+                            tasks = TaskData.getAllTasks();
+                          });
+                        }),
+                        Utils.detailsIcon(onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      TaskDetailsPage(taskId: item.id)));
+                        }),
+                      ],
+                    )),
+                  ],
+                );
+              }).toList(),
+            ),
           ),
         ),
       ),
@@ -371,38 +375,19 @@ class _TrackerPageState extends State<TrackerPage> {
   }
 
   List<PieChartSectionData> showingSections() {
-    return List.generate(3, (i) {
+    return List.generate(2, (i) {
       final isTouched = i == touchedIndex;
       final fontSize = isTouched ? 20.0 : 16.0;
       final radius = isTouched ? 110.0 : 100.0;
       final widgetSize = isTouched ? 55.0 : 40.0;
-      const shadows = [Shadow(color: Colors.black, blurRadius: 2)];
+      const shadows = [Shadow(color: ColorConst.black, blurRadius: 2)];
 
       switch (i) {
         case 0:
           return PieChartSectionData(
-            color: ColorConst.idea,
-            value: 40,
-            title: '40%',
-            radius: radius,
-            titleStyle: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xffffffff),
-              shadows: shadows,
-            ),
-            badgeWidget: _Badge(
-              'assets/icons/idea.svg',
-              size: widgetSize,
-              borderColor: Colors.black,
-            ),
-            badgePositionPercentageOffset: .98,
-          );
-        case 1:
-          return PieChartSectionData(
             color: ColorConst.reminder,
             value: 30,
-            title: '30%',
+            title: '75%',
             radius: radius,
             titleStyle: TextStyle(
               fontSize: fontSize,
@@ -413,15 +398,15 @@ class _TrackerPageState extends State<TrackerPage> {
             badgeWidget: _Badge(
               'assets/icons/reminder.svg',
               size: widgetSize,
-              borderColor: Colors.black,
+              borderColor: ColorConst.black,
             ),
             badgePositionPercentageOffset: .98,
           );
-        case 2:
+        case 1:
           return PieChartSectionData(
             color: ColorConst.task,
-            value: 16,
-            title: '16%',
+            value: 10,
+            title: '25%',
             radius: radius,
             titleStyle: TextStyle(
               fontSize: fontSize,
@@ -432,7 +417,7 @@ class _TrackerPageState extends State<TrackerPage> {
             badgeWidget: _Badge(
               'assets/icons/task.svg',
               size: widgetSize,
-              borderColor: Colors.black,
+              borderColor: ColorConst.black,
             ),
             badgePositionPercentageOffset: .98,
           );
@@ -460,7 +445,7 @@ class _Badge extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ColorConst.white,
         shape: BoxShape.circle,
         border: Border.all(
           color: borderColor,
@@ -468,7 +453,7 @@ class _Badge extends StatelessWidget {
         ),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: Colors.black.withOpacity(.5),
+            color: ColorConst.black.withOpacity(.5),
             offset: const Offset(3, 3),
             blurRadius: 3,
           ),

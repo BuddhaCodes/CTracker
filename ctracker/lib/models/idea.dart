@@ -1,10 +1,9 @@
 class Idea {
   final int id;
   final String title;
-  final List<String> tags;
+  List<String> tags;
   final String description;
   final List<String> images;
-  final String notes;
   final String category;
 
   Idea({
@@ -13,7 +12,6 @@ class Idea {
     required this.tags,
     required this.description,
     required this.images,
-    required this.notes,
     required this.category,
   });
 }
@@ -25,8 +23,7 @@ class IdeaData {
       title: 'Task 1',
       tags: ['Tag A', 'Tag C'],
       description: 'Description of Task 1',
-      images: ['image1.jpg', 'image2.jpg'],
-      notes: 'Notes for Task 1',
+      images: ['feedbackImage.png', 'helpImage.jpg'],
       category: 'Category A',
     ),
     Idea(
@@ -34,11 +31,9 @@ class IdeaData {
       title: 'Task 2',
       tags: ['Tag B'],
       description: 'Description of Task 2',
-      images: ['image3.jpg'],
-      notes: 'Notes for Task 2',
+      images: ['feedbackImage.png', 'helpImage.jpg'],
       category: 'Category B',
     ),
-    // Add more data as needed
   ];
 
   static List<Idea> getAllIdeas() {
@@ -47,5 +42,13 @@ class IdeaData {
 
   static void delete(int id) {
     _data.removeWhere((element) => element.id == id);
+  }
+
+  static Idea getById(int id) {
+    return _data.firstWhere((element) => element.id == id);
+  }
+
+  static void addIdea(Idea idea) {
+    _data.add(idea);
   }
 }

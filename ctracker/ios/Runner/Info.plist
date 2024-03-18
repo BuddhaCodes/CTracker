@@ -2,6 +2,19 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
+	<key>UIUserNotificationType</key>
+	<integer>7</integer>
+	<key>UIUserNotificationFlags</key>
+	<integer>7</integer>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>We use the microphone to record audio for our app's feature</string>
+	<key>NSCameraUsageDescription</key>
+	<string>We use the camera to capture photos for our app's feature</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

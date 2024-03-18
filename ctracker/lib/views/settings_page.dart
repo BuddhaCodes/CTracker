@@ -1,5 +1,5 @@
 import 'package:ctracker/constant/color.dart';
-import 'package:ctracker/constant/string.dart';
+import 'package:ctracker/utils/localization.dart';
 import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:ctracker/constant/values.dart';
@@ -17,6 +17,7 @@ class _SettingsViewState extends State<SettingsView> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = MyLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(),
       body: Padding(
@@ -25,7 +26,7 @@ class _SettingsViewState extends State<SettingsView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Card(
-              elevation: 5,
+              elevation: 2,
               color: ColorConst.cardBackground,
               child: Padding(
                 padding: const EdgeInsets.all(80.0),
@@ -33,24 +34,19 @@ class _SettingsViewState extends State<SettingsView> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     buildNumberPicker(
-                      'Working Minutes',
+                      localizations.translate("workTimeMessage"),
                       workingMinutes,
                       (value) => setState(() => workingMinutes = value),
                     ),
                     buildNumberPicker(
-                      'Short Rest Minutes',
+                      localizations.translate("shortRest"),
                       shortRestMinutes,
                       (value) => setState(() => shortRestMinutes = value),
                     ),
                     buildNumberPicker(
-                      'Long Rest Minutes',
+                      localizations.translate("longRest"),
                       longRestMinutes,
                       (value) => setState(() => longRestMinutes = value),
-                    ),
-                    buildNumberPicker(
-                      'Seconds',
-                      second,
-                      (value) => setState(() => second = value),
                     ),
                   ],
                 ),
@@ -59,7 +55,7 @@ class _SettingsViewState extends State<SettingsView> {
             const SizedBox(height: ValuesConst.boxSeparatorSize),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
+                backgroundColor: ColorConst.buttonColor,
                 padding: const EdgeInsets.symmetric(
                     horizontal: 20, vertical: 20), // button padding
                 shape: RoundedRectangleBorder(
@@ -69,11 +65,16 @@ class _SettingsViewState extends State<SettingsView> {
               ),
               onPressed: () {
                 saveSettings();
-                //Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text(localizations.translate("saveS"),
+                          style: const TextStyle(
+                              color: Color.fromARGB(255, 255, 255, 255)))),
+                );
               },
-              child: const Text(
-                Strings.save,
-                style: TextStyle(
+              child: Text(
+                localizations.translate("save"),
+                style: const TextStyle(
                     fontSize: 24, color: ColorConst.contrastedTextColor),
               ),
             ),
@@ -101,7 +102,7 @@ class _SettingsViewState extends State<SettingsView> {
           onChanged: onChanged,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(25),
-            border: Border.all(color: Colors.black87),
+            border: Border.all(color: ColorConst.pomodorSettingsBorder),
           ),
         ),
       ],

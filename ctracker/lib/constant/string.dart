@@ -1,25 +1,22 @@
-/* Esta clase es usada para almacenar en variables estaticas
-los valores de los strings que iran al UI, esto se usará más adelante
-para localizacion */
 class Strings {
-  static const String appName = 'CTracker';
-  static const String drawerTracker = 'Tracker';
+  static const String appName = 'CNotes';
+  static const String drawerTracker = 'Notas';
   static const String drawerPomodoro = 'Pomodoro';
   static const String drawerSettings = 'Opciones';
 
-  static const String title = 'Title';
-  static const String duedate = 'Due date';
-  static const String description = 'Description';
-  static const String category = 'Category';
-  static const String actions = 'Actions';
-  static const String difficulty = 'Difficulty';
-  static const String priority = 'Priority';
-  static const String effort = 'Effort';
-  static const String project = 'Project';
-  static const String projects = 'Projects';
+  static const String title = 'Titulo';
+  static const String duedate = 'Fecha';
+  static const String description = 'Descripción';
+  static const String category = 'Categoría';
+  static const String actions = 'Acciones';
+  static const String difficulty = 'Dificultad';
+  static const String priority = 'Prioridad';
+  static const String effort = 'Esfuerzo';
+  static const String project = 'Projecto';
+  static const String projects = 'Projectos';
   static const String tags = 'Tags';
 
-  static const String add = 'Add';
+  static const String add = 'Añadir';
 
   static const String ideaHintTitle = 'Título de la idea';
   static const String ideaLabeltTitle = 'Título *';
@@ -68,17 +65,35 @@ class Strings {
   static const String shortRest = "Descanso corto";
   static const String longRest = "Descanso largo";
 
-  static const String start = "Start";
-  static const String stop = "Stop";
-  static const String reset = "Reset";
+  static const String start = "Iniciar";
+  static const String stop = "Parar";
+  static const String reset = "Reiniciar";
 
-  static const String settings = "Settings";
-  static const String workTimeMessage = "Work Time (minutes)";
-  static const String sRestTimeMessage = "Short Rest Time (minutes)";
-  static const String lRestTimeMessage = "Long Rest Time (minutes)";
+  static const String itemValidationDescription =
+      "Necesita entrar tareas de acción";
 
-  static const String close = "Close";
+  static const String note = "Nota";
+  static const String addNote = "Entrar nota";
+  static const String timeDedicated = "El tiempo dedicado es:";
 
-  static const String submit = 'Submit';
-  static const String save = 'Save';
+  static const String newItem = "Nuevo";
+
+  static const String noData = "No se encotró datos";
+
+  static const String settings = "Opciones";
+  static const String workTimeMessage = "Tiempo de trabajo (minutos)";
+  static const String sRestTimeMessage = "Tiempo de descanso corto (minutos)";
+  static const String lRestTimeMessage = "Tiempo de descanso largo (minutos)";
+  static const String seconds = "Segundos";
+
+  static const String ideaDetails = "Detalles de la idea";
+
+  static const String close = "Cerrar";
+
+  static const String meetings = "Reuiniones";
+
+  static const String status = "Estado";
+
+  static const String submit = 'Entrar';
+  static const String save = 'Guardar';
 }

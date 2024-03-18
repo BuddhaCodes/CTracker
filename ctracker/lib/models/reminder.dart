@@ -1,9 +1,11 @@
+import 'package:ctracker/utils/local_notification_service.dart';
+
 class Reminder {
   final int id;
   final String title;
   final DateTime duedate;
   final String description;
-  final String note;
+  String? note;
   final List<String> categories;
   final List<String> images;
 
@@ -12,7 +14,7 @@ class Reminder {
     required this.title,
     required this.duedate,
     required this.description,
-    required this.note,
+    this.note,
     required this.categories,
     required this.images,
   });
@@ -26,7 +28,7 @@ class ReminderData {
       duedate: DateTime.now(),
       description: 'Description of Task 1',
       note: 'Notes for Task 1',
-      categories: ['Category A'],
+      categories: ['Category B'],
       images: ['Image A'],
     ),
     Reminder(
@@ -38,7 +40,15 @@ class ReminderData {
       categories: ['Category A'],
       images: ['Image A'],
     ),
-    // Add more data as needed
+    Reminder(
+      id: 3,
+      title: 'Notes for Task 3',
+      duedate: DateTime.now().add(const Duration(days: 1)),
+      description: 'Description of Task 3',
+      note: 'Notes for Task 3',
+      categories: ['Category A'],
+      images: ['Image A'],
+    ),
   ];
 
   static List<Reminder> getAllReminders() {
@@ -47,5 +57,14 @@ class ReminderData {
 
   static void delete(int id) {
     _data.removeWhere((element) => element.id == id);
+  }
+
+  static Reminder getById(int id) {
+    return _data.firstWhere((element) => element.id == id);
+  }
+
+  static void addReminder(Reminder reminder) {
+    ReminderService.scheduleNotification(reminder);
+    _data.add(reminder);
   }
 }

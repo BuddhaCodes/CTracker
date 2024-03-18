@@ -1,4 +1,7 @@
-class Task {
+import 'package:ctracker/models/inotable.dart';
+import 'package:ctracker/models/note.dart';
+
+class Task extends INotable {
   final int id;
   final String title;
   final String difficulty;
@@ -8,9 +11,11 @@ class Task {
   final String project;
   final String description;
   final List<String> images;
-  final String note;
+  bool hasFinished;
+  Duration timeSpend;
 
-  Task({
+  Task(
+    super.note, {
     required this.id,
     required this.title,
     required this.difficulty,
@@ -20,35 +25,53 @@ class Task {
     required this.project,
     required this.description,
     required this.images,
-    required this.note,
+    required this.hasFinished,
+    required this.timeSpend,
   });
 }
 
 class TaskData {
   static final List<Task> _data = [
     Task(
+        [
+          Note(
+              id: 1,
+              board: "Notes",
+              content: "This is an important note",
+              title: "Important",
+              createdTime: DateTime.now())
+        ],
         id: 1,
-        title: 'Notes for Task 1',
-        difficulty: 'Task 1',
-        priority: 'Priority A',
-        effort: 'Description of Task 1',
-        categories: ['Category 1'],
+        title: 'This is Task 1',
+        difficulty: 'Easy',
+        priority: '10',
+        effort: '\u{1F4AA} I can handle it with a bit of effort \u{1F4AA}',
+        categories: ['Category A'],
         description: 'Description A',
-        project: 'Project A',
+        project: 'Projects A',
         images: ['Image A', 'Image B'],
-        note: 'Note A'),
+        hasFinished: false,
+        timeSpend: Duration.zero),
     Task(
+        [
+          Note(
+              id: 2,
+              board: "Notes",
+              content: "This is another important note",
+              title: "Another Important",
+              createdTime: DateTime.now().add(const Duration(minutes: 10)))
+        ],
         id: 2,
-        title: 'Notes for Task 2',
-        difficulty: 'Task 2',
-        priority: 'Priority B',
-        effort: 'Description of Task 2',
-        categories: ['Category 2'],
+        title: 'This is Task 2',
+        difficulty: 'Hard',
+        priority: '8',
+        effort: '\u{26A1} I will have to summon the powers of Odin \u{26A1}',
+        categories: ['Category B'],
         description: 'Description B',
         project: 'Project A',
         images: ['Image A', 'Image B'],
-        note: 'Note A'),
-    // Add more data as needed
+        hasFinished: false,
+        timeSpend: Duration.zero),
   ];
 
   static List<Task> getAllTasks() {
@@ -57,5 +80,13 @@ class TaskData {
 
   static void delete(int id) {
     _data.removeWhere((element) => element.id == id);
+  }
+
+  static Task getById(int id) {
+    return _data.firstWhere((element) => element.id == id);
+  }
+
+  static void addTask(Task task) {
+    return _data.add(task);
   }
 }

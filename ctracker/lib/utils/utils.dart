@@ -1,9 +1,13 @@
-import 'package:ctracker/constant/color.dart';
-import 'package:ctracker/constant/values.dart';
-import 'package:flutter/material.dart';
+import 'dart:io';
+import 'dart:typed_data';
 
-/*Utils clase para tener los métodos que generan 
-Widgets no asociados a una clase o funciones del sistema*/
+import 'package:ctracker/constant/color.dart';
+import 'package:ctracker/constant/icons.dart';
+import 'package:ctracker/constant/values.dart';
+import 'package:ctracker/models/reminder.dart';
+import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class Utils {
   //Gesture Detector para cerrar el drawer
@@ -18,7 +22,7 @@ class Utils {
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.keyboard_arrow_left, color: Colors.white),
+            Icon(Icons.keyboard_arrow_left, color: ColorConst.white),
           ],
         ),
       ),
@@ -53,13 +57,46 @@ class Utils {
     );
   }
 
-  //Crear celda
+  static Color getColorFromIcon(String icon) {
+    switch (icon) {
+      case IconlyC.sad:
+        return ColorConst.sadColor;
+      case IconlyC.crying:
+        return ColorConst.cryingColor;
+      case IconlyC.coughing:
+        return ColorConst.coughingColor;
+      case IconlyC.calm:
+        return ColorConst.calmColor;
+      case IconlyC.happy:
+        return ColorConst.happyColor;
+      case IconlyC.angry:
+        return ColorConst.angryColor;
+      default:
+        return ColorConst.white;
+    }
+  }
+
+  static bool isToday(DateTime dateToCheck) {
+    DateTime today = DateTime.now();
+    if (dateToCheck.year == today.year &&
+        dateToCheck.month == today.month &&
+        dateToCheck.day == today.day) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  bool isInCurrentMonth(DateTime date) {
+    DateTime today = DateTime.now();
+    return date.year == today.year && date.month == today.month;
+  }
+
   static DataCell buildCell(String item) {
     return DataCell(
         Text(item, style: const TextStyle(color: ColorConst.textColor)));
   }
 
-  //Crear columna
   static DataColumn buildColumn(String item, {Function(int, bool)? onSort}) {
     return DataColumn(
         label: Text(item, style: const TextStyle(color: ColorConst.textColor)),
@@ -78,5 +115,46 @@ class Utils {
       icon: const Icon(Icons.edit, color: ColorConst.update),
       onPressed: onPressed,
     );
+  }
+
+  static IconButton detailsIcon({Function()? onPressed}) {
+    return IconButton(
+        onPressed: onPressed,
+        icon: const Icon(
+          Icons.visibility,
+          color: ColorConst.buttonColor,
+        ));
+  }
+
+  // Function to check if the file is an image (you may extend this for other file types)
+  static bool _isImageFile(String fileName) {
+    final imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp'];
+    return imageExtensions
+        .any((extension) => fileName.toLowerCase().endsWith(extension));
+  }
+
+  static Future<void> _saveImageToFolder(
+      Uint8List bytes, String fileName) async {
+    Directory directory = await getApplicationDocumentsDirectory();
+
+    File destinationFile = File('${directory.path}/$fileName');
+    await destinationFile.writeAsBytes(bytes);
+  }
+
+  static int getDueRemindersCount() {
+    DateTime now = DateTime.now();
+    return ReminderData.getAllReminders()
+        .where((reminder) =>
+            reminder.duedate.year == now.year &&
+            reminder.duedate.month == now.month &&
+            reminder.duedate.day == now.day)
+        .length;
+  }
+
+  static Future<void> checkNotificationPermission() async {
+    PermissionStatus status = await Permission.notification.status;
+    if (!status.isGranted) {
+      await Permission.notification.request();
+    }
   }
 }

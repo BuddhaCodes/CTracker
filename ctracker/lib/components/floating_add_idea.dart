@@ -1,12 +1,12 @@
-import 'package:ctracker/components/dialog.dart';
+import 'package:ctracker/components/idea_dialog.dart';
 import 'package:ctracker/constant/color.dart';
 import 'package:ctracker/utils/localization.dart';
 import 'package:flutter/material.dart';
 
-class FloatingAdd extends StatelessWidget {
-  final Function(bool) onTaskAdded;
+class FloatingAddIdea extends StatelessWidget {
+  final Function(bool) onIdeaAdded;
 
-  const FloatingAdd({super.key, required this.onTaskAdded});
+  const FloatingAddIdea({super.key, required this.onIdeaAdded});
 
   @override
   Widget build(BuildContext context) {
@@ -16,8 +16,8 @@ class FloatingAdd extends StatelessWidget {
         showDialog(
           context: context,
           builder: (BuildContext context) {
-            return AddDialog(
-              onTaskAdded: onTaskAdded,
+            return AddIdeaDialog(
+              onIdeaAdded: onIdeaAdded,
             );
           },
         );
