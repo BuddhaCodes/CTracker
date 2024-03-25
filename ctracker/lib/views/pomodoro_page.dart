@@ -3,12 +3,14 @@ import 'package:appflowy_board/appflowy_board.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:ctracker/components/note_board.dart';
 import 'package:ctracker/constant/color.dart';
+import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/constant/icons.dart';
 import 'package:ctracker/constant/values.dart';
 import 'package:ctracker/models/task.dart';
 import 'package:ctracker/utils/localization.dart';
 import 'package:ctracker/utils/text_item.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 
@@ -42,7 +44,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
   late int remainingLongRestTime;
 
   late DateTime startTime;
-
+  late QuillController _controller;
   bool shouldUpdateElapsedTime = false;
   bool isWorkTimerRunning = false;
   bool isShortRestTimerRunning = false;
@@ -68,7 +70,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
     workTime = ValuesConst.workingMinutes;
     shortRestTime = ValuesConst.shortRestMinutes;
     longRestTime = ValuesConst.longRestMinutes;
-
+    _controller = QuillController.basic();
     Future.delayed(const Duration(seconds: 2), () {
       setState(() {
         _taskProjects = TaskData.getAllTasks()
@@ -238,23 +240,34 @@ class _PomodoroScreenState extends State<PomodoroScreen>
   Widget build(BuildContext context) {
     final localizations = MyLocalizations.of(context);
     if (!_isInitialized) {
-      return const Center(
-        child: CircularProgressIndicator(),
+      return const Scaffold(
+        backgroundColor: ColorP.background,
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
       );
     }
 
     if (_taskProjects.isEmpty) {
-      return Center(
-        child: Text(
-          localizations.translate("noTask"),
-          style: const TextStyle(color: ColorConst.textColor, fontSize: 34),
+      return Scaffold(
+        backgroundColor: ColorP.background,
+        body: Center(
+          child: Text(
+            localizations.translate("noTask"),
+            style: const TextStyle(color: ColorP.textColor, fontSize: 34),
+          ),
         ),
       );
     }
 
     return Scaffold(
+      backgroundColor: ColorP.background,
       appBar: AppBar(
+        backgroundColor: ColorP.background,
         bottom: TabBar(
+          labelColor: ColorP.textColor,
+          indicatorColor: ColorP.ColorB,
+          unselectedLabelColor: ColorP.textColor,
           controller: _tabController,
           tabs: [
             Tab(
@@ -264,7 +277,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                 width: 36,
                 height: 36,
                 colorFilter:
-                    const ColorFilter.mode(ColorConst.black, BlendMode.srcIn),
+                    const ColorFilter.mode(ColorP.textColor, BlendMode.srcIn),
               ),
             ),
             Tab(
@@ -274,7 +287,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                 width: 36,
                 height: 36,
                 colorFilter:
-                    const ColorFilter.mode(ColorConst.black, BlendMode.srcIn),
+                    const ColorFilter.mode(ColorP.textColor, BlendMode.srcIn),
               ),
             ),
             Tab(
@@ -284,7 +297,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                 width: 36,
                 height: 36,
                 colorFilter:
-                    const ColorFilter.mode(ColorConst.black, BlendMode.srcIn),
+                    const ColorFilter.mode(ColorP.textColor, BlendMode.srcIn),
               ),
             ),
           ],
@@ -305,7 +318,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
             child: LayoutBuilder(
               builder: (BuildContext context, BoxConstraints constraints) {
                 return Wrap(
@@ -319,11 +332,11 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                       "${localizations.translate("timeDedicated")} ${_taskProject.timeSpend.toString().split('.').first.padLeft(8, "0")}",
                       style: const TextStyle(
                         fontSize: 24,
-                        color: ColorConst.textColor,
+                        color: ColorP.textColor,
                       ),
                     ),
                     Text(
-                      _taskProject.effort,
+                      _taskProject.effort.name,
                       style: const TextStyle(
                         fontSize: 24,
                       ),
@@ -360,70 +373,87 @@ class _PomodoroScreenState extends State<PomodoroScreen>
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: SizedBox(
-                  width: 400,
-                  child: DropdownButtonFormField(
-                    value: _taskProject,
-                    onChanged: isTimerRunning()
-                        ? null
-                        : (newValue) {
-                            setState(() {
-                              _taskProject = newValue as Task;
-                              controller.clear();
-                              initializeAppFlowyBoard();
-                              resetTimers();
-                            });
-                          },
-                    items: _taskProjects.map<DropdownMenuItem<Task>>(
-                      (Task value) {
-                        return DropdownMenuItem<Task>(
-                          value: value,
-                          child: Text(
-                            value.title,
-                            style: const TextStyle(
-                              color: ColorConst.textColor,
+                  width: MediaQuery.of(context).size.width - 135,
+                  child: Theme(
+                    data: Theme.of(context).copyWith(
+                      canvasColor: ColorP.cardBackground,
+                    ),
+                    child: DropdownButtonFormField(
+                      value: _taskProject,
+                      borderRadius: BorderRadius.circular(20.0),
+                      iconEnabledColor: ColorP.textColor,
+                      onChanged: isTimerRunning()
+                          ? null
+                          : (newValue) {
+                              setState(() {
+                                _taskProject = newValue as Task;
+                                controller.clear();
+                                initializeAppFlowyBoard();
+                                resetTimers();
+                              });
+                            },
+                      items: _taskProjects.map<DropdownMenuItem<Task>>(
+                        (Task value) {
+                          return DropdownMenuItem<Task>(
+                            value: value,
+                            child: Text(
+                              value.title,
+                              style: const TextStyle(
+                                color: ColorP.textColor,
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ).toList(),
-                    decoration: InputDecoration(
-                      labelText: localizations.translate("taskHintTitle"),
-                      border: const OutlineInputBorder(),
+                          );
+                        },
+                      ).toList(),
+                      decoration: InputDecoration(
+                        labelText: localizations.translate("taskHintTitle"),
+                        border: const OutlineInputBorder(),
+                        iconColor: ColorP.textColor,
+                        labelStyle: const TextStyle(color: ColorP.textColor),
+                        filled: true,
+                        fillColor: ColorP.cardBackground,
+                        focusedBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(25.0)),
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _taskProject.hasFinished = true;
-                      controller.clear();
-                      _taskProjects = TaskData.getAllTasks()
-                          .where((element) => element.hasFinished == false)
-                          .toList();
-                      if (_taskProjects.isNotEmpty) {
-                        _taskProject = _taskProjects.first;
-                      }
-                      initializeAppFlowyBoard();
-                    });
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ColorConst.buttonColor,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 22, vertical: 22),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                          ValuesConst.buttonBorderRadius / 2),
+                child: SizedBox(
+                  width: 100,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _taskProject.hasFinished = true;
+                        controller.clear();
+                        _taskProjects = TaskData.getAllTasks()
+                            .where((element) => element.hasFinished == false)
+                            .toList();
+                        if (_taskProjects.isNotEmpty) {
+                          _taskProject = _taskProjects.first;
+                        }
+                        initializeAppFlowyBoard();
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ColorP.ColorD,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 22, vertical: 22),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                            ValuesConst.buttonBorderRadius / 2),
+                      ),
+                      elevation: 5,
                     ),
-                    elevation: 5,
-                  ),
-                  child: Text(
-                    localizations.translate("ended"),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: ColorConst.contrastedTextColor,
+                    child: Text(
+                      localizations.translate("ended"),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: ColorP.textColor,
+                      ),
                     ),
                   ),
                 ),
@@ -437,80 +467,58 @@ class _PomodoroScreenState extends State<PomodoroScreen>
               child: Stack(
                 children: [
                   SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.7,
+                    width: MediaQuery.of(context).size.width * 0.95,
                     child: Card.filled(
                       elevation: 2,
-                      color: const Color.fromARGB(255, 255, 255, 255),
+                      color: ColorP.cardBackground,
                       child: SizedBox(
-                        height: ValuesConst.noteBoardContainer,
-                        child: Padding(
-                          padding: const EdgeInsets.all(15.0),
-                          child: NoteBoard(
-                            task: _taskProject,
-                            controller: controller,
-                          ),
+                        height: 600,
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: QuillToolbar.simple(
+                                configurations:
+                                    QuillSimpleToolbarConfigurations(
+                                  controller: _controller,
+                                  showLink: true,
+                                  showSearchButton: false,
+                                  showCodeBlock: false,
+                                  showInlineCode: false,
+                                  showAlignmentButtons: false,
+                                  showIndent: false,
+                                  showSubscript: false,
+                                  showSuperscript: false,
+                                  showQuote: false,
+                                  showStrikeThrough: false,
+                                  showUnderLineButton: true,
+                                  showClearFormat: false,
+                                  color: ColorP.textColor,
+                                  sharedConfigurations:
+                                      const QuillSharedConfigurations(
+                                    locale: Locale('en'),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const Divider(),
+                            SizedBox(
+                              height: 300,
+                              child: QuillEditor.basic(
+                                configurations: QuillEditorConfigurations(
+                                  controller: _controller,
+                                  readOnly: false,
+                                  minHeight: 300,
+                                  padding: const EdgeInsets.all(20),
+                                  sharedConfigurations:
+                                      const QuillSharedConfigurations(
+                                    locale: Locale('en'),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 16.0,
-                    right: 16.0,
-                    child: FloatingActionButton(
-                      onPressed: _taskProjects.isEmpty
-                          ? null
-                          : () {
-                              String title = '';
-                              showModalBottomSheet(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return Padding(
-                                    padding: const EdgeInsets.all(20.0),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: <Widget>[
-                                        TextField(
-                                          decoration: InputDecoration(
-                                              labelText: localizations
-                                                  .translate("title")),
-                                          onChanged: (value) {
-                                            title = value;
-                                          },
-                                        ),
-                                        const SizedBox(
-                                            height:
-                                                ValuesConst.boxSeparatorSize),
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            if (title.isNotEmpty) {
-                                              final group = AppFlowyGroupData(
-                                                  id: title,
-                                                  name: title,
-                                                  items: []);
-                                              setState(() {
-                                                controller.addGroup(group);
-                                                Navigator.pop(context);
-                                              });
-                                            }
-                                          },
-                                          child: Text(
-                                              localizations.translate("add")),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              );
-                            },
-                      shape: const CircleBorder(),
-                      tooltip: localizations.translate("add"),
-                      hoverColor: ColorConst.buttonColor,
-                      backgroundColor: ColorConst.buttonHoverColor,
-                      child: const Icon(
-                        Icons.add,
-                        color: ColorConst.white,
                       ),
                     ),
                   ),
@@ -545,7 +553,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                       ? null
                       : startWorkTimer,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: ColorConst.buttonColor,
+                    backgroundColor: ColorP.ColorD,
                     padding: EdgeInsets.symmetric(
                         horizontal: ValuesConst.pomodoroButtonPaddingH,
                         vertical: ValuesConst.pomodoroButtonPaddingV),
@@ -559,14 +567,14 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                     localizations.translate("start"),
                     style: TextStyle(
                         fontSize: ValuesConst.buttonFontSize,
-                        color: ColorConst.contrastedTextColor),
+                        color: ColorP.textColor),
                   )),
               ElevatedButton(
                 onPressed: (isWorkTimerRunning && _taskProjects.isNotEmpty)
                     ? stopWorkTimer
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: ColorConst.buttonColor,
+                  backgroundColor: ColorP.ColorD,
                   padding: EdgeInsets.symmetric(
                       horizontal: ValuesConst.pomodoroButtonPaddingH,
                       vertical: ValuesConst.pomodoroButtonPaddingV),
@@ -580,13 +588,13 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                   localizations.translate("stop"),
                   style: TextStyle(
                       fontSize: ValuesConst.buttonFontSize,
-                      color: ColorConst.contrastedTextColor),
+                      color: ColorP.textColor),
                 ),
               ),
               ElevatedButton(
                 onPressed: _taskProjects.isNotEmpty ? resetTimers : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: ColorConst.buttonColor,
+                  backgroundColor: ColorP.ColorD,
                   padding: EdgeInsets.symmetric(
                       horizontal: ValuesConst.pomodoroButtonPaddingH,
                       vertical: ValuesConst.pomodoroButtonPaddingV),
@@ -600,7 +608,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                   localizations.translate("reset"),
                   style: TextStyle(
                       fontSize: ValuesConst.buttonFontSize,
-                      color: ColorConst.contrastedTextColor),
+                      color: ColorP.textColorSubtitle),
                 ),
               ),
             ],

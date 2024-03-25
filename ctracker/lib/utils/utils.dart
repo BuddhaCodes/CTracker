@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:ctracker/constant/color.dart';
+import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/constant/icons.dart';
 import 'package:ctracker/constant/values.dart';
 import 'package:ctracker/models/reminder.dart';
@@ -17,19 +17,18 @@ class Utils {
         Navigator.pop(context);
       },
       child: Container(
-        color: ColorConst.background,
+        color: ColorP.background,
         padding: const EdgeInsets.symmetric(vertical: 20),
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.keyboard_arrow_left, color: ColorConst.white),
+            Icon(Icons.keyboard_arrow_left, color: ColorP.white),
           ],
         ),
       ),
     );
   }
 
-  //Construir elemento del drawer
   static Widget buildListTile({
     required String title,
     required String icon,
@@ -41,10 +40,10 @@ class Utils {
           horizontal: ValuesConst.tilePaddingHorizontal,
           vertical: ValuesConst.tilePaddingVertical),
       child: ListTile(
-        selectedColor: ColorConst.textColor,
+        selectedColor: ColorP.ColorC,
         title: Text(
           title,
-          selectionColor: ColorConst.textColor,
+          selectionColor: ColorP.ColorC,
         ),
         leading: SizedBox(
           height: ValuesConst.tileSeparatorSize,
@@ -60,19 +59,19 @@ class Utils {
   static Color getColorFromIcon(String icon) {
     switch (icon) {
       case IconlyC.sad:
-        return ColorConst.sadColor;
+        return ColorP.sadColor;
       case IconlyC.crying:
-        return ColorConst.cryingColor;
+        return ColorP.cryingColor;
       case IconlyC.coughing:
-        return ColorConst.coughingColor;
+        return ColorP.coughingColor;
       case IconlyC.calm:
-        return ColorConst.calmColor;
+        return ColorP.calmColor;
       case IconlyC.happy:
-        return ColorConst.happyColor;
+        return ColorP.happyColor;
       case IconlyC.angry:
-        return ColorConst.angryColor;
+        return ColorP.angryColor;
       default:
-        return ColorConst.white;
+        return ColorP.white;
     }
   }
 
@@ -92,27 +91,49 @@ class Utils {
     return date.year == today.year && date.month == today.month;
   }
 
-  static DataCell buildCell(String item) {
-    return DataCell(
-        Text(item, style: const TextStyle(color: ColorConst.textColor)));
+  static DataCell buildCell(String item, [Color? color, bool bold = false]) {
+    return DataCell(Container(
+      padding: bold
+          ? const EdgeInsets.symmetric(vertical: 2.0, horizontal: 6)
+          : null,
+      decoration: bold
+          ? BoxDecoration(
+              borderRadius: BorderRadius.circular(40),
+              border: Border.all(
+                color: color ?? ColorP.textColor, // border color
+                width: 2.0, // border width
+              ),
+            )
+          : null,
+      child: Text(item,
+          style: TextStyle(
+            color: color ?? ColorP.textColor,
+            fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+            fontSize: bold ? 24 : 16,
+          )),
+    ));
   }
 
   static DataColumn buildColumn(String item, {Function(int, bool)? onSort}) {
     return DataColumn(
-        label: Text(item, style: const TextStyle(color: ColorConst.textColor)),
+        label: Text(item,
+            style: const TextStyle(
+                color: ColorP.textColor,
+                fontSize: 18,
+                fontWeight: FontWeight.bold)),
         onSort: onSort);
   }
 
   static IconButton deleteIcon({Function()? onPressed}) {
     return IconButton(
-      icon: const Icon(Icons.delete, color: ColorConst.delete),
+      icon: const Icon(Icons.delete, color: ColorP.ColorD),
       onPressed: onPressed,
     );
   }
 
   static IconButton updateIcon({Function()? onPressed}) {
     return IconButton(
-      icon: const Icon(Icons.edit, color: ColorConst.update),
+      icon: const Icon(Icons.edit, color: ColorP.ColorB),
       onPressed: onPressed,
     );
   }
@@ -122,7 +143,7 @@ class Utils {
         onPressed: onPressed,
         icon: const Icon(
           Icons.visibility,
-          color: ColorConst.buttonColor,
+          color: ColorP.buttonColor,
         ));
   }
 
@@ -143,12 +164,7 @@ class Utils {
 
   static int getDueRemindersCount() {
     DateTime now = DateTime.now();
-    return ReminderData.getAllReminders()
-        .where((reminder) =>
-            reminder.duedate.year == now.year &&
-            reminder.duedate.month == now.month &&
-            reminder.duedate.day == now.day)
-        .length;
+    return ReminderData.getAllOfToday().length;
   }
 
   static Future<void> checkNotificationPermission() async {

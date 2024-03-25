@@ -4,6 +4,7 @@ import 'package:appflowy_board/appflowy_board.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:ctracker/components/note_board.dart';
 import 'package:ctracker/constant/color.dart';
+import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/constant/icons.dart';
 import 'package:ctracker/constant/values.dart';
 import 'package:ctracker/models/action_items.dart';
@@ -233,7 +234,7 @@ class _MeetingDetailsPageState extends State<MeetingDetailsPage>
                 width: 36,
                 height: 36,
                 colorFilter:
-                    const ColorFilter.mode(ColorConst.black, BlendMode.srcIn),
+                    const ColorFilter.mode(ColorP.ColorC, BlendMode.srcIn),
               ),
             ),
             Tab(
@@ -243,7 +244,7 @@ class _MeetingDetailsPageState extends State<MeetingDetailsPage>
                 width: 36,
                 height: 36,
                 colorFilter:
-                    const ColorFilter.mode(ColorConst.black, BlendMode.srcIn),
+                    const ColorFilter.mode(ColorP.ColorC, BlendMode.srcIn),
               ),
             ),
             Tab(
@@ -253,7 +254,7 @@ class _MeetingDetailsPageState extends State<MeetingDetailsPage>
                 width: 36,
                 height: 36,
                 colorFilter:
-                    const ColorFilter.mode(ColorConst.black, BlendMode.srcIn),
+                    const ColorFilter.mode(ColorP.ColorC, BlendMode.srcIn),
               ),
             ),
           ],
@@ -283,7 +284,7 @@ class _MeetingDetailsPageState extends State<MeetingDetailsPage>
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: ColorConst.textColor,
+                      color: ColorP.textColor,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -331,7 +332,7 @@ class _MeetingDetailsPageState extends State<MeetingDetailsPage>
         Center(
           child: Text(
             localizations.translate("noTask"),
-            style: const TextStyle(color: ColorConst.textColor, fontSize: 34),
+            style: const TextStyle(color: ColorP.textColor, fontSize: 34),
           ),
         ),
       ],
@@ -358,7 +359,7 @@ class _MeetingDetailsPageState extends State<MeetingDetailsPage>
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: ColorConst.textColor,
+                        color: ColorP.textColor,
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -458,7 +459,7 @@ class _MeetingDetailsPageState extends State<MeetingDetailsPage>
                 return DropdownMenuItem<ActionItem>(
                   value: value,
                   child: Text(value.title,
-                      style: const TextStyle(color: ColorConst.textColor)),
+                      style: const TextStyle(color: ColorP.textColor)),
                 );
               }).toList(),
               decoration: InputDecoration(
@@ -485,7 +486,7 @@ class _MeetingDetailsPageState extends State<MeetingDetailsPage>
               });
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: ColorConst.buttonColor,
+              backgroundColor: ColorP.buttonColor,
               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
               shape: RoundedRectangleBorder(
                 borderRadius:
@@ -497,7 +498,7 @@ class _MeetingDetailsPageState extends State<MeetingDetailsPage>
               localizations.translate("ended"),
               style: const TextStyle(
                 fontSize: 14,
-                color: ColorConst.contrastedTextColor,
+                color: ColorP.white,
               ),
             ),
           ),
@@ -544,7 +545,9 @@ class _MeetingDetailsPageState extends State<MeetingDetailsPage>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           TextField(
+                            style: const TextStyle(color: ColorP.ColorC),
                             decoration: InputDecoration(
+                                labelStyle: TextStyle(color: ColorP.ColorC),
                                 labelText: localizations.translate("title")),
                             onChanged: (value) {
                               title = value;
@@ -572,11 +575,11 @@ class _MeetingDetailsPageState extends State<MeetingDetailsPage>
               },
               shape: const CircleBorder(),
               tooltip: localizations.translate("add"),
-              hoverColor: ColorConst.buttonColor,
-              backgroundColor: ColorConst.buttonHoverColor,
+              hoverColor: ColorP.buttonColor,
+              backgroundColor: ColorP.buttonHoverColor,
               child: const Icon(
                 Icons.add,
-                color: ColorConst.white,
+                color: ColorP.white,
               ),
             ),
           ),
@@ -605,7 +608,7 @@ class _MeetingDetailsPageState extends State<MeetingDetailsPage>
               ElevatedButton(
                   onPressed: isWorkTimerRunning ? null : startWorkTimer,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: ColorConst.buttonColor,
+                    backgroundColor: ColorP.buttonColor,
                     padding: EdgeInsets.symmetric(
                         horizontal: ValuesConst.pomodoroButtonPaddingH,
                         vertical: ValuesConst.pomodoroButtonPaddingV),
@@ -619,12 +622,12 @@ class _MeetingDetailsPageState extends State<MeetingDetailsPage>
                     localizations.translate("start"),
                     style: TextStyle(
                         fontSize: ValuesConst.buttonFontSize,
-                        color: ColorConst.contrastedTextColor),
+                        color: ColorP.white),
                   )),
               ElevatedButton(
                 onPressed: isWorkTimerRunning ? stopWorkTimer : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: ColorConst.buttonColor,
+                  backgroundColor: ColorP.buttonColor,
                   padding: EdgeInsets.symmetric(
                       horizontal: ValuesConst.pomodoroButtonPaddingH,
                       vertical:
@@ -639,13 +642,13 @@ class _MeetingDetailsPageState extends State<MeetingDetailsPage>
                   localizations.translate("stop"),
                   style: TextStyle(
                       fontSize: ValuesConst.buttonFontSize,
-                      color: ColorConst.contrastedTextColor),
+                      color: ColorP.white),
                 ),
               ),
               ElevatedButton(
                 onPressed: resetTimers,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: ColorConst.buttonColor,
+                  backgroundColor: ColorP.buttonColor,
                   padding: EdgeInsets.symmetric(
                       horizontal: ValuesConst.pomodoroButtonPaddingH,
                       vertical: ValuesConst.pomodoroButtonPaddingV),
@@ -659,7 +662,7 @@ class _MeetingDetailsPageState extends State<MeetingDetailsPage>
                   localizations.translate("reset"),
                   style: TextStyle(
                       fontSize: ValuesConst.buttonFontSize,
-                      color: ColorConst.contrastedTextColor),
+                      color: ColorP.textColor),
                 ),
               ),
             ],

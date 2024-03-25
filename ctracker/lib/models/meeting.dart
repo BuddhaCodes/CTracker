@@ -1,11 +1,14 @@
 import 'package:ctracker/models/action_items.dart';
 import 'package:ctracker/models/note.dart';
+import 'package:ctracker/models/participants.dart';
 
 class Meeting {
   final int id;
   final String title;
-  List<String> participants;
+  List<Participant> participants;
   final String content;
+  DateTime duedate;
+  Duration meetingDuration;
   List<ActionItem> actions;
 
   Meeting({
@@ -13,6 +16,8 @@ class Meeting {
     required this.title,
     required this.participants,
     required this.content,
+    required this.duedate,
+    required this.meetingDuration,
     required this.actions,
   });
 }
@@ -22,7 +27,7 @@ class MeetingData {
     Meeting(
         id: 1,
         title: 'Meeting one',
-        participants: ['Julio', 'Miguel'],
+        participants: ParticipantsData.getAllItemType().take(2).toList(),
         content: 'Description of Meeting 1',
         actions: [
           ActionItem(id: 1, title: "Do shit", [
@@ -41,11 +46,13 @@ class MeetingData {
                 title: "Title",
                 createdTime: DateTime.now())
           ])
-        ]),
+        ],
+        meetingDuration: const Duration(hours: 1),
+        duedate: DateTime.now()),
     Meeting(
         id: 2,
         title: 'Meeting two',
-        participants: ['Julio'],
+        participants: ParticipantsData.getAllItemType().take(1).toList(),
         content: 'Description of Meeting 2',
         actions: [
           ActionItem(id: 1, title: "Do shit part II", [
@@ -64,11 +71,31 @@ class MeetingData {
                 title: "Title",
                 createdTime: DateTime.now())
           ])
-        ]),
+        ],
+        meetingDuration: const Duration(hours: 2),
+        duedate: DateTime.now().add(Duration(hours: 1))),
   ];
 
   static List<Meeting> getAllMeetings() {
     return _data;
+  }
+
+  static List<Meeting> getAllMeetingsByMonthAndYear(int month, int year) {
+    return _data
+        .where((element) =>
+            element.duedate.month == month && element.duedate.year == year)
+        .toList();
+  }
+
+  static void update(Meeting meeting) {
+    int index = _data.indexWhere((element) => element.id == meeting.id);
+
+    // If the reminder with the given ID is found, update its properties
+    if (index != -1) {
+      _data[index] = meeting;
+    } else {
+      print('Reminder with ID ${meeting.id} not found');
+    }
   }
 
   static void delete(int id) {

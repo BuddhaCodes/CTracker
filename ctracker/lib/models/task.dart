@@ -1,3 +1,4 @@
+import 'package:ctracker/models/effort.dart';
 import 'package:ctracker/models/inotable.dart';
 import 'package:ctracker/models/note.dart';
 
@@ -6,8 +7,8 @@ class Task extends INotable {
   final String title;
   final String difficulty;
   final String priority;
-  final String effort;
-  final List<String> categories;
+  final Effort effort;
+  final String category;
   final String project;
   final String description;
   final List<String> images;
@@ -21,7 +22,7 @@ class Task extends INotable {
     required this.difficulty,
     required this.priority,
     required this.effort,
-    required this.categories,
+    required this.category,
     required this.project,
     required this.description,
     required this.images,
@@ -45,8 +46,8 @@ class TaskData {
         title: 'This is Task 1',
         difficulty: 'Easy',
         priority: '10',
-        effort: '\u{1F4AA} I can handle it with a bit of effort \u{1F4AA}',
-        categories: ['Category A'],
+        effort: Effort.mucho,
+        category: 'Category A',
         description: 'Description A',
         project: 'Projects A',
         images: ['Image A', 'Image B'],
@@ -65,8 +66,8 @@ class TaskData {
         title: 'This is Task 2',
         difficulty: 'Hard',
         priority: '8',
-        effort: '\u{26A1} I will have to summon the powers of Odin \u{26A1}',
-        categories: ['Category B'],
+        effort: Effort.poco,
+        category: 'Category B',
         description: 'Description B',
         project: 'Project A',
         images: ['Image A', 'Image B'],
@@ -78,8 +79,35 @@ class TaskData {
     return _data;
   }
 
+  static int getTotalTasks() {
+    return _data.length;
+  }
+
+  static int getCompletedTotal() {
+    return getAllTasksCompleted().length;
+  }
+
+  static List<Task> getAllTByEffort(Effort effort) {
+    return _data.where((element) => element.effort == effort).toList();
+  }
+
+  static List<Task> getAllTasksCompleted() {
+    return _data.where((element) => element.hasFinished == true).toList();
+  }
+
   static void delete(int id) {
     _data.removeWhere((element) => element.id == id);
+  }
+
+  static void updateTask(Task task) {
+    int index = _data.indexWhere((element) => element.id == task.id);
+
+    // If the reminder with the given ID is found, update its properties
+    if (index != -1) {
+      _data[index] = task;
+    } else {
+      print('Reminder with ID ${task.id} not found');
+    }
   }
 
   static Task getById(int id) {

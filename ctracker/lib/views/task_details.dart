@@ -2,6 +2,7 @@ import 'package:appflowy_board/appflowy_board.dart';
 import 'package:card_swiper/card_swiper.dart';
 import 'package:ctracker/components/note_board.dart';
 import 'package:ctracker/constant/color.dart';
+import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/constant/values.dart';
 import 'package:ctracker/models/task.dart';
 import 'package:ctracker/utils/localization.dart';
@@ -92,7 +93,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: ColorConst.textColor,
+                        color: ColorP.textColor,
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -105,7 +106,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                         ),
                         const SizedBox(width: 5),
                         Text(
-                          task.categories.join(", "),
+                          task.category,
                           style: const TextStyle(
                             fontSize: 18,
                             color: Colors.grey,
@@ -202,6 +203,8 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                                         children: <Widget>[
                                           TextField(
                                             decoration: InputDecoration(
+                                                labelStyle: const TextStyle(
+                                                    color: ColorP.ColorC),
                                                 labelText: localizations
                                                     .translate("title")),
                                             onChanged: (value) {
@@ -231,10 +234,10 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                                   },
                                 );
                               },
-                              backgroundColor: ColorConst.buttonColor,
+                              backgroundColor: ColorP.buttonColor,
                               child: const Icon(
                                 Icons.add,
-                                color: ColorConst.white,
+                                color: ColorP.white,
                               ),
                             ),
                           ),
@@ -329,6 +332,8 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                                     children: <Widget>[
                                       TextField(
                                         decoration: InputDecoration(
+                                            labelStyle:
+                                                TextStyle(color: ColorP.ColorC),
                                             labelText: localizations
                                                 .translate("title")),
                                         onChanged: (value) {
@@ -357,10 +362,10 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                               },
                             );
                           },
-                          backgroundColor: ColorConst.buttonColor,
+                          backgroundColor: ColorP.buttonColor,
                           child: const Icon(
                             Icons.add,
-                            color: ColorConst.white,
+                            color: ColorP.white,
                           ),
                         ),
                       ),

@@ -1,5 +1,6 @@
 import 'package:calendar_view/calendar_view.dart';
 import 'package:ctracker/constant/color.dart';
+import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/models/reminder.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -86,8 +87,7 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: ColorConst
-                            .textColor, // Using the idea color from the palette
+                        color: ColorP.ColorC,
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -100,7 +100,7 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                         ),
                         const SizedBox(width: 5),
                         Text(
-                          reminder.categories.join(", "),
+                          reminder.categories.name,
                           style: const TextStyle(
                             fontSize: 18,
                             color: Colors.grey,
@@ -174,7 +174,7 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
         ),
         const VerticalDivider(
           thickness: 1,
-          color: ColorConst.borderTable,
+          color: ColorP.textColorSubtitle,
         ),
         Expanded(
           flex: 1,

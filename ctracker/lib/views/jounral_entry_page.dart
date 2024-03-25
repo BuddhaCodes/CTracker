@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:ctracker/constant/color.dart';
+import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/constant/icons.dart';
 import 'package:ctracker/constant/values.dart';
 import 'package:ctracker/models/journal.dart';
@@ -40,13 +41,13 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
           children: [
             Image.asset(
               IconlyC.angry,
-              color: ColorConst.angryColor,
+              color: ColorP.angryColor,
             ),
           ],
         ),
         icon: Image.asset(
           IconlyC.angry,
-          color: ColorConst.angryColor,
+          color: ColorP.angryColor,
         ),
       ),
       Reaction<String>(
@@ -56,13 +57,13 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
           children: [
             Image.asset(
               IconlyC.happy,
-              color: ColorConst.happyColor,
+              color: ColorP.happyColor,
             ),
           ],
         ),
         icon: Image.asset(
           IconlyC.happy,
-          color: ColorConst.happyColor,
+          color: ColorP.happyColor,
         ),
       ),
       Reaction<String>(
@@ -72,13 +73,13 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
           children: [
             Image.asset(
               IconlyC.sad,
-              color: ColorConst.sadColor,
+              color: ColorP.sadColor,
             ),
           ],
         ),
         icon: Image.asset(
           IconlyC.sad,
-          color: ColorConst.sadColor,
+          color: ColorP.sadColor,
         ),
       ),
       Reaction<String>(
@@ -88,13 +89,13 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
           children: [
             Image.asset(
               IconlyC.crying,
-              color: ColorConst.cryingColor,
+              color: ColorP.cryingColor,
             ),
           ],
         ),
         icon: Image.asset(
           IconlyC.crying,
-          color: ColorConst.cryingColor,
+          color: ColorP.cryingColor,
         ),
       ),
       Reaction<String>(
@@ -104,13 +105,13 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
           children: [
             Image.asset(
               IconlyC.coughing,
-              color: ColorConst.coughingColor,
+              color: ColorP.coughingColor,
             ),
           ],
         ),
         icon: Image.asset(
           IconlyC.coughing,
-          color: ColorConst.coughingColor,
+          color: ColorP.coughingColor,
         ),
       ),
       Reaction<String>(
@@ -120,19 +121,19 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
           children: [
             Image.asset(
               IconlyC.calm,
-              color: ColorConst.calmColor,
+              color: ColorP.calmColor,
             ),
           ],
         ),
         icon: Image.asset(
           IconlyC.calm,
-          color: ColorConst.calmColor,
+          color: ColorP.calmColor,
         ),
       )
     ];
 
     if (widget.id == null) {
-      text = "";
+      text = ValuesConst.baseEntry;
       selectedRection = flagsReactions.first.value ?? "";
     } else {
       journalEntry = JournalData.getById(widget.id ?? 0);
@@ -158,6 +159,7 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
     }
 
     return Scaffold(
+      backgroundColor: ColorP.background,
       appBar: AppBar(),
       body: Column(
         children: [
@@ -218,6 +220,8 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(0, 0, 20, 20),
                 child: ElevatedButton(
+                  style: const ButtonStyle(
+                      backgroundColor: MaterialStatePropertyAll(ColorP.ColorD)),
                   onPressed: () {
                     String content =
                         jsonEncode(_controller.document.toDelta().toJson());
@@ -237,7 +241,7 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
                   },
                   child: const Text(
                     'Save',
-                    style: TextStyle(color: ColorConst.textColor),
+                    style: TextStyle(color: ColorP.textColor),
                   ),
                 ),
               ),

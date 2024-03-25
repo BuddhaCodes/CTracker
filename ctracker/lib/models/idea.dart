@@ -1,17 +1,20 @@
+import 'package:ctracker/models/idea_categories.dart';
+import 'package:ctracker/models/tags.dart';
+
 class Idea {
   final int id;
   final String title;
-  List<String> tags;
+  List<Tag> tags;
   final String description;
-  final List<String> images;
-  final String category;
+  final String image;
+  final IdeaCategory category;
 
   Idea({
     required this.id,
     required this.title,
     required this.tags,
     required this.description,
-    required this.images,
+    required this.image,
     required this.category,
   });
 }
@@ -21,20 +24,41 @@ class IdeaData {
     Idea(
       id: 1,
       title: 'Task 1',
-      tags: ['Tag A', 'Tag C'],
-      description: 'Description of Task 1',
-      images: ['feedbackImage.png', 'helpImage.jpg'],
-      category: 'Category A',
+      tags: TagData.getAllItemType().take(2).toList(),
+      description: '',
+      image: 'feedbackImage.png',
+      category: IdeaCategoryData.getAllItemType().take(1).first,
     ),
     Idea(
       id: 2,
       title: 'Task 2',
-      tags: ['Tag B'],
-      description: 'Description of Task 2',
-      images: ['feedbackImage.png', 'helpImage.jpg'],
-      category: 'Category B',
+      tags: TagData.getAllItemType().take(1).toList(),
+      description: '',
+      image: 'helpImage.jpg',
+      category: IdeaCategoryData.getAllItemType().take(1).first,
     ),
   ];
+
+  static List<Idea> getByTags(List<Tag> tags) {
+    List<Idea> filteredIdeas = [];
+    for (var idea in _data) {
+      // Check if all tags of the idea are contained in the provided list
+      if (tags.every((tag) => idea.tags.contains(tag))) {
+        filteredIdeas.add(idea);
+      }
+    }
+    return filteredIdeas;
+  }
+
+  static void upadateIdea(Idea idea) {
+    int index = _data.indexWhere((element) => element.id == idea.id);
+
+    if (index != -1) {
+      _data[index] = idea;
+    } else {
+      print('Reminder with ID ${idea.id} not found');
+    }
+  }
 
   static List<Idea> getAllIdeas() {
     return _data;

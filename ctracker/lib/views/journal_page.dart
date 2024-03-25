@@ -1,14 +1,9 @@
-import 'dart:convert';
-
 import 'package:calendar_view/calendar_view.dart';
-import 'package:ctracker/constant/color.dart';
-import 'package:ctracker/constant/icons.dart';
-import 'package:ctracker/constant/values.dart';
+import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/models/journal.dart';
 import 'package:ctracker/utils/utils.dart';
 import 'package:ctracker/views/jounral_entry_page.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_quill/flutter_quill.dart';
 
 class JournalPage extends StatefulWidget {
   const JournalPage({super.key});
@@ -32,6 +27,7 @@ class _JournalPageState extends State<JournalPage> {
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     return Scaffold(
+      backgroundColor: ColorP.background,
       body: FutureBuilder(
         future: _journalFuture,
         builder:
@@ -59,18 +55,34 @@ class _JournalPageState extends State<JournalPage> {
                       child: SizedBox(
                         width: width * 0.7,
                         child: MonthView(
+                          headerStyle: const HeaderStyle(
+                            decoration: BoxDecoration(
+                              color: ColorP.cardBackground,
+                            ),
+                            leftIcon: Icon(
+                              Icons.arrow_circle_left_outlined,
+                              color: ColorP.textColor,
+                            ),
+                            rightIcon: Icon(
+                              Icons.arrow_circle_right_outlined,
+                              color: ColorP.textColor,
+                            ),
+                          ),
+                          borderColor: ColorP.textColorSubtitle,
                           controller: EventController()..addAll(_events),
                           cellBuilder: (date, events, isToday, isInMonth) {
                             events = events.reversed.toList();
                             return Container(
                               child: events.isEmpty
                                   ? FilledCell(
+                                      highlightColor: ColorP.ColorD,
                                       date: date,
                                       events: events,
+                                      titleColor: ColorP.ColorC,
                                       shouldHighlight: isToday,
                                       backgroundColor: isInMonth
-                                          ? const Color(0xffffffff)
-                                          : const Color(0xfff0f0f0),
+                                          ? ColorP.ColorB
+                                          : ColorP.ColorB.withOpacity(0.8),
                                     )
                                   : Stack(
                                       children: [
@@ -81,8 +93,8 @@ class _JournalPageState extends State<JournalPage> {
                                                 margin: const EdgeInsets.only(
                                                     top: 5.0),
                                                 clipBehavior: Clip.antiAlias,
-                                                decoration:
-                                                    const BoxDecoration(),
+                                                decoration: const BoxDecoration(
+                                                    color: ColorP.ColorB),
                                                 child: SingleChildScrollView(
                                                   physics:
                                                       const BouncingScrollPhysics(),
@@ -164,10 +176,12 @@ class _JournalPageState extends State<JournalPage> {
                                           bottom: 5.0,
                                           right: 5.0,
                                           child: SizedBox(
-                                            width: 24,
-                                            height: 24,
+                                            width: 30,
+                                            height: 30,
                                             child: FloatingActionButton(
-                                              elevation: 0,
+                                              backgroundColor: ColorP.ColorD,
+                                              foregroundColor: ColorP.textColor,
+                                              elevation: 1,
                                               onPressed: () {
                                                 Navigator.push(
                                                   context,

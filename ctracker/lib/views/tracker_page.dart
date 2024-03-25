@@ -1,19 +1,11 @@
-import 'package:ctracker/components/dialog.dart';
-import 'package:ctracker/components/floating_add.dart';
-import 'package:ctracker/components/top_container.dart';
-import 'package:ctracker/constant/color.dart';
-import 'package:ctracker/constant/values.dart';
-import 'package:ctracker/models/item_types.dart';
-import 'package:ctracker/models/reminder.dart';
+import 'package:ctracker/components/circular_graph_painter.dart';
+import 'package:ctracker/components/menu_item.dart';
+import 'package:ctracker/components/task_card.dart';
+import 'package:ctracker/constant/color_palette.dart';
+import 'package:ctracker/models/effort.dart';
 import 'package:ctracker/models/task.dart';
-import 'package:ctracker/utils/localization.dart';
-import 'package:ctracker/utils/utils.dart';
-import 'package:ctracker/views/reminder_details.dart';
-import 'package:ctracker/views/task_details.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:ctracker/views/task_add_page.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:intl/intl.dart';
 
 class TrackerPage extends StatefulWidget {
   final Function onReminderDeleted;
@@ -24,164 +16,227 @@ class TrackerPage extends StatefulWidget {
 }
 
 class _TrackerPageState extends State<TrackerPage> {
-  bool _sortAscendingtask = true;
-  int _sortColumnIndextaks = 0;
+  int _selectedIndex = 0;
+  late List<Task> tasks;
+  int selectedTile = -1;
+  late bool isInitialized = false;
+  late int totalTaks;
+  late int completedTasks;
+  void _onMenuItemClicked(int index) {
+    setState(() {
+      _selectedIndex = index;
+      selectedTile = -1;
+      if (_selectedIndex == 0) {
+        tasks = TaskData.getAllTasks();
+      }
+      if (_selectedIndex == 1) {
+        tasks = TaskData.getAllTasksCompleted();
+      }
+      if (_selectedIndex == 2) {
+        tasks = TaskData.getAllTByEffort(Effort.poco);
+      }
+      if (_selectedIndex == 3) {
+        tasks = TaskData.getAllTByEffort(Effort.medio);
+      }
+      if (_selectedIndex == 4) {
+        tasks = TaskData.getAllTByEffort(Effort.mucho);
+      }
+    });
+  }
 
-  bool _sortAscendingrem = true;
-  int _sortColumnIndexrem = 0;
+  @override
+  void initState() {
+    Future.delayed(const Duration(seconds: 2), () {
+      setState(() {
+        isInitialized = false;
+        totalTaks = TaskData.getTotalTasks();
+        completedTasks = TaskData.getCompletedTotal();
+        tasks = TaskData.getAllTasks();
+        isInitialized = true;
+      });
+    });
+    super.initState();
+  }
 
-  List<ItemType> types = ItemTypeData.getAllItemType();
-  List<Task> tasks = TaskData.getAllTasks();
-  List<Reminder> reminders = ReminderData.getAllReminders();
-
-  ItemType _selectedTable = ItemTypeData.getAllItemType().first;
-  int touchedIndex = 0;
-  bool isInitialized = true;
   @override
   Widget build(BuildContext context) {
-    double width = MediaQuery.of(context).size.width;
     return Scaffold(
-      backgroundColor: ColorConst.background,
-      body: SafeArea(
-        child: Column(
-          children: <Widget>[
-            TopContainer(
-              padding: EdgeInsets.zero,
-              height: 300,
-              width: width,
-              child: AspectRatio(
-                aspectRatio: 1.3,
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: PieChart(
-                    PieChartData(
-                      pieTouchData: PieTouchData(
-                        touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                          setState(() {
-                            if (!event.isInterestedForInteractions ||
-                                pieTouchResponse == null ||
-                                pieTouchResponse.touchedSection == null) {
-                              touchedIndex = -1;
-                              return;
-                            }
-                            touchedIndex = pieTouchResponse
-                                .touchedSection!.touchedSectionIndex;
-                          });
-                        },
-                      ),
-                      borderData: FlBorderData(
-                        show: false,
-                      ),
-                      sectionsSpace: 0,
-                      centerSpaceRadius: 0,
-                      sections: showingSections(),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: Center(
-                  child: Column(
-                    children: [
-                      const SizedBox(
-                        height: ValuesConst.boxSeparatorSize,
-                        width: ValuesConst.boxSeparatorSize,
-                      ),
-                      Center(
-                        child: SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.82,
-                          child: SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.30,
-                            child: DropdownButton<ItemType>(
-                              value: _selectedTable,
-                              isExpanded: true,
-                              dropdownColor: ColorConst.background,
-                              borderRadius: BorderRadius.circular(
-                                  ValuesConst.borderRadius),
-                              onChanged: (ItemType? newValue) {
-                                setState(() {
-                                  _selectedTable =
-                                      newValue ?? ItemType(id: -1, name: "");
-                                });
-                              },
-                              items: types.map<DropdownMenuItem<ItemType>>(
-                                (ItemType value) {
-                                  IconData iconData;
-                                  Color iconColor;
-                                  switch (value.name) {
-                                    case 'Ideas':
-                                      iconData = Icons.lightbulb;
-                                      iconColor = ColorConst.idea;
-                                      break;
-                                    case 'Reminders':
-                                      iconData = Icons.notification_important;
-                                      iconColor = ColorConst.reminder;
-                                      break;
-                                    case 'Tasks':
-                                      iconData = Icons.assignment;
-                                      iconColor = ColorConst.task;
-                                      break;
-                                    case 'All':
-                                      iconData = Icons.apps_outlined;
-                                      iconColor =
-                                          Color.fromARGB(255, 63, 75, 82);
-                                      break;
-                                    default:
-                                      iconData = Icons.error;
-                                      iconColor = ColorConst.black;
-                                  }
-                                  return DropdownMenuItem<ItemType>(
-                                    value: value,
-                                    child: Row(
-                                      children: [
-                                        Icon(iconData, color: iconColor),
-                                        const SizedBox(width: 10),
-                                        Text(value.name)
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ).toList(),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(
-                        height: ValuesConst.boxSeparatorSize,
-                        width: ValuesConst.boxSeparatorSize,
-                      ),
-                      Visibility(
-                        visible: _selectedTable.name == 'Reminders',
-                        child: _buildDataTableReminder(reminders),
-                      ),
-                      Visibility(
-                        visible: _selectedTable.name == 'Tasks',
-                        child: isInitialized
-                            ? _buildDataTableTask(tasks)
-                            : const Center(child: CircularProgressIndicator()),
-                      ),
-                      Visibility(
-                        visible: _selectedTable.name == 'All',
+      backgroundColor: ColorP.background,
+      body: !isInitialized
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(
+              child: Column(
+                children: <Widget>[
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      child: Center(
                         child: Column(
                           children: [
-                            _buildDataTableReminder(reminders),
-                            _buildDataTableTask(tasks),
+                            Padding(
+                              padding: const EdgeInsets.all(15.0),
+                              child: Card(
+                                color: ColorP.cardBackground,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30.0),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(20.0),
+                                  child: SizedBox(
+                                    height: 300,
+                                    width: double.infinity,
+                                    child: Center(
+                                      child: CircularGraph(
+                                          totalTasks: totalTaks,
+                                          completedTasks: completedTasks),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Align(
+                                alignment: Alignment.center,
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    const SizedBox(
+                                      height: 90,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            "My Tasks",
+                                            style: TextStyle(
+                                              fontSize: 36.0,
+                                              color: ColorP.textColor,
+                                            ),
+                                          ),
+                                          SizedBox(height: 8.0),
+                                          Text(
+                                            "Let's start being productive",
+                                            style: TextStyle(
+                                              fontSize: 20.0,
+                                              color: ColorP.textColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    Container(
+                                      width: 70,
+                                      height: 70,
+                                      decoration: const BoxDecoration(
+                                        color: ColorP.cardBackground,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: InkWell(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => TaskAddPage(
+                                                onTaskAdded: handleTaskAdded,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        borderRadius: BorderRadius.circular(25),
+                                        child: const Icon(
+                                          Icons.add,
+                                          size: 40,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 40,
+                              width: double.infinity,
+                              child: ListView(
+                                scrollDirection: Axis.horizontal,
+                                children: <Widget>[
+                                  MenuItem(
+                                    text: 'All',
+                                    isSelected: _selectedIndex == 0,
+                                    onTap: () => _onMenuItemClicked(0),
+                                  ),
+                                  MenuItem(
+                                    text: 'Completed',
+                                    isSelected: _selectedIndex == 1,
+                                    onTap: () => _onMenuItemClicked(1),
+                                  ),
+                                  MenuItem(
+                                    text: 'Not much effort',
+                                    isSelected: _selectedIndex == 2,
+                                    onTap: () => _onMenuItemClicked(2),
+                                  ),
+                                  MenuItem(
+                                    text: 'Mid much effort',
+                                    isSelected: _selectedIndex == 3,
+                                    onTap: () => _onMenuItemClicked(3),
+                                  ),
+                                  MenuItem(
+                                    text: 'A lot of  effort',
+                                    isSelected: _selectedIndex == 4,
+                                    onTap: () => _onMenuItemClicked(4),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 40,
+                            ),
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.98,
+                              child: SizedBox(
+                                height: 500,
+                                child: tasks != null
+                                    ? ListView.builder(
+                                        itemCount: tasks.length,
+                                        itemBuilder:
+                                            (BuildContext context, int index) {
+                                          return TaskCard(
+                                            task: tasks[index],
+                                            selectedTile: selectedTile,
+                                            index: index,
+                                            onExpanded: (int sel) {
+                                              setState(() {
+                                                selectedTile = sel;
+                                              });
+                                            },
+                                            onDelete: () {
+                                              widget.onReminderDeleted();
+                                              _onMenuItemClicked(
+                                                  _selectedIndex);
+                                            },
+                                          );
+                                        },
+                                      )
+                                    : Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingAdd(onTaskAdded: handleTaskAdded),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
@@ -189,282 +244,13 @@ class _TrackerPageState extends State<TrackerPage> {
     if (success) {
       setState(() {
         isInitialized = false;
-        Future.delayed(const Duration(seconds: 3), () {
+        Future.delayed(const Duration(seconds: 2), () {
           tasks = TaskData.getAllTasks();
-          reminders = ReminderData.getAllReminders();
+          totalTaks = TaskData.getTotalTasks();
+          completedTasks = TaskData.getCompletedTotal();
         });
         isInitialized = true;
       });
     } else {}
-  }
-
-  Widget _buildDataTableReminder(List<Reminder> data) {
-    final localizations = MyLocalizations.of(context);
-    return Container(
-      width: MediaQuery.of(context).size.width * ValuesConst.tableWidth,
-      padding: const EdgeInsets.all(ValuesConst.tablePadding),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-              minWidth: MediaQuery.of(context).size.width * 0.82),
-          child: Container(
-            clipBehavior: Clip.hardEdge,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(ValuesConst.tableRadius - 1),
-            ),
-            child: DataTable(
-              border: TableBorder.all(
-                  width: ValuesConst.tableBorderWidth,
-                  color: ColorConst.borderTable,
-                  borderRadius: BorderRadius.circular(ValuesConst.tableRadius)),
-              sortAscending: _sortAscendingrem,
-              sortColumnIndex: _sortColumnIndexrem,
-              headingRowColor:
-                  const MaterialStatePropertyAll(ColorConst.reminder),
-              columns: [
-                Utils.buildColumn(localizations.translate("title"),
-                    onSort: (columnIndex, ascending) => setState(() {
-                          _sortAscendingrem = ascending;
-                          _sortColumnIndexrem = columnIndex;
-                          if (ascending) {
-                            data.sort((a, b) => a.title.compareTo(b.title));
-                          } else {
-                            data.sort((a, b) => b.title.compareTo(a.title));
-                          }
-                        })),
-                Utils.buildColumn(localizations.translate("duedate")),
-                Utils.buildColumn(localizations.translate("description")),
-                Utils.buildColumn(localizations.translate("category")),
-                Utils.buildColumn(localizations.translate("actions")),
-              ],
-              rows: List.generate(data.length, (index) {
-                final item = data[index];
-                final color =
-                    index % 2 == 0 ? ColorConst.background : Colors.grey[350];
-                return DataRow(
-                  color: MaterialStateProperty.all(color),
-                  cells: [
-                    Utils.buildCell(item.title),
-                    Utils.buildCell(
-                        DateFormat('yyyy-MM-dd').format(item.duedate)),
-                    Utils.buildCell(item.description),
-                    Utils.buildCell(item.categories.join(', ')),
-                    DataCell(Row(
-                      children: [
-                        Utils.updateIcon(onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AddDialog(updateReminder: item);
-                            },
-                          );
-                        }),
-                        Utils.deleteIcon(onPressed: () {
-                          setState(() {
-                            ReminderData.delete(item.id);
-                            widget.onReminderDeleted();
-                            reminders = ReminderData.getAllReminders();
-                          });
-                        }),
-                        Utils.detailsIcon(onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => ReminderDetailsPage(
-                                      reminderId: item.id)));
-                        }),
-                      ],
-                    )),
-                  ],
-                );
-              }).toList(),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDataTableTask(List<Task> data) {
-    final localizations = MyLocalizations.of(context);
-    return Container(
-      width: MediaQuery.of(context).size.width * ValuesConst.tableWidth,
-      padding: const EdgeInsets.all(ValuesConst.tablePadding),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-              minWidth: MediaQuery.of(context).size.width * 0.82),
-          child: Container(
-            clipBehavior: Clip.hardEdge,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(ValuesConst.tableRadius - 1),
-            ),
-            child: DataTable(
-              border: TableBorder.all(
-                  width: ValuesConst.tableBorderWidth,
-                  color: ColorConst.borderTable,
-                  borderRadius: BorderRadius.circular(ValuesConst.tableRadius)),
-              sortAscending: _sortAscendingtask,
-              sortColumnIndex: _sortColumnIndextaks,
-              headingRowColor: const MaterialStatePropertyAll(ColorConst.task),
-              columns: [
-                Utils.buildColumn(localizations.translate("titles"),
-                    onSort: (columnIndex, ascending) => setState(() {
-                          _sortAscendingtask = ascending;
-                          _sortColumnIndextaks = columnIndex;
-                          if (ascending) {
-                            data.sort((a, b) => a.title.compareTo(b.title));
-                          } else {
-                            data.sort((a, b) => b.title.compareTo(a.title));
-                          }
-                        })),
-                Utils.buildColumn(localizations.translate("category")),
-                Utils.buildColumn(localizations.translate("description")),
-                Utils.buildColumn(localizations.translate("project")),
-                Utils.buildColumn(localizations.translate("status")),
-                Utils.buildColumn(localizations.translate("actions"))
-              ],
-              rows: List.generate(data.length, (index) {
-                final item = data[index];
-                final color =
-                    index % 2 == 0 ? ColorConst.background : Colors.grey[350];
-                return DataRow(
-                  color: MaterialStateProperty.all(color),
-                  cells: [
-                    Utils.buildCell(item.title),
-                    Utils.buildCell(item.categories.join(', ')),
-                    Utils.buildCell(item.description),
-                    Utils.buildCell(item.project),
-                    Utils.buildCell(
-                        item.hasFinished ? "Terminada" : "Sin terminar"),
-                    DataCell(Row(
-                      children: [
-                        Utils.updateIcon(onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AddDialog(updateTask: item);
-                            },
-                          );
-                        }),
-                        Utils.deleteIcon(onPressed: () {
-                          setState(() {
-                            TaskData.delete(item.id);
-                            tasks = TaskData.getAllTasks();
-                          });
-                        }),
-                        Utils.detailsIcon(onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      TaskDetailsPage(taskId: item.id)));
-                        }),
-                      ],
-                    )),
-                  ],
-                );
-              }).toList(),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  List<PieChartSectionData> showingSections() {
-    return List.generate(2, (i) {
-      final isTouched = i == touchedIndex;
-      final fontSize = isTouched ? 20.0 : 16.0;
-      final radius = isTouched ? 110.0 : 100.0;
-      final widgetSize = isTouched ? 55.0 : 40.0;
-      const shadows = [Shadow(color: ColorConst.black, blurRadius: 2)];
-
-      switch (i) {
-        case 0:
-          return PieChartSectionData(
-            color: ColorConst.reminder,
-            value: 30,
-            title: '75%',
-            radius: radius,
-            titleStyle: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xffffffff),
-              shadows: shadows,
-            ),
-            badgeWidget: _Badge(
-              'assets/icons/reminder.svg',
-              size: widgetSize,
-              borderColor: ColorConst.black,
-            ),
-            badgePositionPercentageOffset: .98,
-          );
-        case 1:
-          return PieChartSectionData(
-            color: ColorConst.task,
-            value: 10,
-            title: '25%',
-            radius: radius,
-            titleStyle: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xffffffff),
-              shadows: shadows,
-            ),
-            badgeWidget: _Badge(
-              'assets/icons/task.svg',
-              size: widgetSize,
-              borderColor: ColorConst.black,
-            ),
-            badgePositionPercentageOffset: .98,
-          );
-        default:
-          throw Exception('Oh no');
-      }
-    });
-  }
-}
-
-class _Badge extends StatelessWidget {
-  const _Badge(
-    this.svgAsset, {
-    required this.size,
-    required this.borderColor,
-  });
-  final String svgAsset;
-  final double size;
-  final Color borderColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: PieChart.defaultDuration,
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: ColorConst.white,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: borderColor,
-          width: 2,
-        ),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: ColorConst.black.withOpacity(.5),
-            offset: const Offset(3, 3),
-            blurRadius: 3,
-          ),
-        ],
-      ),
-      padding: EdgeInsets.all(size * .15),
-      child: Center(
-        child: SvgPicture.asset(
-          svgAsset,
-        ),
-      ),
-    );
   }
 }

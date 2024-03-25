@@ -12,6 +12,8 @@ class IconlyC {
 
   static const String journalIdle = '${_assetPath}journal.png';
 
+  static const String ideaIdle = '${_assetPath}idea.png';
+
   static const String work = '${_assetPath}work.svg';
   static const String shortRest = '${_assetPath}rest.svg';
   static const String longRest = '${_assetPath}longrest.svg';
@@ -25,7 +27,12 @@ class IconlyC {
   static const String happy = '${_assetPath}happy.png';
   static const String sad = '${_assetPath}sad.png';
 
+  static const String note = '${_assetPath}note.png';
+
   static const String reminder = '${_assetPath}reminder.svg';
+  static const String task = '${_assetPath}task-list.svg';
+
+  static const String reminderIdle = '${_assetPath}reminderIdle.png';
 
   static const String drawerIcon = '${_assetPath}drawer.svg';
 }

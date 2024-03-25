@@ -35,7 +35,6 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.6
   flutter_svg: 2.0.10+1
-  flutter_bloc: ^8.1.1
   intl: ^0.18.1
   file_picker: ^6.1.1
   wheel_chooser: ^1.1.2
@@ -46,6 +45,7 @@ dependencies:
   fl_chart: ^0.66.2
   calendar_view: ^1.1.0
   appflowy_board: ^0.1.1
+  flutter_neat_and_clean_calendar: ^0.3.18+40
   badges: ^3.1.2
   card_swiper: ^3.0.1
   multi_dropdown: ^2.1.4
@@ -53,6 +53,7 @@ dependencies:
   permission_handler: ^10.2.0
   flutter_local_notifications: ^17.0.0
   flutter_quill: ^9.3.1
+  date_picker_timeline: ^1.2.5
   flutter_reaction_button: ^3.0.0+3
   flutter_localizations:
     sdk: flutter

@@ -13,13 +13,150 @@ class ValuesConst {
   static const double tablePadding = 16;
   static const double tableWidth = 0.85;
 
+  static const String baseEntry = '''
+[
+  {
+    "insert":"Today's Message To Myself:",
+    "attributes":{"color":"#FF2196F3"}
+  },
+  {
+    "insert":"\\n",
+    "attributes":{
+      "header":1
+    }
+  },
+  {
+    "insert":"\\n"
+  },
+  {
+    "insert":"...",
+    "attributes":{
+      "color":"#FF2196F3"
+    }
+  },
+  {
+    "insert":"\\n\\n\\n"
+  },
+  {
+    "insert":"Today's top 3 goals/priorities:",
+    "attributes":{
+      "color":"#FF00C853"
+    }
+  },
+  {
+    "insert":"\\n",
+    "attributes":{
+      "header":1
+    }
+  },
+  {
+    "insert":"...",
+    "attributes":{
+      "color":"#FF00C853"
+      }
+    },
+  {
+    "insert":"\\n",
+    "attributes":{
+      "list":"ordered"
+      }
+    },
+  {
+    "insert":"...",
+    "attributes":{
+      "color":"#FF00C853"
+      }
+    },
+  {
+    "insert":"\\n",
+    "attributes":{
+      "list":"ordered"
+      }
+    },
+  {
+    "insert":"...",
+    "attributes":{
+      "color":"#FF00C853"
+      }
+    },
+  {
+    "insert":"\\n",
+    "attributes":{
+      "list":"ordered"
+      }
+    },
+  {
+    "insert":"\\n"
+  },
+  {
+    "insert":"Tasks that absolutely must be done today",
+    "attributes":{
+      "color":"#FFF57F17"
+      }
+    },
+  {
+    "insert":"\\n",
+    "attributes":{
+      "header":1
+      }
+    },
+  {
+    "insert":"\\n"},
+  {
+    "insert":"?",
+    "attributes":{
+      "color":"#FFF57F17"
+      }
+    },
+  {
+    "insert":"\\n",
+    "attributes":{
+      "list":"unchecked"
+      }
+    },
+  {
+    "insert":"\\n"},
+  {
+    "insert":"Person(s) need to lead or connect with today (and how to do it well)",
+    "attributes":{
+      "color":"#FFD50000"
+      }
+    },
+  {
+    "insert":":",
+    "attributes":{
+      "color":"#FF880E4F"
+      }
+    },
+  {
+    "insert":"\\n",
+    "attributes":{
+      "header":1
+      }
+    },
+  {
+    "insert":"\\n"},
+  {
+    "insert":"?","attributes":{
+      "color":"#FFD50000"
+    }
+  },
+  {
+    "insert":"\\n",
+    "attributes":{
+      "list":"bullet"
+    }
+  }
+]
+''';
+
   static int workingMinutes = 25;
   static int shortRestMinutes = 5;
   static int longRestMinutes = 10;
   static int second = 1;
 
-  static double pomodoroButtonPaddingH = 44;
-  static double pomodoroButtonPaddingV = 26;
+  static double pomodoroButtonPaddingH = 42;
+  static double pomodoroButtonPaddingV = 24;
 
   static double timerFontSize = 140;
   static double buttonFontSize = 24;

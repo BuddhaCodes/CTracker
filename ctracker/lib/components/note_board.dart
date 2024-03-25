@@ -1,5 +1,6 @@
 import 'package:appflowy_board/appflowy_board.dart';
 import 'package:ctracker/components/card.dart';
+import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/models/inotable.dart';
 import 'package:ctracker/models/note.dart';
 import 'package:ctracker/utils/localization.dart';
@@ -45,7 +46,7 @@ class NoteBoard extends StatefulWidget {
 
 class _NoteBoard extends State<NoteBoard> {
   var config = const AppFlowyBoardConfig(
-    groupBackgroundColor: Color(0xFFF7F8FC),
+    groupBackgroundColor: ColorP.ColorB,
     stretchGroupHeight: true,
   );
 
@@ -75,7 +76,11 @@ class _NoteBoard extends State<NoteBoard> {
       boardScrollController: widget.boardController,
       footerBuilder: (context, columnData) {
         return AppFlowyGroupFooter(
-          icon: const Icon(Icons.add, size: 20),
+          icon: const Icon(
+            Icons.add,
+            size: 20,
+            color: ColorP.ColorD,
+          ),
           title: Text(localizations.translate("newItem")),
           height: 30,
           margin: config.groupPadding,
@@ -86,14 +91,15 @@ class _NoteBoard extends State<NoteBoard> {
       },
       headerBuilder: (context, columnData) {
         return AppFlowyGroupHeader(
-          icon: const Icon(Icons.lightbulb_circle),
-          addIcon: const Icon(Icons.close, size: 20),
+          icon: const Icon(Icons.lightbulb_circle, color: ColorP.ColorD),
+          addIcon: const Icon(Icons.close, size: 20, color: ColorP.ColorD),
           onAddButtonClick: () {
             widget.controller.removeGroup(columnData.headerData.groupId);
           },
           title: SizedBox(
             width: 140,
             child: TextField(
+              style: const TextStyle(color: ColorP.ColorC),
               controller: TextEditingController()
                 ..text = columnData.headerData.groupName,
               onSubmitted: (val) {
@@ -126,16 +132,21 @@ class _NoteBoard extends State<NoteBoard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               TextField(
+                style: const TextStyle(color: ColorP.ColorC),
                 decoration: InputDecoration(
+                    labelStyle: TextStyle(color: ColorP.ColorC),
                     labelText: localizations.translate("title")),
                 onChanged: (value) {
                   title = value;
                 },
               ),
               TextField(
+                style: const TextStyle(color: ColorP.ColorC),
                 maxLines: 8,
-                decoration:
-                    InputDecoration(labelText: localizations.translate("note")),
+                decoration: InputDecoration(
+                  labelText: localizations.translate("note"),
+                  labelStyle: TextStyle(color: ColorP.ColorC),
+                ),
                 onChanged: (value) {
                   text = value;
                 },
@@ -194,18 +205,24 @@ class _NoteBoard extends State<NoteBoard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               TextField(
+                style: const TextStyle(color: ColorP.ColorC),
                 controller: titleArea,
                 decoration: InputDecoration(
-                    labelText: localizations.translate("title")),
+                  labelText: localizations.translate("title"),
+                  labelStyle: TextStyle(color: ColorP.ColorC),
+                ),
                 onChanged: (value) {
                   title = value;
                 },
               ),
               TextField(
+                style: const TextStyle(color: ColorP.ColorC),
                 controller: noteArea,
                 maxLines: 8,
-                decoration:
-                    InputDecoration(labelText: localizations.translate("note")),
+                decoration: InputDecoration(
+                  labelText: localizations.translate("note"),
+                  labelStyle: TextStyle(color: ColorP.ColorC),
+                ),
                 onChanged: (value) {
                   text = value;
                 },

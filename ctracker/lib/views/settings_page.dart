@@ -1,4 +1,5 @@
 import 'package:ctracker/constant/color.dart';
+import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/utils/localization.dart';
 import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
@@ -19,7 +20,7 @@ class _SettingsViewState extends State<SettingsView> {
   Widget build(BuildContext context) {
     final localizations = MyLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(),
+      backgroundColor: ColorP.background,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -27,7 +28,7 @@ class _SettingsViewState extends State<SettingsView> {
           children: [
             Card(
               elevation: 2,
-              color: ColorConst.cardBackground,
+              color: ColorP.cardBackground,
               child: Padding(
                 padding: const EdgeInsets.all(80.0),
                 child: Row(
@@ -55,7 +56,7 @@ class _SettingsViewState extends State<SettingsView> {
             const SizedBox(height: ValuesConst.boxSeparatorSize),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: ColorConst.buttonColor,
+                backgroundColor: ColorP.buttonColor,
                 padding: const EdgeInsets.symmetric(
                     horizontal: 20, vertical: 20), // button padding
                 shape: RoundedRectangleBorder(
@@ -74,8 +75,7 @@ class _SettingsViewState extends State<SettingsView> {
               },
               child: Text(
                 localizations.translate("save"),
-                style: const TextStyle(
-                    fontSize: 24, color: ColorConst.contrastedTextColor),
+                style: const TextStyle(fontSize: 24, color: ColorP.textColor),
               ),
             ),
           ],
@@ -102,7 +102,7 @@ class _SettingsViewState extends State<SettingsView> {
           onChanged: onChanged,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(25),
-            border: Border.all(color: ColorConst.pomodorSettingsBorder),
+            border: Border.all(color: ColorP.textColorSubtitle),
           ),
         ),
       ],
