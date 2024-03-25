@@ -126,7 +126,7 @@ class _MeetingsPageState extends State<MeetingsPage> {
                       height: 30,
                     ),
                     Container(
-                      height: 1012,
+                      height: 650,
                       width: MediaQuery.of(context).size.width * 0.6,
                       color: Colors.white,
                       child: Theme(
@@ -150,7 +150,7 @@ class _MeetingsPageState extends State<MeetingsPage> {
                           eventTileHeight: 60,
                           eventListBuilder: (context, events) {
                             return SizedBox(
-                              height: 300,
+                              height: 242,
                               child: ListView.builder(
                                 scrollDirection: Axis.vertical,
                                 padding: const EdgeInsets.all(0.0),

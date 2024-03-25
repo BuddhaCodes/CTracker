@@ -45,11 +45,11 @@ class _HomePageState extends State<HomePage> {
     Widget getBodyWidget() {
       switch (_selectedIndex) {
         case 0:
-          return const MeetingsPage();
           return ReminderPage(onReminderDeleted: _reminderDeleteHandler);
         case 1:
           return TrackerPage(onReminderDeleted: _reminderDeleteHandler);
         case 2:
+          return const MeetingsPage();
         case 3:
           return const PomodoroPage();
         case 4:
