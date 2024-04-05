@@ -1,39 +1,81 @@
 import 'package:ctracker/components/reminder_layout_card.dart';
 import 'package:ctracker/constant/color_palette.dart';
+import 'package:ctracker/models/enums/status_enum.dart';
 import 'package:ctracker/models/reminder.dart';
+import 'package:ctracker/repository/reminder_repository_implementation.dart';
+import 'package:ctracker/utils/localization.dart';
+import 'package:ctracker/utils/utils.dart';
 import 'package:ctracker/views/all_reminders_page.dart';
 import 'package:ctracker/views/reminder_add_page.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+// ignore: must_be_immutable
 class ReminderPage extends StatefulWidget {
   final Function onReminderDeleted;
   late List<Reminder> reminderCompleted;
   late List<Reminder> reminderRemaining;
   late List<Reminder> reminderOfDay;
   bool isInit = false;
-
   ReminderPage({super.key, required this.onReminderDeleted});
   @override
   State<ReminderPage> createState() => _ReminderPageState();
 }
 
 class _ReminderPageState extends State<ReminderPage> {
+  MyLocalizations? localizations;
+
+  late ReminderRepositoryImplementation reminderRepo;
   @override
   void initState() {
     super.initState();
+    initializeData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    localizations =
+        MyLocalizations.of(context); // Initialize localizations here
+  }
+
+  void initializeData() async {
     widget.isInit = false;
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        widget.reminderCompleted =
-            ReminderData.getCompletedRemindersThisMonth();
+    DateTime present = DateTime.now();
 
-        widget.reminderRemaining =
-            ReminderData.getRemainingRemindersThisMonth();
+    reminderRepo = ReminderRepositoryImplementation();
+    List<Reminder> nextReminders = [];
+    List<Reminder> completed = [];
+    List<Reminder> remaining = [];
+    try {
+      nextReminders = await reminderRepo
+          .getAllRemindersOfDateToDate(DateTime.now(), take: 4);
+      completed = await reminderRepo.getAllRemindersOfDateToDate(
+          DateTime(present.year, present.month, 0),
+          toDate: Utils.getLastDayOfMonth(present).add(const Duration(days: 1)),
+          status: StatusEnum.done);
+      remaining = await reminderRepo.getAllRemindersOfDateToDate(
+          DateTime(present.year, present.month, 0),
+          toDate: Utils.getLastDayOfMonth(present).add(const Duration(days: 1)),
+          status: StatusEnum.notDone);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(localizations?.translate("error") ?? "",
+                  style: const TextStyle(
+                      color: Color.fromARGB(255, 255, 255, 255)))),
+        );
+      }
+    }
 
-        widget.reminderOfDay = ReminderData.getAllOfToday(4);
-        widget.isInit = true;
-      });
+    setState(() {
+      widget.reminderCompleted = completed;
+
+      widget.reminderRemaining = remaining;
+
+      widget.reminderOfDay = nextReminders;
+      widget.isInit = true;
     });
   }
 
@@ -113,7 +155,7 @@ class _ReminderPageState extends State<ReminderPage> {
                                         shape: BoxShape.circle,
                                       ),
                                       child: InkWell(
-                                        onTap: () {
+                                        onTap: () async {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
@@ -122,7 +164,7 @@ class _ReminderPageState extends State<ReminderPage> {
                                                 onReminderAdded: handle,
                                               ),
                                             ),
-                                          );
+                                          ).then((value) => initializeData());
                                         },
                                         borderRadius: BorderRadius.circular(25),
                                         child: const Icon(
@@ -142,13 +184,17 @@ class _ReminderPageState extends State<ReminderPage> {
                                 children: [
                                   Expanded(
                                     child: ReminderCard(
-                                      title: 'Completed Reminders',
+                                      title: localizations?.translate(
+                                              'remindermonthcompleted') ??
+                                          "",
                                       reminders: widget.reminderCompleted,
                                     ),
                                   ),
                                   Expanded(
                                     child: ReminderCard(
-                                      title: 'Remaining Reminders',
+                                      title: localizations?.translate(
+                                              'remindermonthnocompleted') ??
+                                          "",
                                       reminders: widget.reminderRemaining,
                                     ),
                                   ),
@@ -178,18 +224,19 @@ class _ReminderPageState extends State<ReminderPage> {
                                     ),
                                   );
                                 },
-                                child: const Row(
+                                child: Row(
                                   children: [
                                     Text(
-                                      "All reminders",
-                                      style: TextStyle(
+                                      localizations?.translate('allreminder') ??
+                                          "",
+                                      style: const TextStyle(
                                         fontSize: 16.0,
                                         color: ColorP.textColor,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    Spacer(),
-                                    Icon(
+                                    const Spacer(),
+                                    const Icon(
                                       Icons.arrow_forward,
                                       color: ColorP.textColor,
                                     ),
@@ -202,10 +249,12 @@ class _ReminderPageState extends State<ReminderPage> {
                             ),
                             SizedBox(
                               width: MediaQuery.of(context).size.width * 0.98,
-                              child: const Align(
+                              child: Align(
                                 alignment: Alignment.centerLeft,
-                                child: Text("Next reminders",
-                                    style: TextStyle(
+                                child: Text(
+                                    localizations?.translate('nextreminder') ??
+                                        "",
+                                    style: const TextStyle(
                                         color: ColorP.textColor,
                                         fontSize: 32,
                                         fontWeight: FontWeight.bold)),
@@ -240,7 +289,7 @@ class _ReminderPageState extends State<ReminderPage> {
                                             const EdgeInsets.symmetric(
                                                 horizontal: 16, vertical: 8),
                                         tileColor:
-                                            ColorP.ColorsAlternators[index],
+                                            ColorP.colorsAlternators[index],
                                         title: Padding(
                                           padding: const EdgeInsets.only(
                                               bottom: 4.0),
@@ -286,18 +335,6 @@ class _ReminderPageState extends State<ReminderPage> {
   }
 
   void handle(bool added) {
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        widget.isInit = false;
-        widget.reminderCompleted =
-            ReminderData.getCompletedRemindersThisMonth();
-
-        widget.reminderRemaining =
-            ReminderData.getRemainingRemindersThisMonth();
-
-        widget.reminderOfDay = ReminderData.getAllOfToday(4);
-        widget.isInit = true;
-      });
-    });
+    initializeData();
   }
 }

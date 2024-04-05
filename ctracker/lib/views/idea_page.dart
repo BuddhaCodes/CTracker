@@ -3,45 +3,97 @@ import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/constant/icons.dart';
 import 'package:ctracker/models/idea.dart';
 import 'package:ctracker/models/tags.dart';
+import 'package:ctracker/repository/idea_repository_implementation.dart';
+import 'package:ctracker/repository/tag_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
 import 'package:ctracker/views/idea_add_page.dart';
 import 'package:flutter/material.dart';
-import 'package:multi_dropdown/models/chip_config.dart';
 import 'package:multi_dropdown/multiselect_dropdown.dart';
 
+// ignore: must_be_immutable
 class IdeaPage extends StatefulWidget {
   bool isInit = false;
 
   IdeaPage({super.key});
 
   @override
-  _IdeaPageState createState() => _IdeaPageState();
+  IdeaPageState createState() => IdeaPageState();
 }
 
-class _IdeaPageState extends State<IdeaPage> {
+class IdeaPageState extends State<IdeaPage> {
+  MyLocalizations? localizations;
   List<Tag> ideaTags = [];
   late List<Tag> tags;
   late List<Idea> ideas;
   late MultiSelectController _tagsController;
+  late IdeaRepositoryImplementation ideaRepo;
+  late TagRepositoryImplementation tagRepo;
   int selectedTile = -1;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    localizations =
+        MyLocalizations.of(context); // Initialize localizations here
+  }
+
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 2), () {
-      widget.isInit = false;
-      ideas = IdeaData.getAllIdeas();
-      tags = TagData.getAllItemType();
-      _tagsController = MultiSelectController();
-      setState(() {
-        widget.isInit = true;
+    initializeData();
+  }
+
+  void initializeData() async {
+    ideaRepo = IdeaRepositoryImplementation();
+    tagRepo = TagRepositoryImplementation();
+    widget.isInit = false;
+    try {
+      ideaRepo.getAllIdeas().then((ideasResult) {
+        setState(() {
+          ideas = ideasResult;
+        });
       });
-    });
+    } catch (e) {
+      ideas = [];
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(localizations!.translate("error"),
+                  style: const TextStyle(
+                      color: Color.fromARGB(255, 255, 255, 255)))),
+        );
+      }
+    }
+    try {
+      tagRepo.getAllTags().then((tagsResult) {
+        setState(() {
+          tags = tagsResult;
+          _tagsController = MultiSelectController();
+          widget.isInit = true;
+        });
+      });
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(localizations!.translate("error"),
+                  style: const TextStyle(
+                      color: Color.fromARGB(255, 255, 255, 255)))),
+        );
+      }
+      tags = [];
+      _tagsController = MultiSelectController();
+      widget.isInit = true;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final localizations = MyLocalizations.of(context);
-
+    final String translateError = localizations?.translate("error") ?? "";
+    final String translateIdeaP = localizations?.translate("ideap") ?? "";
+    final String translateIdeapsub1 =
+        localizations?.translate("ideapsub1") ?? "";
+    final String translateIdeasub2 = localizations?.translate("ideasub2") ?? "";
     return Scaffold(
       backgroundColor: ColorP.background,
       body: !widget.isInit
@@ -72,9 +124,9 @@ class _IdeaPageState extends State<IdeaPage> {
                                   const SizedBox(
                                     width: 30,
                                   ),
-                                  const Text(
-                                    "I think",
-                                    style: TextStyle(
+                                  Text(
+                                    translateIdeaP,
+                                    style: const TextStyle(
                                       fontSize: 64.0,
                                       fontWeight: FontWeight.bold,
                                       color: ColorP.textColor,
@@ -83,7 +135,7 @@ class _IdeaPageState extends State<IdeaPage> {
                                   const SizedBox(
                                     width: 10,
                                   ),
-                                  const SizedBox(
+                                  SizedBox(
                                     height: 90,
                                     child: Column(
                                       crossAxisAlignment:
@@ -92,16 +144,16 @@ class _IdeaPageState extends State<IdeaPage> {
                                           MainAxisAlignment.center,
                                       children: [
                                         Text(
-                                          "therefore",
-                                          style: TextStyle(
+                                          translateIdeapsub1,
+                                          style: const TextStyle(
                                             fontSize: 20.0,
                                             color: ColorP.textColor,
                                           ),
                                         ),
-                                        SizedBox(height: 20.0),
+                                        const SizedBox(height: 20.0),
                                         Text(
-                                          "I am",
-                                          style: TextStyle(
+                                          translateIdeasub2,
+                                          style: const TextStyle(
                                             fontSize: 20.0,
                                             color: ColorP.textColor,
                                           ),
@@ -157,7 +209,27 @@ class _IdeaPageState extends State<IdeaPage> {
                                         .first)
                                     .toList();
                                 setState(() {
-                                  ideas = IdeaData.getByTags(ideaTags);
+                                  try {
+                                    ideaRepo
+                                        .getByTags(ideaTags)
+                                        .then((ideasResult) {
+                                      ideas = ideasResult;
+                                      widget.isInit = true;
+                                    });
+                                  } catch (e) {
+                                    ideas = [];
+                                    widget.isInit = true;
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                            content: Text(translateError,
+                                                style: const TextStyle(
+                                                    color: Color.fromARGB(
+                                                        255, 255, 255, 255)))),
+                                      );
+                                    }
+                                  }
                                 });
                               },
                               borderRadius: 4.0,
@@ -165,7 +237,7 @@ class _IdeaPageState extends State<IdeaPage> {
                               hintFontSize: 16,
                               options: tags
                                   .map((participant) => ValueItem(
-                                      label: participant.name,
+                                      label: participant.title,
                                       value: participant.id))
                                   .toList(),
                               maxItems: 5,
@@ -232,16 +304,23 @@ class _IdeaPageState extends State<IdeaPage> {
     );
   }
 
-  void handle(bool added) {
-    setState(() {
-      widget.isInit = false;
-    });
-    Future.delayed(const Duration(seconds: 2), () {
+  void handle(bool added) async {
+    try {
+      final ideasR = await ideaRepo.getAllIdeas();
+
       setState(() {
-        ideas = IdeaData.getAllIdeas();
-        ideaTags = [];
-        widget.isInit = true;
+        ideas = ideasR;
       });
-    });
+    } catch (e) {
+      ideas = [];
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(localizations?.translate("error") ?? "",
+                  style: const TextStyle(
+                      color: Color.fromARGB(255, 255, 255, 255)))),
+        );
+      }
+    }
   }
 }

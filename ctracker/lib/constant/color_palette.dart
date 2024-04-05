@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 class ColorP {
@@ -7,9 +5,13 @@ class ColorP {
   static const Color textColor = Color(0xFFFFFFFF);
   static const Color cardBackground = Color(0xFF2A2E37);
 
+  // ignore: constant_identifier_names
   static const Color ColorA = Color(0xFFFFFFFF);
+  // ignore: constant_identifier_names
   static const Color ColorB = Color(0xFFA2C7C6);
+  // ignore: constant_identifier_names
   static const Color ColorC = Color(0xFF000000);
+  // ignore: constant_identifier_names
   static const Color ColorD = Color(0xFFFF7A55);
 
   static const Color reminder = Color.fromARGB(255, 45, 193, 234);
@@ -17,7 +19,7 @@ class ColorP {
   static const Color white = Colors.white;
   static const Color buttonColor = Color(0xFF007BFF);
   static const Color buttonHoverColor = Color(0xFF0056B3);
-  static const List<Color> ColorsAlternators = [ColorA, ColorB, ColorC, ColorD];
+  static const List<Color> colorsAlternators = [ColorA, ColorB, ColorC, ColorD];
 
   static const Color textColorSubtitle = Color(0xFFC0C0C0);
 

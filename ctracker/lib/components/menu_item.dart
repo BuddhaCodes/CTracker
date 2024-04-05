@@ -1,16 +1,17 @@
 import 'package:ctracker/constant/color_palette.dart';
 import 'package:flutter/material.dart';
 
+// ignore: must_be_immutable
 class MenuItem extends StatelessWidget {
   final String text;
   bool isSelected;
   final VoidCallback onTap;
   MenuItem({
-    Key? key,
+    super.key,
     required this.text,
     required this.isSelected,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

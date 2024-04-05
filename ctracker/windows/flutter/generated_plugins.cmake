@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_windows
+  awesome_notifications
   irondash_engine_context
   permission_handler_windows
   super_native_extensions

@@ -1,16 +1,13 @@
-import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/constant/icons.dart';
 import 'package:ctracker/constant/values.dart';
 import 'package:ctracker/models/reminder.dart';
+import 'package:ctracker/repository/reminder_repository_implementation.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter_neat_and_clean_calendar/neat_and_clean_calendar_event.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class Utils {
-  //Gesture Detector para cerrar el drawer
   static GestureDetector renderGestureDetector(BuildContext context) {
     return GestureDetector(
       onTap: () {
@@ -77,16 +74,12 @@ class Utils {
 
   static bool isToday(DateTime dateToCheck) {
     DateTime today = DateTime.now();
-    if (dateToCheck.year == today.year &&
+    return dateToCheck.year == today.year &&
         dateToCheck.month == today.month &&
-        dateToCheck.day == today.day) {
-      return true;
-    } else {
-      return false;
-    }
+        dateToCheck.day == today.day;
   }
 
-  bool isInCurrentMonth(DateTime date) {
+  static bool isInCurrentMonth(DateTime date) {
     DateTime today = DateTime.now();
     return date.year == today.year && date.month == today.month;
   }
@@ -100,8 +93,8 @@ class Utils {
           ? BoxDecoration(
               borderRadius: BorderRadius.circular(40),
               border: Border.all(
-                color: color ?? ColorP.textColor, // border color
-                width: 2.0, // border width
+                color: color ?? ColorP.textColor,
+                width: 2.0,
               ),
             )
           : null,
@@ -138,6 +131,25 @@ class Utils {
     );
   }
 
+  
+
+  static List<NeatCleanCalendarEvent> getObjectsInRange(
+      DateTime date, List<NeatCleanCalendarEvent> objects) {
+    return objects.where((object) {
+      return date.isAfter(object.startTime.subtract(const Duration(days: 1))) &&
+          date.isBefore(object.endTime.add(const Duration(days: 1)));
+    }).toList();
+  }
+
+  static IconButton checkNotes({Function()? onPressed}) {
+    return IconButton(
+        onPressed: onPressed,
+        icon: const Icon(
+          Icons.note_outlined,
+          color: ColorP.buttonColor,
+        ));
+  }
+
   static IconButton detailsIcon({Function()? onPressed}) {
     return IconButton(
         onPressed: onPressed,
@@ -147,24 +159,72 @@ class Utils {
         ));
   }
 
-  // Function to check if the file is an image (you may extend this for other file types)
-  static bool _isImageFile(String fileName) {
-    final imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp'];
-    return imageExtensions
-        .any((extension) => fileName.toLowerCase().endsWith(extension));
+  static IconButton workIcon({Function()? onPressed}) {
+    return IconButton(
+        onPressed: onPressed,
+        icon: const Icon(
+          Icons.work_outline_outlined,
+          color: ColorP.buttonColor,
+        ));
   }
 
-  static Future<void> _saveImageToFolder(
-      Uint8List bytes, String fileName) async {
-    Directory directory = await getApplicationDocumentsDirectory();
-
-    File destinationFile = File('${directory.path}/$fileName');
-    await destinationFile.writeAsBytes(bytes);
+  static Future<int> getDueRemindersCount() async {
+    ReminderRepositoryImplementation rd = ReminderRepositoryImplementation();
+    DateTime present =
+        DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    List<Reminder> reminders = await rd.getAllRemindersOfDateToDate(present,
+        toDate: present.add(const Duration(days: 1)));
+    return reminders.length;
   }
 
-  static int getDueRemindersCount() {
-    DateTime now = DateTime.now();
-    return ReminderData.getAllOfToday().length;
+  static Duration parseDuration(String durationString) {
+    List<String> parts = durationString.split(":");
+
+    List<String> secondsAndMilliseconds = parts[2].split(".");
+    int seconds = int.parse(secondsAndMilliseconds[0]);
+    int milliseconds = secondsAndMilliseconds.length > 1
+        ? int.parse(secondsAndMilliseconds[1])
+        : 0;
+
+    int hours = int.parse(parts[0]);
+    int minutes = int.parse(parts[1]);
+
+    return Duration(
+        hours: hours,
+        minutes: minutes,
+        seconds: seconds,
+        milliseconds: milliseconds);
+  }
+
+  static DateTime getLastDayOfMonth(DateTime anyDayInMonth) {
+    int year = anyDayInMonth.year;
+    int month = anyDayInMonth.month;
+
+    if (month == 12) {
+      year++;
+      month = 1;
+    } else {
+      month++;
+    }
+
+    DateTime firstDayOfNextMonth = DateTime(year, month, 1);
+
+    DateTime lastDayOfMonth =
+        firstDayOfNextMonth.subtract(const Duration(days: 1));
+
+    return lastDayOfMonth;
+  }
+
+  static List<DateTime> getWeekRange(DateTime date) {
+    int weekday = date.weekday;
+
+    int daysSinceMonday = (weekday + 7 - DateTime.monday) % 7;
+
+    DateTime startOfWeek = date.subtract(Duration(days: daysSinceMonday));
+
+    DateTime endOfWeek = startOfWeek.add(const Duration(days: 6));
+
+    return [startOfWeek, endOfWeek];
   }
 
   static Future<void> checkNotificationPermission() async {

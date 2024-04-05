@@ -2,20 +2,21 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:ctracker/constant/color.dart';
 import 'package:ctracker/constant/color_palette.dart';
+import 'package:ctracker/models/category.dart';
 import 'package:ctracker/models/idea.dart';
-import 'package:ctracker/models/idea_categories.dart';
-import 'package:ctracker/models/reminder.dart';
 import 'package:ctracker/models/tags.dart';
+import 'package:ctracker/repository/category_repository_implementation.dart';
+import 'package:ctracker/repository/idea_repository_implementation.dart';
+import 'package:ctracker/repository/tag_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:intl/intl.dart';
 import 'package:multi_dropdown/multiselect_dropdown.dart';
 import 'package:path_provider/path_provider.dart';
 
+// ignore: must_be_immutable
 class IdeaAddPage extends StatefulWidget {
   final Function onIdeaAdded;
   Idea? uIdea;
@@ -25,19 +26,23 @@ class IdeaAddPage extends StatefulWidget {
 }
 
 class _IdeaAddPageState extends State<IdeaAddPage> {
-  late IdeaCategory _ideaCategory;
+  bool isNotValidDescription = false;
+
+  late Categories _ideaCategory;
   late List<Tag> tags;
   late List<Tag> ideaTags;
 
-  late List<IdeaCategory> _ideaCategories;
+  late List<Categories> _ideaCategories;
   late QuillController _controller;
-
+  late IdeaRepositoryImplementation ideaRepo;
+  late TagRepositoryImplementation tagRepo;
+  late CategoryRepositoryImplementation catRepo;
   late TextEditingController titleController;
   bool isInit = false;
 
   late int imageCounts;
   late List<String> selectedImages;
-
+  MyLocalizations? localizations;
   late MultiSelectController _tagsController;
 
   final formKey = GlobalKey<FormState>();
@@ -45,41 +50,61 @@ class _IdeaAddPageState extends State<IdeaAddPage> {
   @override
   void initState() {
     super.initState();
+    initializeData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    localizations =
+        MyLocalizations.of(context); // Initialize localizations here
+  }
+
+  void initializeData() async {
     isInit = false;
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _ideaCategories = IdeaCategoryData.getAllItemType();
-        _controller = QuillController.basic();
-        titleController = TextEditingController();
-        tags = TagData.getAllItemType();
-        _tagsController = MultiSelectController();
 
-        if (widget.uIdea != null) {
-          imageCounts = widget.uIdea!.image.length;
-          selectedImages = [widget.uIdea!.image];
-          titleController.text = widget.uIdea!.title;
-          ideaTags = widget.uIdea!.tags;
-          Document doc =
-              Document.fromJson(jsonDecode(widget.uIdea?.description ?? ""));
-          _controller.document = doc;
+    ideaRepo = IdeaRepositoryImplementation();
+    tagRepo = TagRepositoryImplementation();
+    catRepo = CategoryRepositoryImplementation();
+    try {
+      _ideaCategories = await catRepo.getAllCategories();
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context);
+      }
+    }
 
-          _ideaCategory = IdeaCategoryData.getAllItemType()
-              .where((element) => element.id == widget.uIdea?.category.id)
-              .first;
-        } else {
-          imageCounts = 0;
-          ideaTags = [];
-          selectedImages = [];
-          _ideaCategory = IdeaCategoryData.getAllItemType().first;
-        }
-      });
+    tags = await tagRepo.getAllTags();
+
+    setState(() {
+      _tagsController = MultiSelectController();
+      _controller = QuillController.basic();
+      titleController = TextEditingController();
+      selectedImages = [];
+      if (widget.uIdea != null) {
+        titleController.text = widget.uIdea!.title;
+        ideaTags = widget.uIdea!.tags;
+
+        Document doc =
+            Document.fromJson(jsonDecode(widget.uIdea?.description ?? ""));
+        _controller.document = doc;
+
+        _ideaCategory = _ideaCategories
+            .where((element) => element.id == widget.uIdea?.category.id)
+            .first;
+      } else {
+        ideaTags = [];
+        imageCounts = 0;
+        _ideaCategory = _ideaCategories.first;
+      }
+    });
+    setState(() {
       isInit = true;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final localizations = MyLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: ColorP.background,
@@ -101,13 +126,19 @@ class _IdeaAddPageState extends State<IdeaAddPage> {
                           child: Form(
                             key: formKey,
                             child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'Enter the title *',
-                                  style: TextStyle(
-                                      color: ColorP.textColorSubtitle,
-                                      fontSize: 14),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    localizations?.translate(
+                                            'ideaValidationtTitle') ??
+                                        "",
+                                    style: const TextStyle(
+                                        color: ColorP.textColorSubtitle,
+                                        fontSize: 14),
+                                  ),
                                 ),
                                 TextFormField(
                                   controller: titleController,
@@ -116,9 +147,6 @@ class _IdeaAddPageState extends State<IdeaAddPage> {
                                       borderRadius: BorderRadius.all(
                                           Radius.circular(25.0)),
                                     ),
-                                    labelText: 'Enter the title *',
-                                    labelStyle:
-                                        TextStyle(color: ColorP.textColor),
                                     filled: true,
                                     fillColor: ColorP.cardBackground,
                                     focusedBorder: OutlineInputBorder(
@@ -128,17 +156,22 @@ class _IdeaAddPageState extends State<IdeaAddPage> {
                                   ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return 'Please enter some text';
+                                      return localizations?.translate(
+                                              'ideaValidationtTitle') ??
+                                          "";
                                     }
                                     return null;
                                   },
                                 ),
                                 const SizedBox(height: 30),
-                                Text(
-                                  "Select ${localizations.translate("category")}",
-                                  style: const TextStyle(
-                                      color: ColorP.textColorSubtitle,
-                                      fontSize: 14),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    localizations?.translate("catselect") ?? "",
+                                    style: const TextStyle(
+                                        color: ColorP.textColorSubtitle,
+                                        fontSize: 14),
+                                  ),
                                 ),
                                 Theme(
                                   data: Theme.of(context).copyWith(
@@ -149,17 +182,14 @@ class _IdeaAddPageState extends State<IdeaAddPage> {
                                     borderRadius: BorderRadius.circular(20.0),
                                     onChanged: (newValue) {
                                       setState(() {
-                                        _ideaCategory = newValue ??
-                                            IdeaCategory(
-                                              id: -1,
-                                              name: "",
-                                            );
+                                        _ideaCategory =
+                                            newValue ?? _ideaCategories.first;
                                       });
                                     },
                                     items: _ideaCategories
-                                        .map<DropdownMenuItem<IdeaCategory>>(
-                                      (IdeaCategory value) {
-                                        return DropdownMenuItem<IdeaCategory>(
+                                        .map<DropdownMenuItem<Categories>>(
+                                      (Categories value) {
+                                        return DropdownMenuItem<Categories>(
                                           value: value,
                                           child: Text(
                                             value.name,
@@ -169,132 +199,195 @@ class _IdeaAddPageState extends State<IdeaAddPage> {
                                         );
                                       },
                                     ).toList(),
-                                    decoration: InputDecoration(
-                                      border: const OutlineInputBorder(
+                                    decoration: const InputDecoration(
+                                      border: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(25.0)),
                                       ),
-                                      labelText:
-                                          localizations.translate("category"),
-                                      labelStyle: const TextStyle(
-                                          color: ColorP.textColor),
                                       filled: true,
                                       iconColor: ColorP.textColor,
                                       fillColor: ColorP.cardBackground,
-                                      focusedBorder: const OutlineInputBorder(
+                                      focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(25.0)),
                                       ),
                                     ),
+                                    validator: (value) {
+                                      if (value == null) {
+                                        return localizations
+                                                ?.translate("catselect") ??
+                                            "";
+                                      }
+                                      return null;
+                                    },
                                   ),
                                 ),
                                 const SizedBox(height: 30),
-                                const Text(
-                                  'Select the idea tags *',
-                                  style: TextStyle(
-                                      color: ColorP.textColorSubtitle,
-                                      fontSize: 14),
+                                const Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Text(
+                                    'Select the idea tags *',
+                                    style: TextStyle(
+                                        color: ColorP.textColorSubtitle,
+                                        fontSize: 14),
+                                  ),
                                 ),
                                 SizedBox(
-                                  height: 50,
-                                  child: MultiSelectDropDown(
-                                    controller: _tagsController,
-                                    onOptionSelected:
-                                        (List<ValueItem> selectedOptions) {
-                                      ideaTags = selectedOptions
-                                          .map((e) => tags
-                                              .where((element) =>
-                                                  element.id == e.value)
-                                              .first)
-                                          .toList();
+                                  height: 80,
+                                  child: FormField<List<Tag>>(
+                                    validator: (value) {
+                                      if (ideaTags.isEmpty) {
+                                        return localizations
+                                                ?.translate('tagselectvalid') ??
+                                            "";
+                                      }
+                                      return null;
                                     },
-                                    borderRadius: 4.0,
-                                    borderColor: ColorP.cardBackground,
-                                    hintFontSize: 16,
-                                    options: tags
-                                        .map((participant) => ValueItem(
-                                            label: participant.name,
-                                            value: participant.id))
-                                        .toList(),
-                                    maxItems: 5,
-                                    onOptionRemoved: (index, option) {
-                                      setState(() {
-                                        _tagsController.clearSelection(option);
-                                      });
+                                    builder: (field) {
+                                      return Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          MultiSelectDropDown(
+                                            controller: _tagsController,
+                                            onOptionSelected: (List<ValueItem>
+                                                selectedOptions) {
+                                              field.didChange(selectedOptions
+                                                  .map((e) => tags
+                                                      .where((element) =>
+                                                          element.id == e.value)
+                                                      .first)
+                                                  .toList());
+                                              ideaTags = selectedOptions
+                                                  .map((e) => tags
+                                                      .where((element) =>
+                                                          element.id == e.value)
+                                                      .first)
+                                                  .toList();
+                                            },
+                                            borderRadius: 4.0,
+                                            borderColor: ColorP.cardBackground,
+                                            hintFontSize: 16,
+                                            options: tags
+                                                .map((tag) => ValueItem(
+                                                    label: tag.title,
+                                                    value: tag.id))
+                                                .toList(),
+                                            maxItems: 5,
+                                            onOptionRemoved: (index, option) {
+                                              setState(() {
+                                                _tagsController
+                                                    .clearSelection(option);
+                                              });
+                                            },
+                                            selectionType: SelectionType.multi,
+                                            chipConfig: const ChipConfig(
+                                                wrapType: WrapType.scroll,
+                                                backgroundColor: ColorP.ColorD,
+                                                deleteIconColor: ColorP.ColorA,
+                                                labelColor: ColorP.textColor),
+                                            dropdownHeight: 150,
+                                            selectedOptions: ideaTags
+                                                .map((e) => ValueItem(
+                                                    label: e.title,
+                                                    value: e.id))
+                                                .toList(),
+                                            dropdownBackgroundColor:
+                                                ColorP.cardBackground,
+                                            dropdownBorderRadius: 25,
+                                            selectedOptionBackgroundColor:
+                                                ColorP.ColorD,
+                                            selectedOptionTextColor:
+                                                ColorP.textColor,
+                                            radiusGeometry:
+                                                const BorderRadius.all(
+                                                    Radius.circular(25.0)),
+                                            optionsBackgroundColor:
+                                                ColorP.cardBackground,
+                                            fieldBackgroundColor:
+                                                ColorP.cardBackground,
+                                            hintStyle: const TextStyle(
+                                                fontSize: 16,
+                                                color: ColorP.textColor),
+                                            optionTextStyle: const TextStyle(
+                                                fontSize: 16,
+                                                color: ColorP.textColor),
+                                            selectedOptionIcon:
+                                                const Icon(Icons.check_circle),
+                                          ),
+                                          if (field.errorText != null)
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                  top: 8, left: 8),
+                                              child: Text(
+                                                field.errorText!,
+                                                style: const TextStyle(
+                                                  color: Colors.red,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      );
                                     },
-                                    selectionType: SelectionType.multi,
-                                    chipConfig: const ChipConfig(
-                                        wrapType: WrapType.scroll,
-                                        backgroundColor: ColorP.ColorD,
-                                        deleteIconColor: ColorP.ColorA,
-                                        labelColor: ColorP.textColor),
-                                    dropdownHeight: 150,
-                                    dropdownBackgroundColor:
-                                        ColorP.cardBackground,
-                                    dropdownBorderRadius: 25,
-                                    selectedOptionBackgroundColor:
-                                        ColorP.ColorD,
-                                    selectedOptionTextColor: ColorP.textColor,
-                                    radiusGeometry: const BorderRadius.all(
-                                        Radius.circular(25.0)),
-                                    optionsBackgroundColor:
-                                        ColorP.cardBackground,
-                                    fieldBackgroundColor: ColorP.cardBackground,
-                                    hintStyle: const TextStyle(
-                                        fontSize: 16, color: ColorP.textColor),
-                                    optionTextStyle: const TextStyle(
-                                        fontSize: 16, color: ColorP.textColor),
-                                    selectedOptionIcon:
-                                        const Icon(Icons.check_circle),
                                   ),
                                 ),
-                                const SizedBox(height: 30),
-                                const Text(
-                                  'Enter image *',
-                                  style: TextStyle(
-                                      color: ColorP.textColorSubtitle,
-                                      fontSize: 14),
-                                ),
-                                ElevatedButton(
-                                  style: ButtonStyle(
-                                    backgroundColor:
-                                        const MaterialStatePropertyAll(
-                                            ColorP.ColorD),
-                                    overlayColor: MaterialStatePropertyAll(
-                                        ColorP.ColorD.withOpacity(0.98)),
-                                    elevation:
-                                        const MaterialStatePropertyAll(10),
-                                    minimumSize: MaterialStateProperty.all(
-                                        const Size(150, 50)),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: <Widget>[
-                                      const Icon(
-                                        Icons.file_upload_rounded,
-                                        color: ColorP.textColor,
-                                        size: 24.0,
-                                      ),
-                                      const SizedBox(
-                                        width: 10,
-                                      ),
-                                      Text(localizations.translate("addImage"),
-                                          style: const TextStyle(
-                                              color: ColorP.textColor)),
-                                    ],
-                                  ),
-                                  onPressed: () async {
-                                    _selectFile(true);
-                                  },
-                                ),
+                                // const SizedBox(height: 30),
+                                // const Padding(
+                                //   padding: EdgeInsets.all(8.0),
+                                //   child: Text(
+                                //     'Enter image *',
+                                //     style: TextStyle(
+                                //         color: ColorP.textColorSubtitle,
+                                //         fontSize: 14),
+                                //   ),
+                                // ),
+                                // ElevatedButton(
+                                //   style: ButtonStyle(
+                                //     backgroundColor:
+                                //         const MaterialStatePropertyAll(
+                                //             ColorP.ColorD),
+                                //     overlayColor: MaterialStatePropertyAll(
+                                //         ColorP.ColorD.withOpacity(0.98)),
+                                //     elevation:
+                                //         const MaterialStatePropertyAll(10),
+                                //     minimumSize: MaterialStateProperty.all(
+                                //         const Size(150, 50)),
+                                //   ),
+                                //   child: Row(
+                                //     mainAxisAlignment: MainAxisAlignment.center,
+                                //     children: <Widget>[
+                                //       const Icon(
+                                //         Icons.file_upload_rounded,
+                                //         color: ColorP.textColor,
+                                //         size: 24.0,
+                                //       ),
+                                //       const SizedBox(
+                                //         width: 10,
+                                //       ),
+                                //       Text(localizations.translate("addImage"),
+                                //           style: const TextStyle(
+                                //               color: ColorP.textColor)),
+                                //     ],
+                                //   ),
+                                //   onPressed: () async {
+                                //     _selectFile(true);
+                                //   },
+                                // ),
                                 const SizedBox(
                                   height: 30,
                                 ),
-                                const Text(
-                                  'Enter the idea description *',
-                                  style: TextStyle(
-                                      color: ColorP.textColorSubtitle,
-                                      fontSize: 14),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    localizations?.translate(
+                                            'taskValidationDescription') ??
+                                        "",
+                                    style: const TextStyle(
+                                        color: ColorP.textColorSubtitle,
+                                        fontSize: 14),
+                                  ),
                                 ),
                                 SizedBox(
                                   height: 300,
@@ -409,6 +502,26 @@ class _IdeaAddPageState extends State<IdeaAddPage> {
                                           ),
                                         ),
                                       ),
+                                      const SizedBox(
+                                        height: 8,
+                                      ),
+                                      if (isNotValidDescription == true)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                              top: 8, left: 8),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                              localizations?.translate(
+                                                      'taskValidationDescription') ??
+                                                  "",
+                                              style: const TextStyle(
+                                                color: Colors.red,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                                     ],
                                   ),
                                 ),
@@ -430,7 +543,8 @@ class _IdeaAddPageState extends State<IdeaAddPage> {
                                           const Size(150, 50)),
                                     ),
                                     child: Text(
-                                        localizations.translate("submit"),
+                                        localizations?.translate("submit") ??
+                                            "",
                                         style: const TextStyle(
                                             color: ColorP.textColor)),
                                     onPressed: () {
@@ -456,39 +570,59 @@ class _IdeaAddPageState extends State<IdeaAddPage> {
     );
   }
 
-  void _addIdea() {
-    if (formKey.currentState!.validate()) {
-      if (widget.uIdea != null) {
-        String title = titleController.text;
-        String content = jsonEncode(_controller.document.toDelta().toJson());
+  void _addIdea() async {
+    String content = jsonEncode(_controller.document.toDelta().toJson());
+    String title = titleController.text;
 
-        Idea newIdea = Idea(
-          id: widget.uIdea!.id,
-          title: title,
-          category: _ideaCategory,
-          description: content,
-          tags: ideaTags,
-          image: selectedImages.first,
-        );
-
-        IdeaData.upadateIdea(newIdea);
+    setState(() {
+      if (content.isEmpty || _controller.document.isEmpty()) {
+        isNotValidDescription = true;
       } else {
-        String title = titleController.text;
-        String content = jsonEncode(_controller.document.toDelta().toJson());
-        Idea newIdea = Idea(
-          id: 5,
-          title: title,
-          category: _ideaCategory,
-          description: content,
-          tags: ideaTags,
-          image: "",
-        );
-
-        IdeaData.addIdea(newIdea);
+        isNotValidDescription = false;
       }
+    });
 
-      widget.onIdeaAdded(true);
-      Navigator.pop(context);
+    if (formKey.currentState!.validate() && !isNotValidDescription) {
+      Idea newIdea = Idea(
+        title: title,
+        category: _ideaCategory,
+        description: content,
+        tags: ideaTags,
+      );
+      if (widget.uIdea != null) {
+        try {
+          await ideaRepo
+              .updateIdea(widget.uIdea?.id ?? "", newIdea)
+              .whenComplete(() {
+            Navigator.pop(context);
+          });
+        } catch (e) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text(localizations?.translate("error") ?? "",
+                      style: const TextStyle(
+                          color: Color.fromARGB(255, 255, 255, 255)))),
+            );
+          }
+        }
+      } else {
+        try {
+          await ideaRepo.addIdea(newIdea).whenComplete(() {
+            widget.onIdeaAdded(true);
+            Navigator.pop(context);
+          });
+        } catch (e) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text(localizations?.translate("error") ?? "",
+                      style: const TextStyle(
+                          color: Color.fromARGB(255, 255, 255, 255)))),
+            );
+          }
+        }
+      }
     }
   }
 

@@ -1,12 +1,12 @@
 import 'package:appflowy_board/appflowy_board.dart';
 import 'package:ctracker/components/note_board.dart';
-import 'package:ctracker/constant/color.dart';
 import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/constant/values.dart';
-import 'package:ctracker/models/general_note.dart';
+import 'package:ctracker/models/board.dart';
+import 'package:ctracker/repository/board_repository_implementation.dart';
+import 'package:ctracker/repository/sticky_note_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class GeneralNotes extends StatefulWidget {
   const GeneralNotes({super.key});
@@ -17,24 +17,53 @@ class GeneralNotes extends StatefulWidget {
 
 class _GeneralNotesState extends State<GeneralNotes> {
   bool isInitialized = false;
+  MyLocalizations? localizations;
+  late StickyNoteRepositoryImplementation stickyRepo;
+  late BoardRepositoryImplementation boardRepo;
   late AppFlowyBoardController controller;
-  late GeneralNote generalNote;
+  late List<Board> boardsWithNotes;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    localizations =
+        MyLocalizations.of(context); // Initialize localizations here
+  }
+
   @override
   void initState() {
-    Future.delayed(const Duration(seconds: 2), () {
+    initializeData();
+
+    super.initState();
+  }
+
+  void initializeData() async {
+    isInitialized = false;
+    stickyRepo = StickyNoteRepositoryImplementation();
+    boardRepo = BoardRepositoryImplementation();
+    controller = AppFlowyBoardController();
+
+    try {
+      final stickyFetch = await boardRepo.getAllBoards();
+
       setState(() {
-        generalNote = GeneralNote([]);
-        isInitialized = false;
-        controller = AppFlowyBoardController();
+        boardsWithNotes = stickyFetch;
         isInitialized = true;
       });
-    });
-    super.initState();
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(localizations?.translate("error") ?? "",
+                  style: const TextStyle(
+                      color: Color.fromARGB(255, 255, 255, 255)))),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final localizations = MyLocalizations.of(context);
     double width = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: ColorP.background,
@@ -50,12 +79,12 @@ class _GeneralNotesState extends State<GeneralNotes> {
                       children: [
                         Container(
                           padding: const EdgeInsets.all(16.0),
-                          child: const Align(
+                          child: Align(
                             alignment: Alignment.center,
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                SizedBox(
+                                const SizedBox(
                                   width: 10,
                                 ),
                                 SizedBox(
@@ -66,16 +95,17 @@ class _GeneralNotesState extends State<GeneralNotes> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
-                                        "General notes",
-                                        style: TextStyle(
+                                        localizations?.translate('gnote') ?? "",
+                                        style: const TextStyle(
                                           fontSize: 36.0,
                                           color: ColorP.textColor,
                                         ),
                                       ),
-                                      SizedBox(height: 8.0),
+                                      const SizedBox(height: 8.0),
                                       Text(
-                                        "Anotate the important stuff",
-                                        style: TextStyle(
+                                        localizations?.translate('gnotesub') ??
+                                            "",
+                                        style: const TextStyle(
                                           fontSize: 20.0,
                                           color: ColorP.textColor,
                                         ),
@@ -104,7 +134,8 @@ class _GeneralNotesState extends State<GeneralNotes> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(15.0),
                                           child: NoteBoard(
-                                            task: generalNote,
+                                            onUpdate: initializeData,
+                                            board: boardsWithNotes,
                                             controller: controller,
                                           ),
                                         ),
@@ -131,8 +162,10 @@ class _GeneralNotesState extends State<GeneralNotes> {
                                             children: <Widget>[
                                               TextField(
                                                 decoration: InputDecoration(
-                                                  labelText: localizations
-                                                      .translate("title"),
+                                                  labelText:
+                                                      localizations?.translate(
+                                                              "title") ??
+                                                          "",
                                                   labelStyle: const TextStyle(
                                                       color: ColorP.ColorC),
                                                 ),
@@ -146,19 +179,48 @@ class _GeneralNotesState extends State<GeneralNotes> {
                                                   height: ValuesConst
                                                       .boxSeparatorSize),
                                               ElevatedButton(
-                                                onPressed: () {
+                                                onPressed: () async {
                                                   if (title.isNotEmpty) {
-                                                    final group =
-                                                        AppFlowyGroupData(
-                                                            id: title,
-                                                            name: title,
-                                                            items: []);
-                                                    controller.addGroup(group);
-                                                    Navigator.pop(context);
+                                                    try {
+                                                      Board b = await boardRepo
+                                                          .addBoards(Board(
+                                                              title: title));
+                                                      final group =
+                                                          AppFlowyGroupData(
+                                                              id: b.id ?? "",
+                                                              name: b.title,
+                                                              items: []);
+
+                                                      controller
+                                                          .addGroup(group);
+                                                      if (context.mounted) {
+                                                        Navigator.pop(context);
+                                                      }
+                                                    } catch (e) {
+                                                      if (context.mounted) {
+                                                        ScaffoldMessenger.of(
+                                                                context)
+                                                            .showSnackBar(
+                                                          SnackBar(
+                                                              content: Text(
+                                                                  localizations
+                                                                          ?.translate(
+                                                                              "error") ??
+                                                                      "",
+                                                                  style: const TextStyle(
+                                                                      color: Color.fromARGB(
+                                                                          255,
+                                                                          255,
+                                                                          255,
+                                                                          255)))),
+                                                        );
+                                                      }
+                                                    }
                                                   }
                                                 },
                                                 child: Text(localizations
-                                                    .translate("add")),
+                                                        ?.translate("add") ??
+                                                    ""),
                                               ),
                                             ],
                                           ),
@@ -167,7 +229,8 @@ class _GeneralNotesState extends State<GeneralNotes> {
                                     );
                                   },
                                   shape: const CircleBorder(),
-                                  tooltip: localizations.translate("add"),
+                                  tooltip:
+                                      localizations?.translate("add") ?? "",
                                   hoverColor: ColorP.ColorD.withOpacity(0.8),
                                   backgroundColor: ColorP.ColorD,
                                   child: const Icon(

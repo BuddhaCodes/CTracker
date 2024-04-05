@@ -6,7 +6,7 @@ class ReminderCard extends StatelessWidget {
   final String title;
   final List<Reminder> reminders;
 
-  ReminderCard({required this.title, required this.reminders});
+  const ReminderCard({super.key, required this.title, required this.reminders});
 
   @override
   Widget build(BuildContext context) {

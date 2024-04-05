@@ -1,6 +1,8 @@
 import 'package:calendar_view/calendar_view.dart';
 import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/models/journal.dart';
+import 'package:ctracker/repository/journal_repository_implementation.dart';
+import 'package:ctracker/utils/localization.dart';
 import 'package:ctracker/utils/utils.dart';
 import 'package:ctracker/views/jounral_entry_page.dart';
 import 'package:flutter/material.dart';
@@ -9,17 +11,25 @@ class JournalPage extends StatefulWidget {
   const JournalPage({super.key});
 
   @override
-  _JournalPageState createState() => _JournalPageState();
+  JournalPageState createState() => JournalPageState();
 }
 
-class _JournalPageState extends State<JournalPage> {
+class JournalPageState extends State<JournalPage> {
   late Future<List<Journal>?> _journalFuture;
-
+  late JournalRepositoryImplementation journalRepo;
   List<CalendarEventData> _events = [];
+  MyLocalizations? localizations;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    localizations =
+        MyLocalizations.of(context); // Initialize localizations here
+  }
 
   @override
   void initState() {
     super.initState();
+    journalRepo = JournalRepositoryImplementation();
     _journalFuture = fetchReminderFromDatabase();
   }
 
@@ -161,6 +171,45 @@ class _JournalPageState extends State<JournalPage> {
                                                                   width: 36,
                                                                 ),
                                                               ),
+                                                              Expanded(
+                                                                child:
+                                                                    Container(
+                                                                  decoration:
+                                                                      BoxDecoration(
+                                                                    color: Colors
+                                                                        .white70,
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                            10),
+                                                                    border:
+                                                                        Border
+                                                                            .all(
+                                                                      color: Colors
+                                                                          .white70,
+                                                                    ),
+                                                                  ),
+                                                                  child: Utils.deleteIcon(
+                                                                      onPressed:
+                                                                          () async {
+                                                                    try {
+                                                                      journalRepo
+                                                                          .deleteJournal(journals[index].id ??
+                                                                              "")
+                                                                          .whenComplete(() =>
+                                                                              refreshState());
+                                                                    } catch (e) {
+                                                                      if (context
+                                                                          .mounted) {
+                                                                        ScaffoldMessenger.of(context)
+                                                                            .showSnackBar(
+                                                                          SnackBar(
+                                                                              content: Text(localizations?.translate("error") ?? "", style: const TextStyle(color: Color.fromARGB(255, 255, 255, 255)))),
+                                                                        );
+                                                                      }
+                                                                    }
+                                                                  }),
+                                                                ),
+                                                              ),
                                                             ],
                                                           ),
                                                         ),
@@ -194,7 +243,7 @@ class _JournalPageState extends State<JournalPage> {
                                                                   fetchReminderFromDatabase)),
                                                 ).then((res) => refreshState());
                                               },
-                                              child: Icon(Icons.add),
+                                              child: const Icon(Icons.add),
                                             ),
                                           ),
                                         ),
@@ -234,10 +283,20 @@ class _JournalPageState extends State<JournalPage> {
     );
   }
 
-  Future<List<Journal>?> fetchReminderFromDatabase() {
-    return Future.delayed(const Duration(seconds: 2), () {
-      return JournalData.getAllJournals();
-    });
+  Future<List<Journal>?> fetchReminderFromDatabase() async {
+    try {
+      return journalRepo.getAllJournal();
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(localizations?.translate("error") ?? "",
+                  style: const TextStyle(
+                      color: Color.fromARGB(255, 255, 255, 255)))),
+        );
+      }
+      return [];
+    }
   }
 
   void refreshState() {

@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:ctracker/constant/color_palette.dart';
+import 'package:ctracker/utils/localization.dart';
 import 'package:flutter/material.dart';
 
 class CircularGraph extends StatelessWidget {
@@ -8,13 +9,14 @@ class CircularGraph extends StatelessWidget {
   final int completedTasks;
 
   const CircularGraph({
-    Key? key,
+    super.key,
     required this.totalTasks,
     required this.completedTasks,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final localizations = MyLocalizations.of(context);
     return Row(
       children: [
         Expanded(
@@ -29,8 +31,8 @@ class CircularGraph extends StatelessWidget {
                   height: 20,
                   color: Colors.blue,
                 ),
-                SizedBox(height: 5),
-                Text('Completed'),
+                const SizedBox(height: 5),
+                Text(localizations.translate('completed')),
               ],
             ),
           ),
@@ -38,7 +40,7 @@ class CircularGraph extends StatelessWidget {
         Expanded(
           flex: 7,
           child: CustomPaint(
-            size: Size(200, 200),
+            size: const Size(200, 200),
             painter: CircularGraphPainter(totalTasks, completedTasks),
           ),
         ),
@@ -54,8 +56,8 @@ class CircularGraph extends StatelessWidget {
                   height: 20,
                   color: ColorP.ColorD,
                 ),
-                SizedBox(height: 5),
-                Text('Not Completed'),
+                const SizedBox(height: 5),
+                Text(localizations.translate('nocompleted')),
               ],
             ),
           ),
@@ -89,8 +91,10 @@ class CircularGraphPainter extends CustomPainter {
     Offset center = Offset(size.width / 2, size.height / 2);
 
     canvas.drawCircle(center, radius, bgCirclePaint);
-
-    double completedAngle = (completedTasks / totalTasks) * 2 * pi;
+    double completedAngle = 0;
+    if (totalTasks != 0) {
+      completedAngle = (completedTasks / totalTasks) * 2 * pi;
+    }
 
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
@@ -105,7 +109,7 @@ class CircularGraphPainter extends CustomPainter {
         color: ColorP.textColor,
         fontSize: 32.0,
       ),
-      text: '$completedTasks / $totalTasks',
+      text: totalTasks == 0 ? "0" : '$completedTasks / $totalTasks',
     );
     TextPainter tp = TextPainter(
       text: span,

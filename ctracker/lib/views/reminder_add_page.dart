@@ -2,17 +2,21 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:ctracker/constant/color.dart';
 import 'package:ctracker/constant/color_palette.dart';
+import 'package:ctracker/models/enums/repeat_type_enum.dart';
+import 'package:ctracker/models/enums/status_enum.dart';
 import 'package:ctracker/models/reminder.dart';
-import 'package:ctracker/models/reminder_categories.dart';
+import 'package:ctracker/models/repeat_types.dart';
+import 'package:ctracker/models/status.dart';
+import 'package:ctracker/repository/reminder_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_quill/flutter_quill.dart';
 import 'package:intl/intl.dart';
+// ignore: depend_on_referenced_packages
 import 'package:path_provider/path_provider.dart';
 
+// ignore: must_be_immutable
 class ReminderAddPage extends StatefulWidget {
   final Function onReminderAdded;
   Reminder? uReminder;
@@ -22,59 +26,57 @@ class ReminderAddPage extends StatefulWidget {
 }
 
 class _ReminderAddPageState extends State<ReminderAddPage> {
-  late ReminderCategory _reminderCategory;
-
-  late List<ReminderCategory> _reminderCategories;
   late TextEditingController _dateController;
-  late QuillController _controller;
-
   late TextEditingController titleController;
-  late TextEditingController descriptionController;
+  late ReminderRepositoryImplementation reminderRepo;
   bool isInit = false;
+  MyLocalizations? localizations;
+  late RepeatTypeEnum _selectedRepeatType;
 
   late int imageCounts;
   late List<String> selectedImages;
 
   final formKey = GlobalKey<FormState>();
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    localizations =
+        MyLocalizations.of(context); // Initialize localizations here
+  }
 
   @override
   void initState() {
     super.initState();
     isInit = false;
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _reminderCategories = ReminderCategoryData.getAllItemType();
-        _controller = QuillController.basic();
-        _dateController = TextEditingController();
-        titleController = TextEditingController();
-        descriptionController = TextEditingController();
+    initializeData();
+  }
 
-        if (widget.uReminder != null) {
-          imageCounts = widget.uReminder!.images.length;
-          selectedImages = widget.uReminder!.images;
-          titleController.text = widget.uReminder!.title;
-          descriptionController.text = widget.uReminder!.description;
-          Document doc =
-              Document.fromJson(jsonDecode(widget.uReminder?.note ?? ""));
-          _controller.document = doc;
-          _dateController.text = DateFormat('yyyy-MM-dd hh:mm a')
-              .format(widget.uReminder!.duedate);
-          _reminderCategory = ReminderCategoryData.getAllItemType()
-              .where((element) => element.id == widget.uReminder?.categories.id)
-              .first;
-        } else {
-          imageCounts = 0;
-          selectedImages = [];
-          _reminderCategory = ReminderCategoryData.getAllItemType().first;
-        }
-      });
+  void initializeData() async {
+    _dateController = TextEditingController();
+    titleController = TextEditingController();
+    reminderRepo = ReminderRepositoryImplementation();
+
+    setState(() {
+      if (widget.uReminder != null) {
+        titleController.text = widget.uReminder!.title;
+        _selectedRepeatType = RepeatTypeEnum.values
+            .where((element) => element.id == widget.uReminder?.type.id)
+            .first;
+        _dateController.text =
+            DateFormat('yyyy-MM-dd hh:mm a').format(widget.uReminder!.duedate);
+      } else {
+        _selectedRepeatType = RepeatTypeEnum.hourly;
+        imageCounts = 0;
+        selectedImages = [];
+      }
+    });
+    setState(() {
       isInit = true;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final localizations = MyLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: ColorP.background,
@@ -96,13 +98,19 @@ class _ReminderAddPageState extends State<ReminderAddPage> {
                           child: Form(
                             key: formKey,
                             child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'Enter the title *',
-                                  style: TextStyle(
-                                      color: ColorP.textColorSubtitle,
-                                      fontSize: 14),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    localizations?.translate(
+                                            'ideaValidationtTitle') ??
+                                        "",
+                                    style: const TextStyle(
+                                        color: ColorP.textColorSubtitle,
+                                        fontSize: 14),
+                                  ),
                                 ),
                                 TextFormField(
                                   controller: titleController,
@@ -111,9 +119,6 @@ class _ReminderAddPageState extends State<ReminderAddPage> {
                                       borderRadius: BorderRadius.all(
                                           Radius.circular(25.0)),
                                     ),
-                                    labelText: 'Enter the title *',
-                                    labelStyle:
-                                        TextStyle(color: ColorP.textColor),
                                     filled: true,
                                     fillColor: ColorP.cardBackground,
                                     focusedBorder: OutlineInputBorder(
@@ -123,75 +128,45 @@ class _ReminderAddPageState extends State<ReminderAddPage> {
                                   ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return 'Please enter some text';
+                                      return localizations?.translate(
+                                              'ideaValidationtTitle') ??
+                                          "";
                                     }
                                     return null;
                                   },
                                 ),
                                 const SizedBox(height: 30),
-                                const Text(
-                                  'Enter the description *',
-                                  style: TextStyle(
-                                      color: ColorP.textColorSubtitle,
-                                      fontSize: 14),
-                                ),
-                                TextFormField(
-                                  maxLines: 4,
-                                  controller: descriptionController,
-                                  decoration: const InputDecoration(
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(25.0)),
-                                    ),
-                                    labelText: 'Enter the description *',
-                                    labelStyle:
-                                        TextStyle(color: ColorP.textColor),
-                                    filled: true,
-                                    fillColor: ColorP.cardBackground,
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(25.0)),
-                                    ),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    localizations?.translate("repeattypeadd") ??
+                                        "",
+                                    style: const TextStyle(
+                                        color: ColorP.textColorSubtitle,
+                                        fontSize: 14),
                                   ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter some description';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 30),
-                                Text(
-                                  "Select ${localizations.translate("category")}",
-                                  style: const TextStyle(
-                                      color: ColorP.textColorSubtitle,
-                                      fontSize: 14),
                                 ),
                                 Theme(
                                   data: Theme.of(context).copyWith(
                                     canvasColor: ColorP.cardBackground,
                                   ),
                                   child: DropdownButtonFormField(
-                                    value: _reminderCategory,
+                                    value: _selectedRepeatType,
                                     borderRadius: BorderRadius.circular(20.0),
                                     onChanged: (newValue) {
                                       setState(() {
-                                        _reminderCategory = newValue ??
-                                            ReminderCategory(
-                                              id: -1,
-                                              name: "",
-                                              color: Colors.black,
-                                            );
+                                        _selectedRepeatType =
+                                            newValue ?? RepeatTypeEnum.hourly;
                                       });
                                     },
-                                    items: _reminderCategories.map<
-                                        DropdownMenuItem<ReminderCategory>>(
-                                      (ReminderCategory value) {
-                                        return DropdownMenuItem<
-                                            ReminderCategory>(
+                                    items: RepeatTypeEnum.values
+                                        .map<DropdownMenuItem<RepeatTypeEnum>>(
+                                      (RepeatTypeEnum value) {
+                                        return DropdownMenuItem<RepeatTypeEnum>(
                                           value: value,
                                           child: Text(
-                                            value.name,
+                                            value
+                                                .name, // Convert enum value to string
                                             style: const TextStyle(
                                                 color: ColorP.textColor),
                                           ),
@@ -203,8 +178,9 @@ class _ReminderAddPageState extends State<ReminderAddPage> {
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(25.0)),
                                       ),
-                                      labelText:
-                                          localizations.translate("category"),
+                                      labelText: localizations
+                                              ?.translate("repeat_type") ??
+                                          "",
                                       labelStyle: const TextStyle(
                                           color: ColorP.textColor),
                                       filled: true,
@@ -215,66 +191,53 @@ class _ReminderAddPageState extends State<ReminderAddPage> {
                                             Radius.circular(25.0)),
                                       ),
                                     ),
+                                    validator: (value) {
+                                      if (value == null) {
+                                        return localizations
+                                                ?.translate("repeattypeadd") ??
+                                            "";
+                                      }
+                                      return null;
+                                    },
                                   ),
-                                ),
-                                const SizedBox(height: 30),
-                                const Text(
-                                  'Enter image *',
-                                  style: TextStyle(
-                                      color: ColorP.textColorSubtitle,
-                                      fontSize: 14),
-                                ),
-                                ElevatedButton(
-                                  style: ButtonStyle(
-                                    backgroundColor:
-                                        const MaterialStatePropertyAll(
-                                            ColorP.ColorD),
-                                    overlayColor: MaterialStatePropertyAll(
-                                        ColorP.ColorD.withOpacity(0.98)),
-                                    elevation:
-                                        const MaterialStatePropertyAll(10),
-                                    minimumSize: MaterialStateProperty.all(
-                                        const Size(150, 50)),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: <Widget>[
-                                      const Icon(
-                                        Icons.file_upload_rounded,
-                                        color: ColorP.textColor,
-                                        size: 24.0,
-                                      ),
-                                      const SizedBox(
-                                        width: 10,
-                                      ),
-                                      Text(localizations.translate("addImage"),
-                                          style: const TextStyle(
-                                              color: ColorP.textColor)),
-                                    ],
-                                  ),
-                                  onPressed: () async {
-                                    _selectFile(true);
-                                  },
                                 ),
                                 const SizedBox(
                                   height: 30,
                                 ),
-                                const Text(
-                                  'Enter the date *',
-                                  style: TextStyle(
-                                      color: ColorP.textColorSubtitle,
-                                      fontSize: 14),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    localizations?.translate('dateadd') ?? "",
+                                    style: const TextStyle(
+                                        color: ColorP.textColorSubtitle,
+                                        fontSize: 14),
+                                  ),
                                 ),
-                                TextField(
+                                TextFormField(
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return localizations
+                                              ?.translate('dateadd') ??
+                                          "";
+                                    }
+                                    DateFormat format =
+                                        DateFormat("yyyy-MM-dd hh:mm a");
+                                    if (!format
+                                        .parse(value)
+                                        .isAfter(DateTime.now())) {
+                                      return localizations
+                                              ?.translate('daterange') ??
+                                          "";
+                                    }
+                                    return null;
+                                  },
                                   controller: _dateController,
                                   decoration: const InputDecoration(
-                                      icon: Icon(
-                                        Icons.calendar_today_rounded,
-                                        color: ColorP.textColor,
-                                      ),
-                                      labelText: "Selecciona fecha",
-                                      labelStyle: TextStyle(
-                                          color: ColorP.textColorSubtitle)),
+                                    icon: Icon(
+                                      Icons.calendar_today_rounded,
+                                      color: ColorP.textColor,
+                                    ),
+                                  ),
                                   style:
                                       const TextStyle(color: ColorP.textColor),
                                   onTap: () async {
@@ -294,62 +257,6 @@ class _ReminderAddPageState extends State<ReminderAddPage> {
                                     }
                                   },
                                 ),
-                                const SizedBox(height: 30),
-                                const Text(
-                                  'Enter the note content *',
-                                  style: TextStyle(
-                                      color: ColorP.textColorSubtitle,
-                                      fontSize: 14),
-                                ),
-                                SizedBox(
-                                  height: 300,
-                                  child: Column(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.all(20),
-                                        child: QuillToolbar.simple(
-                                          configurations:
-                                              QuillSimpleToolbarConfigurations(
-                                            controller: _controller,
-                                            showLink: true,
-                                            showSearchButton: false,
-                                            showCodeBlock: false,
-                                            showInlineCode: false,
-                                            showAlignmentButtons: false,
-                                            showIndent: false,
-                                            showSubscript: false,
-                                            showSuperscript: false,
-                                            showQuote: false,
-                                            showStrikeThrough: false,
-                                            showUnderLineButton: true,
-                                            showClearFormat: false,
-                                            color: ColorP.textColor,
-                                            sharedConfigurations:
-                                                const QuillSharedConfigurations(
-                                              locale: Locale('en'),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      const Divider(),
-                                      Expanded(
-                                        child: QuillEditor.basic(
-                                          configurations:
-                                              QuillEditorConfigurations(
-                                            controller: _controller,
-                                            readOnly: false,
-                                            minHeight: 400,
-                                            padding: const EdgeInsets.all(20),
-                                            sharedConfigurations:
-                                                const QuillSharedConfigurations(
-                                              locale: Locale('en'),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
                                 const SizedBox(
                                   height: 30,
                                 ),
@@ -368,7 +275,8 @@ class _ReminderAddPageState extends State<ReminderAddPage> {
                                           const Size(150, 50)),
                                     ),
                                     child: Text(
-                                        localizations.translate("submit"),
+                                        localizations?.translate("submit") ??
+                                            "",
                                         style: const TextStyle(
                                             color: ColorP.textColor)),
                                     onPressed: () {
@@ -394,50 +302,31 @@ class _ReminderAddPageState extends State<ReminderAddPage> {
     );
   }
 
-  void _addReminder() {
+  void _addReminder() async {
     if (formKey.currentState!.validate()) {
-      if (widget.uReminder != null) {
-        String title = titleController.text;
-        String description = descriptionController.text;
-        String content = jsonEncode(_controller.document.toDelta().toJson());
+      String title = titleController.text;
 
-        setState(() {
-          _controller.clear();
+      Reminder newReminder = Reminder(
+        title: title,
+        type: RepeatType(
+            id: _selectedRepeatType.id, name: _selectedRepeatType.name),
+        duedate: DateFormat('yyyy-MM-dd hh:mm a').parse(_dateController.text),
+      );
+      if (widget.uReminder == null) {
+        newReminder.status =
+            Status(id: StatusEnum.notDone.id, name: StatusEnum.notDone.name);
+        await reminderRepo.addReminder(newReminder).whenComplete(() {
+          widget.onReminderAdded(true);
+          Navigator.pop(context);
         });
-        Reminder newReminder = Reminder(
-          id: widget.uReminder!.id,
-          title: title,
-          note: content,
-          duedate: DateFormat('yyyy-MM-dd hh:mm a').parse(_dateController.text),
-          categories: _reminderCategory,
-          description: description,
-          images: selectedImages,
-        );
-
-        ReminderData.updateReminder(newReminder);
       } else {
-        String title = titleController.text;
-        String description = descriptionController.text;
-        String content = jsonEncode(_controller.document.toDelta().toJson());
-
-        setState(() {
-          _controller.clear();
+        newReminder.status = widget.uReminder?.status;
+        await reminderRepo
+            .updateReminder(widget.uReminder?.id ?? "", newReminder)
+            .whenComplete(() {
+          Navigator.pop(context);
         });
-        Reminder newReminder = Reminder(
-          id: 5,
-          title: title,
-          note: content,
-          duedate: DateFormat('yyyy-MM-dd hh:mm a').parse(_dateController.text),
-          categories: _reminderCategory,
-          description: description,
-          images: selectedImages,
-        );
-
-        ReminderData.addReminder(newReminder);
       }
-
-      widget.onReminderAdded(true);
-      Navigator.pop(context);
     }
   }
 

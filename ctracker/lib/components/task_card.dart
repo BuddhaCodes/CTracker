@@ -1,12 +1,16 @@
-import 'package:ctracker/constant/color.dart';
 import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/constant/icons.dart';
+import 'package:ctracker/models/enums/status_enum.dart';
 import 'package:ctracker/models/task.dart';
+import 'package:ctracker/repository/task_repository_implementation.dart';
+import 'package:ctracker/utils/localization.dart';
 import 'package:ctracker/utils/utils.dart';
 import 'package:ctracker/views/task_add_page.dart';
+import 'package:ctracker/views/task_view_note_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
+// ignore: must_be_immutable
 class TaskCard extends StatefulWidget {
   final Task task;
   int index;
@@ -14,20 +18,31 @@ class TaskCard extends StatefulWidget {
   Function(int) onExpanded;
   VoidCallback onDelete;
   TaskCard(
-      {required this.task,
+      {super.key,
+      required this.task,
       required this.index,
       required this.selectedTile,
       required this.onExpanded,
       required this.onDelete});
 
   @override
-  _TaskCardState createState() => _TaskCardState();
+  TaskCardState createState() => TaskCardState();
 }
 
-class _TaskCardState extends State<TaskCard> {
+class TaskCardState extends State<TaskCard> {
+  late TaskRepositoryImplementation taskRepo;
+  MyLocalizations? localizations;
   @override
   void initState() {
+    taskRepo = TaskRepositoryImplementation();
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    localizations =
+        MyLocalizations.of(context); // Initialize localizations here
   }
 
   @override
@@ -46,7 +61,7 @@ class _TaskCardState extends State<TaskCard> {
                 width: 24,
                 height: 24,
                 colorFilter: ColorFilter.mode(
-                    widget.task.hasFinished
+                    widget.task.status.id == StatusEnum.done.id
                         ? ColorP.reminder
                         : const Color.fromARGB(255, 189, 91, 25),
                     BlendMode.srcIn)),
@@ -68,14 +83,36 @@ class _TaskCardState extends State<TaskCard> {
                     uTask: widget.task,
                   ),
                 ),
-              );
+              ).then((value) => widget.onDelete());
             }),
-            Utils.deleteIcon(onPressed: () {
-              setState(() {
-                TaskData.delete(widget.task.id);
+            Utils.deleteIcon(onPressed: () async {
+              try {
+                await taskRepo
+                    .deleteTask(widget.task.id ?? "")
+                    .whenComplete(() => widget.onDelete());
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(localizations?.translate("error") ?? "",
+                            style: const TextStyle(
+                                color: Color.fromARGB(255, 255, 255, 255)))),
+                  );
+                }
                 widget.onDelete();
-              });
+              }
             }),
+            if (widget.task.pomodoro!.note.isNotEmpty)
+              Utils.checkNotes(onPressed: () async {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TaskViewNote(
+                      uTask: widget.task,
+                    ),
+                  ),
+                );
+              }),
           ],
         ),
         children: [
@@ -97,9 +134,11 @@ class _TaskCardState extends State<TaskCard> {
                                 fontWeight: FontWeight.normal,
                               ),
                               children: [
-                                const TextSpan(
-                                  text: 'Description:',
-                                  style: TextStyle(
+                                TextSpan(
+                                  text:
+                                      localizations?.translate('description') ??
+                                          "",
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -122,7 +161,7 @@ class _TaskCardState extends State<TaskCard> {
                               ),
                             ),
                             child: Text(
-                              widget.task.category,
+                              widget.task.category.name,
                               style: const TextStyle(color: ColorP.textColor),
                             ),
                           ),
@@ -151,9 +190,11 @@ class _TaskCardState extends State<TaskCard> {
                                 fontWeight: FontWeight.normal,
                               ),
                               children: [
-                                const TextSpan(
-                                  text: 'Difficulty:',
-                                  style: TextStyle(
+                                TextSpan(
+                                  text:
+                                      localizations?.translate('difficulty') ??
+                                          "",
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -161,7 +202,7 @@ class _TaskCardState extends State<TaskCard> {
                                   style: const TextStyle(
                                     color: ColorP.textColorSubtitle,
                                   ),
-                                  text: ' ${widget.task.difficulty}',
+                                  text: ' ${widget.task.difficulty.name}',
                                 ),
                               ],
                             ),
@@ -177,9 +218,10 @@ class _TaskCardState extends State<TaskCard> {
                                 fontWeight: FontWeight.normal,
                               ),
                               children: [
-                                const TextSpan(
-                                  text: 'Effort:',
-                                  style: TextStyle(
+                                TextSpan(
+                                  text:
+                                      localizations?.translate('effort') ?? "",
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -187,7 +229,7 @@ class _TaskCardState extends State<TaskCard> {
                                   style: const TextStyle(
                                     color: ColorP.textColorSubtitle,
                                   ),
-                                  text: ' ${widget.task.effort}',
+                                  text: ' ${widget.task.effort.name}',
                                 ),
                               ],
                             ),
@@ -203,9 +245,10 @@ class _TaskCardState extends State<TaskCard> {
                                 fontWeight: FontWeight.normal,
                               ),
                               children: [
-                                const TextSpan(
-                                  text: 'Priority:',
-                                  style: TextStyle(
+                                TextSpan(
+                                  text: localizations?.translate('priority') ??
+                                      "",
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -213,7 +256,7 @@ class _TaskCardState extends State<TaskCard> {
                                   style: const TextStyle(
                                     color: ColorP.textColorSubtitle,
                                   ),
-                                  text: ' ${widget.task.priority}',
+                                  text: ' ${widget.task.priority.level}',
                                 ),
                               ],
                             ),
@@ -238,7 +281,7 @@ class _TaskCardState extends State<TaskCard> {
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: widget.task.hasFinished
+                    color: widget.task.status.id == StatusEnum.done.id
                         ? Colors.blue.withAlpha(200)
                         : ColorP.ColorD.withAlpha(200),
                     borderRadius: BorderRadius.circular(20),
@@ -247,7 +290,7 @@ class _TaskCardState extends State<TaskCard> {
                     ),
                   ),
                   child: Text(
-                    widget.task.hasFinished ? "Finished" : "Not yet",
+                    widget.task.status.name,
                     style: const TextStyle(color: ColorP.textColor),
                   ),
                 ),

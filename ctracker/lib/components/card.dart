@@ -6,16 +6,20 @@ import 'package:badges/badges.dart' as badges;
 class CardWidget extends StatefulWidget {
   final TextItem item;
   final Function() onTap;
-
-  CardWidget({required this.item, required this.onTap});
+  const CardWidget({super.key, required this.item, required this.onTap});
 
   @override
-  _CardWidgetState createState() => _CardWidgetState();
+  CardWidgetState createState() => CardWidgetState();
 }
 
-class _CardWidgetState extends State<CardWidget> {
+class CardWidgetState extends State<CardWidget> {
   Color badgeColor = ColorP.ColorD;
   bool isHover = false;
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,26 +28,7 @@ class _CardWidgetState extends State<CardWidget> {
       showBadge: true,
       ignorePointer: false,
       onTap: widget.onTap,
-      badgeContent: MouseRegion(
-        onHover: (_) {
-          setState(() {
-            badgeColor = Colors.orange;
-            Future.delayed(const Duration(seconds: 1), () {
-              isHover = true;
-              badgeColor = ColorP.ColorD;
-            });
-          });
-        },
-        onExit: (_) {
-          setState(() {
-            badgeColor = ColorP.ColorD;
-            Future.delayed(const Duration(seconds: 1), () {
-              isHover = false;
-            });
-          });
-        },
-        child: const Icon(Icons.close, color: ColorP.textColor, size: 15),
-      ),
+      badgeContent: const Icon(Icons.close, color: ColorP.textColor, size: 15),
       badgeAnimation: badges.BadgeAnimation.rotation(
         toAnimate: isHover,
       ),
@@ -62,7 +47,7 @@ class _CardWidgetState extends State<CardWidget> {
           child: Column(
             children: [
               Text(
-                widget.item.id,
+                widget.item.title,
                 style: const TextStyle(color: ColorP.textColorSubtitle),
               ),
               const SizedBox(height: 10),
@@ -70,7 +55,7 @@ class _CardWidgetState extends State<CardWidget> {
                 widget.item.subTitle,
                 style: const TextStyle(
                     fontSize: 12, color: ColorP.textColorSubtitle),
-              )
+              ),
             ],
           ),
         ),

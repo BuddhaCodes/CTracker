@@ -1,18 +1,19 @@
 import 'dart:async';
-import 'package:appflowy_board/appflowy_board.dart';
+import 'dart:convert';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:ctracker/components/note_board.dart';
-import 'package:ctracker/constant/color.dart';
 import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/constant/icons.dart';
 import 'package:ctracker/constant/values.dart';
+import 'package:ctracker/models/enums/effort_enum.dart';
+import 'package:ctracker/models/enums/status_enum.dart';
+import 'package:ctracker/models/status.dart';
 import 'package:ctracker/models/task.dart';
+import 'package:ctracker/repository/pomodoro_repository_implementation.dart';
+import 'package:ctracker/repository/task_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
-import 'package:ctracker/utils/text_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:intl/intl.dart';
 
 class PomodoroPage extends StatelessWidget {
   const PomodoroPage({super.key});
@@ -27,15 +28,17 @@ class PomodoroScreen extends StatefulWidget {
   const PomodoroScreen({super.key});
 
   @override
-  _PomodoroScreenState createState() => _PomodoroScreenState();
+  PomodoroScreenState createState() => PomodoroScreenState();
 }
 
-class _PomodoroScreenState extends State<PomodoroScreen>
+class PomodoroScreenState extends State<PomodoroScreen>
     with SingleTickerProviderStateMixin {
+  late TaskRepositoryImplementation taskRepo;
+  late PomodoroRepositoryImplementation pomoRepo;
   late int workTime;
   late int shortRestTime;
   late int longRestTime;
-
+  MyLocalizations? localizations;
   late Task _taskProject;
   late List<Task> _taskProjects;
 
@@ -56,10 +59,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
 
   bool _isInitialized = false;
 
-  final AppFlowyBoardController controller = AppFlowyBoardController();
-
   late TabController _tabController;
-  late AppFlowyBoardScrollController boardController;
 
   final player = AudioPlayer();
 
@@ -67,59 +67,55 @@ class _PomodoroScreenState extends State<PomodoroScreen>
   void initState() {
     super.initState();
 
+    initializeData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    localizations =
+        MyLocalizations.of(context); // Initialize localizations here
+  }
+
+  void initializeData() async {
+    setState(() {
+      _isInitialized = false;
+    });
     workTime = ValuesConst.workingMinutes;
     shortRestTime = ValuesConst.shortRestMinutes;
     longRestTime = ValuesConst.longRestMinutes;
     _controller = QuillController.basic();
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _taskProjects = TaskData.getAllTasks()
-            .where((element) => element.hasFinished == false)
-            .toList();
-        ;
-        if (_taskProjects.isNotEmpty) {
-          _taskProject = _taskProjects.first;
-          initializeAppFlowyBoard();
+    taskRepo = TaskRepositoryImplementation();
+    pomoRepo = PomodoroRepositoryImplementation();
+    List<Task> fetch = [];
+    fetch = await taskRepo.getNoCompletedTask();
+    setState(() {
+      _taskProjects = fetch;
+      if (_taskProjects.isNotEmpty) {
+        _taskProject = _taskProjects.first;
+
+        if (_taskProject.pomodoro != null &&
+            _taskProject.pomodoro!.note.isNotEmpty) {
+          Document doc =
+              Document.fromJson(jsonDecode(_taskProject.pomodoro!.note));
+          _controller.document = doc;
         }
-        remainingWorkTime = workTime * 60;
-        remainingShortRestTime = shortRestTime * 60;
-        remainingLongRestTime = longRestTime * 60;
-        startTime = DateTime.now();
-        _tabController = TabController(
-          length: 3,
-          vsync: this,
-          animationDuration: Duration.zero,
-        );
-        _isInitialized = true;
-      });
-    });
-  }
+      }
 
-  void initializeAppFlowyBoard() {
-    Map<String, List<TextItem>> groupedNotes = {};
-
-    for (var note in _taskProject.note) {
-      groupedNotes.putIfAbsent(note.board, () => []);
-      groupedNotes[note.board]!.add(TextItem(
-        note.title,
-        note.content,
-        DateFormat('yyyy-MM-dd').format(note.createdTime),
-      ));
-    }
-
-    List<AppFlowyGroupData> groups = groupedNotes.entries.map((entry) {
-      return AppFlowyGroupData(
-        id: entry.key,
-        name: entry.key,
-        items: entry.value,
+      remainingWorkTime = workTime * 60;
+      remainingShortRestTime = shortRestTime * 60;
+      remainingLongRestTime = longRestTime * 60;
+      startTime = DateTime.now();
+      _tabController = TabController(
+        length: 3,
+        vsync: this,
+        animationDuration: Duration.zero,
       );
-    }).toList();
+    });
 
-    boardController = AppFlowyBoardScrollController();
-
-    for (var board in groups) {
-      controller.addGroup(board);
-    }
+    setState(() {
+      _isInitialized = true;
+    });
   }
 
   bool isTimerRunning() {
@@ -128,13 +124,33 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         isLongRestTimerRunning;
   }
 
-  void startWorkTimer() {
+  void startWorkTimer() async {
     setState(() {
       isWorkTimerRunning = true;
       shouldUpdateElapsedTime = true;
       startTime = DateTime.now();
     });
-    workTimer = Timer.periodic(Duration(seconds: ValuesConst.second), (timer) {
+
+    if (_taskProject.pomodoro != null &&
+        _taskProject.pomodoro?.started_time == null) {
+      _taskProject.pomodoro?.started_time = DateTime.now();
+      try {
+        await pomoRepo.updatePomodoro(
+            _taskProject.pomodoro?.id ?? "", _taskProject.pomodoro!);
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(localizations?.translate("error") ?? "",
+                    style: const TextStyle(
+                        color: Color.fromARGB(255, 255, 255, 255)))),
+          );
+        }
+      }
+    }
+
+    workTimer =
+        Timer.periodic(Duration(seconds: ValuesConst.second), (timer) async {
       setState(() {
         if (remainingWorkTime > 0) {
           remainingWorkTime--;
@@ -151,11 +167,40 @@ class _PomodoroScreenState extends State<PomodoroScreen>
     });
   }
 
-  void stopWorkTimer() {
+  void stopWorkTimer() async {
+    if (_taskProject.pomodoro != null &&
+        _taskProject.pomodoro?.end_time == null) {
+      _taskProject.pomodoro?.end_time = DateTime.now();
+      try {
+        await pomoRepo.updatePomodoro(
+            _taskProject.pomodoro?.id ?? "", _taskProject.pomodoro!);
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(localizations?.translate("error") ?? "",
+                    style: const TextStyle(
+                        color: Color.fromARGB(255, 255, 255, 255)))),
+          );
+        }
+      }
+    }
     setState(() {
       if (shouldUpdateElapsedTime) {
         Duration elapsedTime = DateTime.now().difference(startTime);
         _taskProject.timeSpend += elapsedTime;
+        try {
+          taskRepo.updateTask(_taskProject.id!, _taskProject);
+        } catch (e) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text(localizations?.translate("error") ?? "",
+                      style: const TextStyle(
+                          color: Color.fromARGB(255, 255, 255, 255)))),
+            );
+          }
+        }
         shouldUpdateElapsedTime = false;
       }
       isWorkTimerRunning = false;
@@ -238,7 +283,6 @@ class _PomodoroScreenState extends State<PomodoroScreen>
 
   @override
   Widget build(BuildContext context) {
-    final localizations = MyLocalizations.of(context);
     if (!_isInitialized) {
       return const Scaffold(
         backgroundColor: ColorP.background,
@@ -253,7 +297,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         backgroundColor: ColorP.background,
         body: Center(
           child: Text(
-            localizations.translate("noTask"),
+            localizations?.translate("noTask") ?? "",
             style: const TextStyle(color: ColorP.textColor, fontSize: 34),
           ),
         ),
@@ -271,7 +315,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
           controller: _tabController,
           tabs: [
             Tab(
-              text: localizations.translate("work"),
+              text: localizations?.translate("work") ?? "",
               icon: SvgPicture.asset(
                 IconlyC.work,
                 width: 36,
@@ -281,7 +325,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
               ),
             ),
             Tab(
-              text: localizations.translate("shortRest"),
+              text: localizations?.translate("shortRest") ?? "",
               icon: SvgPicture.asset(
                 IconlyC.shortRest,
                 width: 36,
@@ -291,7 +335,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
               ),
             ),
             Tab(
-              text: localizations.translate("longRest"),
+              text: localizations?.translate("longRest") ?? "",
               icon: SvgPicture.asset(
                 IconlyC.longRest,
                 width: 36,
@@ -312,7 +356,6 @@ class _PomodoroScreenState extends State<PomodoroScreen>
   }
 
   Widget buildScrollableLayout() {
-    final localizations = MyLocalizations.of(context);
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -329,14 +372,14 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                   runSpacing: 8.0,
                   children: [
                     Text(
-                      "${localizations.translate("timeDedicated")} ${_taskProject.timeSpend.toString().split('.').first.padLeft(8, "0")}",
+                      "${localizations?.translate("timeDedicated") ?? ""} ${_taskProject.timeSpend.toString().split('.').first.padLeft(8, "0")}",
                       style: const TextStyle(
                         fontSize: 24,
                         color: ColorP.textColor,
                       ),
                     ),
                     Text(
-                      _taskProject.effort.name,
+                      _taskProject.effort.longname,
                       style: const TextStyle(
                         fontSize: 24,
                       ),
@@ -387,8 +430,12 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                           : (newValue) {
                               setState(() {
                                 _taskProject = newValue as Task;
-                                controller.clear();
-                                initializeAppFlowyBoard();
+                                _controller.clear();
+                                if (_taskProject.pomodoro?.note != null) {
+                                  Document doc = Document.fromJson(jsonDecode(
+                                      _taskProject.pomodoro?.note ?? ""));
+                                  _controller.document = doc;
+                                }
                                 resetTimers();
                               });
                             },
@@ -406,7 +453,8 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                         },
                       ).toList(),
                       decoration: InputDecoration(
-                        labelText: localizations.translate("taskHintTitle"),
+                        labelText:
+                            localizations?.translate("taskHintTitle") ?? "",
                         border: const OutlineInputBorder(),
                         iconColor: ColorP.textColor,
                         labelStyle: const TextStyle(color: ColorP.textColor),
@@ -426,17 +474,24 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                   width: 100,
                   child: ElevatedButton(
                     onPressed: () {
-                      setState(() {
-                        _taskProject.hasFinished = true;
-                        controller.clear();
-                        _taskProjects = TaskData.getAllTasks()
-                            .where((element) => element.hasFinished == false)
-                            .toList();
-                        if (_taskProjects.isNotEmpty) {
-                          _taskProject = _taskProjects.first;
+                      _taskProject.status = Status(
+                          id: StatusEnum.done.id, name: StatusEnum.done.name);
+                      try {
+                        taskRepo
+                            .updateTask(_taskProject.id ?? "", _taskProject)
+                            .whenComplete(() => initializeData());
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text(
+                                    localizations?.translate("error") ?? "",
+                                    style: const TextStyle(
+                                        color: Color.fromARGB(
+                                            255, 255, 255, 255)))),
+                          );
                         }
-                        initializeAppFlowyBoard();
-                      });
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: ColorP.ColorD,
@@ -449,7 +504,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                       elevation: 5,
                     ),
                     child: Text(
-                      localizations.translate("ended"),
+                      localizations?.translate("ended") ?? "",
                       style: const TextStyle(
                         fontSize: 14,
                         color: ColorP.textColor,
@@ -468,58 +523,98 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                 children: [
                   SizedBox(
                     width: MediaQuery.of(context).size.width * 0.95,
-                    child: Card.filled(
-                      elevation: 2,
-                      color: ColorP.cardBackground,
-                      child: SizedBox(
-                        height: 600,
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(20),
-                              child: QuillToolbar.simple(
-                                configurations:
-                                    QuillSimpleToolbarConfigurations(
-                                  controller: _controller,
-                                  showLink: true,
-                                  showSearchButton: false,
-                                  showCodeBlock: false,
-                                  showInlineCode: false,
-                                  showAlignmentButtons: false,
-                                  showIndent: false,
-                                  showSubscript: false,
-                                  showSuperscript: false,
-                                  showQuote: false,
-                                  showStrikeThrough: false,
-                                  showUnderLineButton: true,
-                                  showClearFormat: false,
-                                  color: ColorP.textColor,
-                                  sharedConfigurations:
-                                      const QuillSharedConfigurations(
-                                    locale: Locale('en'),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const Divider(),
-                            SizedBox(
-                              height: 300,
-                              child: QuillEditor.basic(
-                                configurations: QuillEditorConfigurations(
-                                  controller: _controller,
-                                  readOnly: false,
-                                  minHeight: 300,
+                    child: Stack(
+                      children: [
+                        Card.filled(
+                          elevation: 2,
+                          color: ColorP.cardBackground,
+                          child: SizedBox(
+                            height: 300,
+                            child: Column(
+                              children: [
+                                Padding(
                                   padding: const EdgeInsets.all(20),
-                                  sharedConfigurations:
-                                      const QuillSharedConfigurations(
-                                    locale: Locale('en'),
+                                  child: QuillToolbar.simple(
+                                    configurations:
+                                        QuillSimpleToolbarConfigurations(
+                                      controller: _controller,
+                                      showLink: true,
+                                      showSearchButton: false,
+                                      showCodeBlock: false,
+                                      showInlineCode: false,
+                                      showAlignmentButtons: false,
+                                      showIndent: false,
+                                      showSubscript: false,
+                                      showSuperscript: false,
+                                      showQuote: false,
+                                      showStrikeThrough: false,
+                                      showUnderLineButton: true,
+                                      showClearFormat: false,
+                                      color: ColorP.textColor,
+                                      sharedConfigurations:
+                                          const QuillSharedConfigurations(
+                                        locale: Locale('en'),
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
+                                const Divider(),
+                                SizedBox(
+                                  height: 200,
+                                  child: QuillEditor.basic(
+                                    configurations: QuillEditorConfigurations(
+                                      controller: _controller,
+                                      readOnly: false,
+                                      minHeight: 200,
+                                      padding: const EdgeInsets.all(20),
+                                      sharedConfigurations:
+                                          const QuillSharedConfigurations(
+                                        locale: Locale('en'),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
+                        Positioned(
+                          bottom: 20,
+                          right: 20,
+                          child: FloatingActionButton(
+                            onPressed: () {
+                              String content = jsonEncode(
+                                  _controller.document.toDelta().toJson());
+                              _taskProject.pomodoro?.note = content;
+                              try {
+                                pomoRepo.updatePomodoro(
+                                    _taskProject.pomodoro?.id ?? "",
+                                    _taskProject.pomodoro!);
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Text(
+                                            localizations?.translate("error") ??
+                                                "",
+                                            style: const TextStyle(
+                                                color: Color.fromARGB(
+                                                    255, 255, 255, 255)))),
+                                  );
+                                }
+                              }
+                            },
+                            shape: const CircleBorder(),
+                            tooltip: localizations?.translate("add") ?? "",
+                            hoverColor: ColorP.ColorD.withOpacity(0.8),
+                            backgroundColor: ColorP.ColorD,
+                            child: const Icon(
+                              Icons.save_outlined,
+                              color: ColorP.white,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -531,7 +626,6 @@ class _PomodoroScreenState extends State<PomodoroScreen>
   }
 
   Widget buildTimer(int remainingTime) {
-    final localizations = MyLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -564,7 +658,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                     elevation: 5,
                   ),
                   child: Text(
-                    localizations.translate("start"),
+                    localizations?.translate("start") ?? "",
                     style: TextStyle(
                         fontSize: ValuesConst.buttonFontSize,
                         color: ColorP.textColor),
@@ -585,7 +679,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                   elevation: 5,
                 ),
                 child: Text(
-                  localizations.translate("stop"),
+                  localizations?.translate("stop") ?? "",
                   style: TextStyle(
                       fontSize: ValuesConst.buttonFontSize,
                       color: ColorP.textColor),
@@ -605,10 +699,10 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                   elevation: 5,
                 ),
                 child: Text(
-                  localizations.translate("reset"),
+                  localizations?.translate("reset") ?? "",
                   style: TextStyle(
                       fontSize: ValuesConst.buttonFontSize,
-                      color: ColorP.textColorSubtitle),
+                      color: ColorP.textColor),
                 ),
               ),
             ],

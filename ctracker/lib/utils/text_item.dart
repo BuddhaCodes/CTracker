@@ -5,11 +5,12 @@ class TextItem extends AppFlowyGroupItem {
   final String title;
   final String note;
   final String subTitle;
-
-  TextItem(this.title, this.note, this.subTitle);
-
   @override
-  String get id => title;
+  final String id;
+  final DateTime created;
+  final String gId;
+  TextItem(
+      this.id, this.title, this.note, this.subTitle, this.created, this.gId);
 }
 
 class IdeaTextItem extends AppFlowyGroupItem {

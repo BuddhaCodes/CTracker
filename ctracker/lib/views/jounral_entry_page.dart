@@ -1,16 +1,17 @@
 import 'dart:convert';
 
-import 'package:ctracker/constant/color.dart';
 import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/constant/icons.dart';
 import 'package:ctracker/constant/values.dart';
 import 'package:ctracker/models/journal.dart';
+import 'package:ctracker/repository/journal_repository_implementation.dart';
+import 'package:ctracker/utils/localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_reaction_button/flutter_reaction_button.dart';
 
 class JournalEntryPage extends StatefulWidget {
-  final int? id;
+  final String? id;
   final DateTime date;
   final Function entryHandle;
   const JournalEntryPage(
@@ -24,15 +25,29 @@ class JournalEntryPage extends StatefulWidget {
 }
 
 class _JournalEntryPageState extends State<JournalEntryPage> {
-  QuillController _controller = QuillController.basic();
+  bool isLoading = true;
+  MyLocalizations? localizations;
+  final QuillController _controller = QuillController.basic();
   String text = "";
   Journal? journalEntry;
   List<Reaction<String>> flagsReactions = [];
   String selectedRection = "";
-
+  late JournalRepositoryImplementation journalRepo;
   @override
   void initState() {
     super.initState();
+    initializeData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    localizations = MyLocalizations.of(context);
+  }
+
+  void initializeData() async {
+    isLoading = true;
+    journalRepo = JournalRepositoryImplementation();
     flagsReactions = [
       Reaction<String>(
         value: IconlyC.angry,
@@ -136,7 +151,18 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
       text = ValuesConst.baseEntry;
       selectedRection = flagsReactions.first.value ?? "";
     } else {
-      journalEntry = JournalData.getById(widget.id ?? 0);
+      try {
+        journalEntry = await journalRepo.getById(widget.id ?? "");
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(localizations?.translate("error") ?? "",
+                    style: const TextStyle(
+                        color: Color.fromARGB(255, 255, 255, 255)))),
+          );
+        }
+      }
       if (journalEntry != null) {
         text = journalEntry?.content ?? "";
         selectedRection = (flagsReactions
@@ -149,6 +175,10 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
         selectedRection = flagsReactions.first.value ?? "";
       }
     }
+
+    setState(() {
+      isLoading = false;
+    });
   }
 
   @override
@@ -161,94 +191,119 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
     return Scaffold(
       backgroundColor: ColorP.background,
       appBar: AppBar(),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(ValuesConst.boxSeparatorSize),
-            child: QuillToolbar.simple(
-              configurations: QuillSimpleToolbarConfigurations(
-                controller: _controller,
-                sharedConfigurations: const QuillSharedConfigurations(
-                  locale: Locale('en'),
-                ),
-              ),
-            ),
-          ),
-          const Divider(),
-          Expanded(
-            child: QuillEditor.basic(
-              configurations: QuillEditorConfigurations(
-                controller: _controller,
-                readOnly: false,
-                padding: const EdgeInsets.all(ValuesConst.boxSeparatorSize),
-                sharedConfigurations: const QuillSharedConfigurations(
-                  locale: Locale('en'),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(
-            height: ValuesConst.boxSeparatorSize,
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(0, 0, 20, 20),
-                child: SizedBox.square(
-                  dimension: 30,
-                  child: ReactionButton<String>(
-                    toggle: false,
-                    isChecked: true,
-                    direction: ReactionsBoxAlignment.rtl,
-                    onReactionChanged: (Reaction<String>? reaction) {
-                      selectedRection = reaction?.value ?? "";
-                    },
-                    selectedReaction: flagsReactions
-                        .where((element) => element.value == selectedRection)
-                        .first,
-                    reactions: flagsReactions,
-                    placeholder: flagsReactions.first,
-                    boxColor: Color.fromARGB(255, 255, 255, 255),
-                    boxRadius: 10,
-                    itemsSpacing: 20,
-                    itemSize: const Size(40, 40),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(ValuesConst.boxSeparatorSize),
+                  child: QuillToolbar.simple(
+                    configurations: QuillSimpleToolbarConfigurations(
+                      controller: _controller,
+                      sharedConfigurations: const QuillSharedConfigurations(
+                        locale: Locale('en'),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(0, 0, 20, 20),
-                child: ElevatedButton(
-                  style: const ButtonStyle(
-                      backgroundColor: MaterialStatePropertyAll(ColorP.ColorD)),
-                  onPressed: () {
-                    String content =
-                        jsonEncode(_controller.document.toDelta().toJson());
-
-                    widget.id == null
-                        ? JournalData.AddEntry(
-                            selectedRection, widget.date, content)
-                        : JournalData.UpdateEntry(widget.id ?? 0,
-                            selectedRection, widget.date, content);
-
-                    setState(() {
-                      _controller.clear();
-                    });
-
-                    widget.entryHandle();
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    'Save',
-                    style: TextStyle(color: ColorP.textColor),
+                const Divider(),
+                Expanded(
+                  child: QuillEditor.basic(
+                    configurations: QuillEditorConfigurations(
+                      controller: _controller,
+                      readOnly: false,
+                      padding:
+                          const EdgeInsets.all(ValuesConst.boxSeparatorSize),
+                      sharedConfigurations: const QuillSharedConfigurations(
+                        locale: Locale('en'),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ],
-      ),
+                const SizedBox(
+                  height: ValuesConst.boxSeparatorSize,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 0, 20, 20),
+                      child: SizedBox.square(
+                        dimension: 30,
+                        child: ReactionButton<String>(
+                          toggle: false,
+                          isChecked: true,
+                          direction: ReactionsBoxAlignment.rtl,
+                          onReactionChanged: (Reaction<String>? reaction) {
+                            selectedRection = reaction?.value ?? "";
+                          },
+                          selectedReaction: flagsReactions
+                              .where(
+                                  (element) => element.value == selectedRection)
+                              .first,
+                          reactions: flagsReactions,
+                          placeholder: flagsReactions.first,
+                          boxColor: ColorP.white,
+                          boxRadius: 10,
+                          itemsSpacing: 20,
+                          itemSize: const Size(40, 40),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 0, 20, 20),
+                      child: ElevatedButton(
+                        style: const ButtonStyle(
+                            backgroundColor:
+                                MaterialStatePropertyAll(ColorP.ColorD)),
+                        onPressed: () async {
+                          String content = jsonEncode(
+                              _controller.document.toDelta().toJson());
+                          try {
+                            widget.id == null
+                                ? await journalRepo.addJournal(Journal(
+                                    moodIcon: selectedRection,
+                                    date: widget.date,
+                                    content: content))
+                                : await journalRepo.updateJournal(
+                                    widget.id ?? "",
+                                    Journal(
+                                        moodIcon: selectedRection,
+                                        date: widget.date,
+                                        content: content));
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(
+                                        localizations?.translate("error") ?? "",
+                                        style: const TextStyle(
+                                            color: Color.fromARGB(
+                                                255, 255, 255, 255)))),
+                              );
+                            }
+                          }
+
+                          setState(() {
+                            _controller.clear();
+                          });
+
+                          widget.entryHandle();
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                          }
+                        },
+                        child: Text(
+                          localizations?.translate('submit') ?? "",
+                          style: const TextStyle(color: ColorP.textColor),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
     );
   }
 }

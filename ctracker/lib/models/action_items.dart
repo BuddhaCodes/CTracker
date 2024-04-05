@@ -1,9 +1,16 @@
-import 'package:ctracker/models/inotable.dart';
+import 'package:ctracker/models/pomodoros.dart';
+import 'package:ctracker/models/status.dart';
 
-class ActionItem extends INotable {
-  final int id;
-  final String title;
-  bool hasFinished;
-  ActionItem(super.note,
-      {this.hasFinished = false, required this.id, required this.title});
+class ActionItem {
+  String? id;
+  String name;
+  final String description;
+  Status? status;
+  Pomodoro? pomodoro;
+  ActionItem(
+      {this.status,
+      this.pomodoro,
+      this.id,
+      required this.name,
+      required this.description});
 }

@@ -2,8 +2,10 @@ import 'package:ctracker/components/circular_graph_painter.dart';
 import 'package:ctracker/components/menu_item.dart';
 import 'package:ctracker/components/task_card.dart';
 import 'package:ctracker/constant/color_palette.dart';
-import 'package:ctracker/models/effort.dart';
+import 'package:ctracker/models/enums/effort_enum.dart';
 import 'package:ctracker/models/task.dart';
+import 'package:ctracker/repository/task_repository_implementation.dart';
+import 'package:ctracker/utils/localization.dart';
 import 'package:ctracker/views/task_add_page.dart';
 import 'package:flutter/material.dart';
 
@@ -12,50 +14,133 @@ class TrackerPage extends StatefulWidget {
   const TrackerPage({super.key, required this.onReminderDeleted});
 
   @override
-  _TrackerPageState createState() => _TrackerPageState();
+  TrackerPageState createState() => TrackerPageState();
 }
 
-class _TrackerPageState extends State<TrackerPage> {
+class TrackerPageState extends State<TrackerPage> {
   int _selectedIndex = 0;
+  MyLocalizations? localizations;
   late List<Task> tasks;
   int selectedTile = -1;
+  late TaskRepositoryImplementation taskRepo;
   late bool isInitialized = false;
-  late int totalTaks;
-  late int completedTasks;
-  void _onMenuItemClicked(int index) {
+  late int totalTaks = 0;
+  late int completedTasks = 0;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    localizations =
+        MyLocalizations.of(context); // Initialize localizations here
+  }
+
+  Future<void> _onMenuItemClicked(int index) async {
+    setState(() {
+      isInitialized = false;
+    });
+    List<Task> fetch = [];
     setState(() {
       _selectedIndex = index;
       selectedTile = -1;
-      if (_selectedIndex == 0) {
-        tasks = TaskData.getAllTasks();
+    });
+
+    if (_selectedIndex == 0) {
+      try {
+        fetch = await taskRepo.getAllTasks();
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(localizations?.translate("error") ?? "",
+                    style: const TextStyle(
+                        color: Color.fromARGB(255, 255, 255, 255)))),
+          );
+        }
       }
-      if (_selectedIndex == 1) {
-        tasks = TaskData.getAllTasksCompleted();
+    }
+    if (_selectedIndex == 1) {
+      try {
+        fetch = await taskRepo.getCompletedTask();
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(localizations?.translate("error") ?? "",
+                    style: const TextStyle(
+                        color: Color.fromARGB(255, 255, 255, 255)))),
+          );
+        }
       }
-      if (_selectedIndex == 2) {
-        tasks = TaskData.getAllTByEffort(Effort.poco);
+    }
+    if (_selectedIndex == 2) {
+      try {
+        fetch = await taskRepo.getByEffort(Effort.poco);
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(localizations?.translate("error") ?? "",
+                    style: const TextStyle(
+                        color: Color.fromARGB(255, 255, 255, 255)))),
+          );
+        }
       }
-      if (_selectedIndex == 3) {
-        tasks = TaskData.getAllTByEffort(Effort.medio);
+    }
+    if (_selectedIndex == 3) {
+      try {
+        fetch = await taskRepo.getByEffort(Effort.medio);
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(localizations?.translate("error") ?? "",
+                    style: const TextStyle(
+                        color: Color.fromARGB(255, 255, 255, 255)))),
+          );
+        }
       }
-      if (_selectedIndex == 4) {
-        tasks = TaskData.getAllTByEffort(Effort.mucho);
+    }
+    if (_selectedIndex == 4) {
+      try {
+        fetch = await taskRepo.getByEffort(Effort.mucho);
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(localizations?.translate("error") ?? "",
+                    style: const TextStyle(
+                        color: Color.fromARGB(255, 255, 255, 255)))),
+          );
+        }
       }
+    }
+
+    setState(() {
+      tasks = fetch;
+      isInitialized = true;
     });
   }
 
   @override
   void initState() {
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        isInitialized = false;
-        totalTaks = TaskData.getTotalTasks();
-        completedTasks = TaskData.getCompletedTotal();
-        tasks = TaskData.getAllTasks();
-        isInitialized = true;
-      });
-    });
     super.initState();
+    taskRepo = TaskRepositoryImplementation();
+    tasks = [];
+    initializeData();
+  }
+
+  void initializeData() {
+    setState(() {
+      isInitialized = false;
+    });
+    _initializeGraph().whenComplete(() =>
+        _onMenuItemClicked(_selectedIndex).whenComplete(() => setState(() {
+              isInitialized = true;
+            })));
+  }
+
+  Future<void> _initializeGraph() async {
+    totalTaks = await taskRepo.getAmountOfTask();
+    completedTasks = await taskRepo.getAmountCompletedTasks();
   }
 
   @override
@@ -104,7 +189,7 @@ class _TrackerPageState extends State<TrackerPage> {
                                     const SizedBox(
                                       width: 10,
                                     ),
-                                    const SizedBox(
+                                    SizedBox(
                                       height: 90,
                                       child: Column(
                                         crossAxisAlignment:
@@ -113,16 +198,19 @@ class _TrackerPageState extends State<TrackerPage> {
                                             MainAxisAlignment.center,
                                         children: [
                                           Text(
-                                            "My Tasks",
-                                            style: TextStyle(
+                                            localizations?.translate('taskp') ??
+                                                "",
+                                            style: const TextStyle(
                                               fontSize: 36.0,
                                               color: ColorP.textColor,
                                             ),
                                           ),
-                                          SizedBox(height: 8.0),
+                                          const SizedBox(height: 8.0),
                                           Text(
-                                            "Let's start being productive",
-                                            style: TextStyle(
+                                            localizations
+                                                    ?.translate('taskpsub') ??
+                                                "",
+                                            style: const TextStyle(
                                               fontSize: 20.0,
                                               color: ColorP.textColor,
                                             ),
@@ -168,27 +256,30 @@ class _TrackerPageState extends State<TrackerPage> {
                                 scrollDirection: Axis.horizontal,
                                 children: <Widget>[
                                   MenuItem(
-                                    text: 'All',
+                                    text: localizations?.translate('all') ?? "",
                                     isSelected: _selectedIndex == 0,
                                     onTap: () => _onMenuItemClicked(0),
                                   ),
                                   MenuItem(
-                                    text: 'Completed',
+                                    text:
+                                        localizations?.translate('completed') ??
+                                            "",
                                     isSelected: _selectedIndex == 1,
                                     onTap: () => _onMenuItemClicked(1),
                                   ),
                                   MenuItem(
-                                    text: 'Not much effort',
+                                    text: localizations?.translate('notmuch') ??
+                                        "",
                                     isSelected: _selectedIndex == 2,
                                     onTap: () => _onMenuItemClicked(2),
                                   ),
                                   MenuItem(
-                                    text: 'Mid much effort',
+                                    text: localizations?.translate('mid') ?? "",
                                     isSelected: _selectedIndex == 3,
                                     onTap: () => _onMenuItemClicked(3),
                                   ),
                                   MenuItem(
-                                    text: 'A lot of  effort',
+                                    text: localizations?.translate('lot') ?? "",
                                     isSelected: _selectedIndex == 4,
                                     onTap: () => _onMenuItemClicked(4),
                                   ),
@@ -201,33 +292,27 @@ class _TrackerPageState extends State<TrackerPage> {
                             SizedBox(
                               width: MediaQuery.of(context).size.width * 0.98,
                               child: SizedBox(
-                                height: 500,
-                                child: tasks != null
-                                    ? ListView.builder(
-                                        itemCount: tasks.length,
-                                        itemBuilder:
-                                            (BuildContext context, int index) {
-                                          return TaskCard(
-                                            task: tasks[index],
-                                            selectedTile: selectedTile,
-                                            index: index,
-                                            onExpanded: (int sel) {
-                                              setState(() {
-                                                selectedTile = sel;
-                                              });
-                                            },
-                                            onDelete: () {
-                                              widget.onReminderDeleted();
-                                              _onMenuItemClicked(
-                                                  _selectedIndex);
-                                            },
-                                          );
+                                  height: 500,
+                                  child: ListView.builder(
+                                    itemCount: tasks.length,
+                                    itemBuilder:
+                                        (BuildContext context, int index) {
+                                      return TaskCard(
+                                        task: tasks[index],
+                                        selectedTile: selectedTile,
+                                        index: index,
+                                        onExpanded: (int sel) {
+                                          setState(() {
+                                            selectedTile = sel;
+                                          });
                                         },
-                                      )
-                                    : Center(
-                                        child: CircularProgressIndicator(),
-                                      ),
-                              ),
+                                        onDelete: () {
+                                          widget.onReminderDeleted();
+                                          initializeData();
+                                        },
+                                      );
+                                    },
+                                  )),
                             ),
                           ],
                         ),
@@ -241,16 +326,6 @@ class _TrackerPageState extends State<TrackerPage> {
   }
 
   void handleTaskAdded(bool success) {
-    if (success) {
-      setState(() {
-        isInitialized = false;
-        Future.delayed(const Duration(seconds: 2), () {
-          tasks = TaskData.getAllTasks();
-          totalTaks = TaskData.getTotalTasks();
-          completedTasks = TaskData.getCompletedTotal();
-        });
-        isInitialized = true;
-      });
-    } else {}
+    initializeData();
   }
 }
