@@ -1,12 +1,15 @@
 import 'package:ctracker/components/idea_card.dart';
 import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/constant/icons.dart';
+import 'package:ctracker/models/enums/tags_enum.dart';
+import 'package:ctracker/models/graphs/idea_graph.dart';
 import 'package:ctracker/models/idea.dart';
 import 'package:ctracker/models/tags.dart';
 import 'package:ctracker/repository/idea_repository_implementation.dart';
 import 'package:ctracker/repository/tag_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
 import 'package:ctracker/views/idea_add_page.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:multi_dropdown/multiselect_dropdown.dart';
 
@@ -28,13 +31,14 @@ class IdeaPageState extends State<IdeaPage> {
   late MultiSelectController _tagsController;
   late IdeaRepositoryImplementation ideaRepo;
   late TagRepositoryImplementation tagRepo;
-  int selectedTile = -1;
+  late List<BarChartGroupData> chartData;
 
+  int selectedTile = -1;
+  int touchedIndex = -1;
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    localizations =
-        MyLocalizations.of(context); // Initialize localizations here
+    localizations = MyLocalizations.of(context);
   }
 
   @override
@@ -46,6 +50,7 @@ class IdeaPageState extends State<IdeaPage> {
   void initializeData() async {
     ideaRepo = IdeaRepositoryImplementation();
     tagRepo = TagRepositoryImplementation();
+    chartData = [];
     widget.isInit = false;
     try {
       ideaRepo.getAllIdeas().then((ideasResult) {
@@ -64,6 +69,48 @@ class IdeaPageState extends State<IdeaPage> {
         );
       }
     }
+
+    try {
+      IdeaTagsChart fetch = await ideaRepo.getNumberByTags();
+
+      chartData = List.generate(3, (i) {
+        switch (i) {
+          case 0:
+            return makeGroupData(0, fetch.house.toDouble(),
+                isTouched: i == touchedIndex);
+          case 1:
+            return makeGroupData(1, fetch.innovative.toDouble(),
+                isTouched: i == touchedIndex);
+          case 2:
+            return makeGroupData(2, fetch.project.toDouble(),
+                isTouched: i == touchedIndex);
+          default:
+            return throw Error();
+        }
+      });
+    } catch (e) {
+      chartData = List.generate(3, (i) {
+        switch (i) {
+          case 0:
+            return makeGroupData(0, 0, isTouched: i == touchedIndex);
+          case 1:
+            return makeGroupData(1, 0, isTouched: i == touchedIndex);
+          case 2:
+            return makeGroupData(2, 0, isTouched: i == touchedIndex);
+          default:
+            return throw Error();
+        }
+      });
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(localizations!.translate("error"),
+                  style: const TextStyle(
+                      color: Color.fromARGB(255, 255, 255, 255)))),
+        );
+      }
+    }
+
     try {
       tagRepo.getAllTags().then((tagsResult) {
         setState(() {
@@ -106,6 +153,61 @@ class IdeaPageState extends State<IdeaPage> {
                       scrollDirection: Axis.vertical,
                       child: Center(
                         child: Column(children: [
+                          Padding(
+                            padding: const EdgeInsets.all(15.0),
+                            child: Card(
+                              color: ColorP.cardBackground,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30.0),
+                              ),
+                              child: Column(
+                                children: [
+                                  SizedBox(
+                                    height: 400,
+                                    width: MediaQuery.of(context).size.width,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(24),
+                                      child: AspectRatio(
+                                        aspectRatio: 1.4,
+                                        child: AspectRatio(
+                                          aspectRatio: 1,
+                                          child: Stack(
+                                            children: <Widget>[
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.all(16),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment
+                                                          .stretch,
+                                                  children: <Widget>[
+                                                    Expanded(
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .symmetric(
+                                                                horizontal: 8),
+                                                        child: BarChart(
+                                                          mainBarData(),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(
+                                                      height: 12,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                           Container(
                             padding: const EdgeInsets.all(16.0),
                             child: Align(
@@ -208,29 +310,29 @@ class IdeaPageState extends State<IdeaPage> {
                                             (element) => element.id == e.value)
                                         .first)
                                     .toList();
-                                setState(() {
-                                  try {
-                                    ideaRepo
-                                        .getByTags(ideaTags)
-                                        .then((ideasResult) {
+
+                                try {
+                                  ideaRepo
+                                      .getByTags(ideaTags)
+                                      .then((ideasResult) {
+                                    setState(() {
                                       ideas = ideasResult;
                                       widget.isInit = true;
                                     });
-                                  } catch (e) {
-                                    ideas = [];
-                                    widget.isInit = true;
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                            content: Text(translateError,
-                                                style: const TextStyle(
-                                                    color: Color.fromARGB(
-                                                        255, 255, 255, 255)))),
-                                      );
-                                    }
+                                  });
+                                } catch (e) {
+                                  ideas = [];
+                                  widget.isInit = true;
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content: Text(translateError,
+                                              style: const TextStyle(
+                                                  color: Color.fromARGB(
+                                                      255, 255, 255, 255)))),
+                                    );
                                   }
-                                });
+                                }
                               },
                               borderRadius: 4.0,
                               borderColor: ColorP.cardBackground,
@@ -304,13 +406,151 @@ class IdeaPageState extends State<IdeaPage> {
     );
   }
 
+  BarChartData mainBarData() {
+    return BarChartData(
+      barTouchData: BarTouchData(
+        touchTooltipData: BarTouchTooltipData(
+          getTooltipColor: (_) => Colors.blueGrey,
+          tooltipHorizontalAlignment: FLHorizontalAlignment.right,
+          tooltipMargin: -10,
+          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+            String weekDay;
+            switch (group.x) {
+              case 0:
+                weekDay = TagsEnum.house.name;
+                break;
+              case 1:
+                weekDay = TagsEnum.innovative.name;
+                break;
+              case 2:
+                weekDay = TagsEnum.project.name;
+                break;
+              default:
+                weekDay = TagsEnum.house.name;
+                break;
+            }
+            return BarTooltipItem(
+              '$weekDay\n',
+              const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+              children: <TextSpan>[
+                TextSpan(
+                  text: (rod.toY).toString(),
+                  style: const TextStyle(
+                    color: Colors.white, //widget.touchedBarColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+        touchCallback: (FlTouchEvent event, barTouchResponse) {
+          setState(() {
+            if (!event.isInterestedForInteractions ||
+                barTouchResponse == null ||
+                barTouchResponse.spot == null) {
+              touchedIndex = -1;
+              return;
+            }
+            touchedIndex = barTouchResponse.spot!.touchedBarGroupIndex;
+          });
+        },
+      ),
+      titlesData: FlTitlesData(
+        show: true,
+        rightTitles: const AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
+        topTitles: const AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            getTitlesWidget: getTitles,
+            reservedSize: 38,
+          ),
+        ),
+        leftTitles: const AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: false,
+          ),
+        ),
+      ),
+      borderData: FlBorderData(
+        show: false,
+      ),
+      barGroups: chartData,
+      gridData: const FlGridData(show: false),
+    );
+  }
+
+  BarChartGroupData makeGroupData(
+    int x,
+    double y, {
+    bool isTouched = false,
+    Color? barColor,
+    double width = 22,
+    List<int> showTooltips = const [],
+  }) {
+    barColor ??= ColorP.contentColorWhite;
+    return BarChartGroupData(
+      x: x,
+      barRods: [
+        BarChartRodData(
+          toY: isTouched ? y + 1 : y,
+          color: isTouched ? ColorP.contentColorGreen : barColor,
+          width: width,
+          borderSide: isTouched
+              ? const BorderSide(color: Color.fromARGB(255, 0, 152, 10))
+              : const BorderSide(color: Colors.white, width: 0),
+          backDrawRodData: BackgroundBarChartRodData(
+            show: true,
+            toY: 20,
+            color: ColorP.contentColorWhite.withOpacity(0.3),
+          ),
+        ),
+      ],
+      showingTooltipIndicators: showTooltips,
+    );
+  }
+
+  Widget getTitles(double value, TitleMeta meta) {
+    const style = TextStyle(
+      color: Colors.white,
+      fontWeight: FontWeight.bold,
+      fontSize: 14,
+    );
+    Widget text;
+    switch (value.toInt()) {
+      case 0:
+        text = Text(TagsEnum.house.name, style: style);
+        break;
+      case 1:
+        text = Text(TagsEnum.innovative.name, style: style);
+        break;
+      case 2:
+        text = Text(TagsEnum.project.name, style: style);
+        break;
+      default:
+        text = const Text('', style: style);
+        break;
+    }
+    return SideTitleWidget(
+      axisSide: meta.axisSide,
+      space: 16,
+      child: text,
+    );
+  }
+
   void handle(bool added) async {
     try {
-      final ideasR = await ideaRepo.getAllIdeas();
-
-      setState(() {
-        ideas = ideasR;
-      });
+      initializeData();
     } catch (e) {
       ideas = [];
       if (context.mounted) {

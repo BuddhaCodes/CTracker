@@ -53,6 +53,37 @@ class Utils {
     );
   }
 
+  static Color lerpGradient(List<Color> colors, List<double> stops, double t) {
+    if (colors.isEmpty) {
+      throw ArgumentError('"colors" is empty.');
+    } else if (colors.length == 1) {
+      return colors[0];
+    }
+
+    if (stops.length != colors.length) {
+      stops = [];
+
+      colors.asMap().forEach((index, color) {
+        final percent = 1.0 / (colors.length - 1);
+        stops.add(percent * index);
+      });
+    }
+
+    for (var s = 0; s < stops.length - 1; s++) {
+      final leftStop = stops[s];
+      final rightStop = stops[s + 1];
+      final leftColor = colors[s];
+      final rightColor = colors[s + 1];
+      if (t <= leftStop) {
+        return leftColor;
+      } else if (t < rightStop) {
+        final sectionT = (t - leftStop) / (rightStop - leftStop);
+        return Color.lerp(leftColor, rightColor, sectionT)!;
+      }
+    }
+    return colors.last;
+  }
+
   static Color getColorFromIcon(String icon) {
     switch (icon) {
       case IconlyC.sad:
@@ -131,8 +162,6 @@ class Utils {
     );
   }
 
-  
-
   static List<NeatCleanCalendarEvent> getObjectsInRange(
       DateTime date, List<NeatCleanCalendarEvent> objects) {
     return objects.where((object) {
@@ -183,17 +212,33 @@ class Utils {
     List<String> secondsAndMilliseconds = parts[2].split(".");
     int seconds = int.parse(secondsAndMilliseconds[0]);
     int milliseconds = secondsAndMilliseconds.length > 1
-        ? int.parse(secondsAndMilliseconds[1])
+        ? int.parse(secondsAndMilliseconds[1].padRight(3, '0'))
         : 0;
 
     int hours = int.parse(parts[0]);
     int minutes = int.parse(parts[1]);
+    Duration duration = Duration(
+        hours: hours, minutes: minutes, seconds: seconds, milliseconds: 0);
+    return duration;
+  }
 
-    return Duration(
-        hours: hours,
-        minutes: minutes,
-        seconds: seconds,
-        milliseconds: milliseconds);
+  static List<DropdownMenuItem<int>> buildYearDropdownItems() {
+    List<DropdownMenuItem<int>> items = [];
+    int currentYear = DateTime.now().year;
+    for (int year = 2000; year <= currentYear + 10; year++) {
+      items.add(
+        DropdownMenuItem<int>(
+          value: year,
+          child: Text(
+            year.toString(),
+            style: const TextStyle(
+              color: ColorP.textColor,
+            ),
+          ),
+        ),
+      );
+    }
+    return items;
   }
 
   static DateTime getLastDayOfMonth(DateTime anyDayInMonth) {

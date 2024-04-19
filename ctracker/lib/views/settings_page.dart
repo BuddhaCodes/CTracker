@@ -42,26 +42,39 @@ class SettingsViewState extends State<SettingsView> {
                       elevation: 2,
                       color: ColorP.cardBackground,
                       child: Padding(
-                        padding: const EdgeInsets.all(80.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        padding: const EdgeInsets.fromLTRB(20.0, 20, 20, 40),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            buildNumberPicker(
-                              localizations?.translate("workTimeMessage") ?? "",
-                              workingMinutes,
-                              (value) => setState(() => workingMinutes = value),
-                            ),
-                            buildNumberPicker(
-                              localizations?.translate("shortRest") ?? "",
-                              shortRestMinutes,
-                              (value) =>
-                                  setState(() => shortRestMinutes = value),
-                            ),
-                            buildNumberPicker(
-                              localizations?.translate("longRest") ?? "",
-                              longRestMinutes,
-                              (value) =>
-                                  setState(() => longRestMinutes = value),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildNumberPicker(
+                                    localizations
+                                            ?.translate("workTimeMessage") ??
+                                        "",
+                                    workingMinutes,
+                                    (value) =>
+                                        setState(() => workingMinutes = value),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: buildNumberPicker(
+                                    localizations?.translate("shortRest") ?? "",
+                                    shortRestMinutes,
+                                    (value) => setState(
+                                        () => shortRestMinutes = value),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: buildNumberPicker(
+                                    localizations?.translate("longRest") ?? "",
+                                    longRestMinutes,
+                                    (value) =>
+                                        setState(() => longRestMinutes = value),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -70,8 +83,8 @@ class SettingsViewState extends State<SettingsView> {
                   ],
                 ),
                 Positioned(
-                  bottom: 32.0,
-                  right: 32.0,
+                  bottom: 16.0,
+                  right: 28.0,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: ColorP.ColorD,

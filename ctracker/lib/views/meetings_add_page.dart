@@ -310,106 +310,135 @@ class _MeetingAddPageState extends State<MeetingsAddPage> {
                                   },
                                 ),
                                 const SizedBox(height: 30),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(
-                                    localizations?.translate('dateadd') ?? "",
-                                    style: const TextStyle(
-                                        color: ColorP.textColorSubtitle,
-                                        fontSize: 14),
-                                  ),
-                                ),
-                                TextFormField(
-                                  controller: _dateController,
-                                  decoration: const InputDecoration(
-                                    icon: Icon(
-                                      Icons.calendar_today_rounded,
-                                      color: ColorP.textColor,
-                                    ),
-                                  ),
-                                  style:
-                                      const TextStyle(color: ColorP.textColor),
-                                  onTap: () async {
-                                    DateTime? pickeddate =
-                                        await showDateTimePicker(
-                                            context: context,
-                                            initialDate: DateTime.now(),
-                                            firstDate: DateTime(2000),
-                                            lastDate: DateTime(2101));
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                              localizations
+                                                      ?.translate('dateadd') ??
+                                                  "",
+                                              style: const TextStyle(
+                                                  color:
+                                                      ColorP.textColorSubtitle,
+                                                  fontSize: 14),
+                                            ),
+                                          ),
+                                          TextFormField(
+                                            controller: _dateController,
+                                            decoration: const InputDecoration(
+                                              icon: Icon(
+                                                Icons.calendar_today_rounded,
+                                                color: ColorP.textColor,
+                                              ),
+                                            ),
+                                            style: const TextStyle(
+                                                color: ColorP.textColor),
+                                            onTap: () async {
+                                              DateTime? pickeddate =
+                                                  await showDateTimePicker(
+                                                      context: context,
+                                                      initialDate:
+                                                          DateTime.now(),
+                                                      firstDate: DateTime(2000),
+                                                      lastDate: DateTime(2101));
 
-                                    if (pickeddate != null) {
-                                      setState(() {
-                                        _dateController.text =
-                                            DateFormat('yyyy-MM-dd hh:mm a')
-                                                .format(pickeddate);
-                                      });
-                                    }
-                                  },
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return localizations
-                                              ?.translate('dateadd') ??
-                                          "";
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(
-                                  height: 30,
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(
-                                    localizations?.translate('endmeetingadd') ??
-                                        "",
-                                    style: const TextStyle(
-                                        color: ColorP.textColorSubtitle,
-                                        fontSize: 14),
-                                  ),
-                                ),
-                                TextFormField(
-                                  controller: _enddateController,
-                                  decoration: const InputDecoration(
-                                    icon: Icon(
-                                      Icons.calendar_today_rounded,
-                                      color: ColorP.textColor,
+                                              if (pickeddate != null) {
+                                                setState(() {
+                                                  _dateController
+                                                      .text = DateFormat(
+                                                          'yyyy-MM-dd hh:mm a')
+                                                      .format(pickeddate);
+                                                });
+                                              }
+                                            },
+                                            validator: (value) {
+                                              if (value == null ||
+                                                  value.isEmpty) {
+                                                return localizations?.translate(
+                                                        'dateadd') ??
+                                                    "";
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  style:
-                                      const TextStyle(color: ColorP.textColor),
-                                  onTap: () async {
-                                    DateTime? pickeddate =
-                                        await showDateTimePicker(
-                                            context: context,
-                                            initialDate: DateTime.now(),
-                                            firstDate: DateTime(2000),
-                                            lastDate: DateTime(2101));
+                                    const SizedBox(
+                                      width: 30,
+                                    ),
+                                    Expanded(
+                                      child: Column(
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                              localizations?.translate(
+                                                      'endmeetingadd') ??
+                                                  "",
+                                              style: const TextStyle(
+                                                  color:
+                                                      ColorP.textColorSubtitle,
+                                                  fontSize: 14),
+                                            ),
+                                          ),
+                                          TextFormField(
+                                            controller: _enddateController,
+                                            decoration: const InputDecoration(
+                                              icon: Icon(
+                                                Icons.calendar_today_rounded,
+                                                color: ColorP.textColor,
+                                              ),
+                                            ),
+                                            style: const TextStyle(
+                                                color: ColorP.textColor),
+                                            onTap: () async {
+                                              DateTime? pickeddate =
+                                                  await showDateTimePicker(
+                                                      context: context,
+                                                      initialDate:
+                                                          DateTime.now(),
+                                                      firstDate: DateTime(2000),
+                                                      lastDate: DateTime(2101));
 
-                                    if (pickeddate != null) {
-                                      setState(() {
-                                        _enddateController.text =
-                                            DateFormat('yyyy-MM-dd hh:mm a')
-                                                .format(pickeddate);
-                                      });
-                                    }
-                                  },
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return localizations
-                                              ?.translate('endmeetingadd') ??
-                                          "";
-                                    }
-                                    if (DateFormat('yyyy-MM-dd hh:mm a')
-                                        .parse(value)
-                                        .isBefore(
-                                            DateFormat('yyyy-MM-dd hh:mm a')
-                                                .parse(_dateController.text))) {
-                                      return localizations
-                                              ?.translate('daterange') ??
-                                          "";
-                                    }
-                                    return null;
-                                  },
+                                              if (pickeddate != null) {
+                                                setState(() {
+                                                  _enddateController
+                                                      .text = DateFormat(
+                                                          'yyyy-MM-dd hh:mm a')
+                                                      .format(pickeddate);
+                                                });
+                                              }
+                                            },
+                                            validator: (value) {
+                                              if (value == null ||
+                                                  value.isEmpty) {
+                                                return localizations?.translate(
+                                                        'endmeetingadd') ??
+                                                    "";
+                                              }
+                                              if (DateFormat(
+                                                      'yyyy-MM-dd hh:mm a')
+                                                  .parse(value)
+                                                  .isBefore(DateFormat(
+                                                          'yyyy-MM-dd hh:mm a')
+                                                      .parse(_dateController
+                                                          .text))) {
+                                                return localizations?.translate(
+                                                        'daterange') ??
+                                                    "";
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  ],
                                 ),
                                 const SizedBox(height: 30),
                                 Padding(
@@ -554,7 +583,7 @@ class _MeetingAddPageState extends State<MeetingsAddPage> {
                                         localizations?.translate("submit") ??
                                             "",
                                         style: const TextStyle(
-                                            color: ColorP.textColorSubtitle)),
+                                            color: ColorP.textColor)),
                                     onPressed: () {
                                       if (formKey.currentState!.validate()) {
                                         _addMeeting();

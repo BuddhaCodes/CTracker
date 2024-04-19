@@ -40,8 +40,7 @@ class _ReminderAddPageState extends State<ReminderAddPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    localizations =
-        MyLocalizations.of(context); // Initialize localizations here
+    localizations = MyLocalizations.of(context);
   }
 
   @override
@@ -101,105 +100,145 @@ class _ReminderAddPageState extends State<ReminderAddPage> {
                               mainAxisAlignment: MainAxisAlignment.start,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(
-                                    localizations?.translate(
-                                            'ideaValidationtTitle') ??
-                                        "",
-                                    style: const TextStyle(
-                                        color: ColorP.textColorSubtitle,
-                                        fontSize: 14),
-                                  ),
-                                ),
-                                TextFormField(
-                                  controller: titleController,
-                                  decoration: const InputDecoration(
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(25.0)),
-                                    ),
-                                    filled: true,
-                                    fillColor: ColorP.cardBackground,
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(25.0)),
-                                    ),
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return localizations?.translate(
-                                              'ideaValidationtTitle') ??
-                                          "";
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 30),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(
-                                    localizations?.translate("repeattypeadd") ??
-                                        "",
-                                    style: const TextStyle(
-                                        color: ColorP.textColorSubtitle,
-                                        fontSize: 14),
-                                  ),
-                                ),
-                                Theme(
-                                  data: Theme.of(context).copyWith(
-                                    canvasColor: ColorP.cardBackground,
-                                  ),
-                                  child: DropdownButtonFormField(
-                                    value: _selectedRepeatType,
-                                    borderRadius: BorderRadius.circular(20.0),
-                                    onChanged: (newValue) {
-                                      setState(() {
-                                        _selectedRepeatType =
-                                            newValue ?? RepeatTypeEnum.hourly;
-                                      });
-                                    },
-                                    items: RepeatTypeEnum.values
-                                        .map<DropdownMenuItem<RepeatTypeEnum>>(
-                                      (RepeatTypeEnum value) {
-                                        return DropdownMenuItem<RepeatTypeEnum>(
-                                          value: value,
-                                          child: Text(
-                                            value
-                                                .name, // Convert enum value to string
-                                            style: const TextStyle(
-                                                color: ColorP.textColor),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                              localizations?.translate(
+                                                      'ideaValidationtTitle') ??
+                                                  "",
+                                              style: const TextStyle(
+                                                  color:
+                                                      ColorP.textColorSubtitle,
+                                                  fontSize: 14),
+                                            ),
                                           ),
-                                        );
-                                      },
-                                    ).toList(),
-                                    decoration: InputDecoration(
-                                      border: const OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(25.0)),
-                                      ),
-                                      labelText: localizations
-                                              ?.translate("repeat_type") ??
-                                          "",
-                                      labelStyle: const TextStyle(
-                                          color: ColorP.textColor),
-                                      filled: true,
-                                      iconColor: ColorP.textColor,
-                                      fillColor: ColorP.cardBackground,
-                                      focusedBorder: const OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(25.0)),
+                                          TextFormField(
+                                            controller: titleController,
+                                            decoration: const InputDecoration(
+                                              border: OutlineInputBorder(
+                                                borderRadius: BorderRadius.all(
+                                                    Radius.circular(25.0)),
+                                              ),
+                                              filled: true,
+                                              fillColor: ColorP.cardBackground,
+                                              focusedBorder: OutlineInputBorder(
+                                                borderRadius: BorderRadius.all(
+                                                    Radius.circular(25.0)),
+                                              ),
+                                            ),
+                                            validator: (value) {
+                                              if (value == null ||
+                                                  value.isEmpty) {
+                                                return localizations?.translate(
+                                                        'ideaValidationtTitle') ??
+                                                    "";
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    validator: (value) {
-                                      if (value == null) {
-                                        return localizations
-                                                ?.translate("repeattypeadd") ??
-                                            "";
-                                      }
-                                      return null;
-                                    },
-                                  ),
+                                    const SizedBox(
+                                      width: 30,
+                                    ),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                              localizations?.translate(
+                                                      "repeattypeadd") ??
+                                                  "",
+                                              style: const TextStyle(
+                                                  color:
+                                                      ColorP.textColorSubtitle,
+                                                  fontSize: 14),
+                                            ),
+                                          ),
+                                          Theme(
+                                            data: Theme.of(context).copyWith(
+                                              canvasColor:
+                                                  ColorP.cardBackground,
+                                            ),
+                                            child: DropdownButtonFormField(
+                                              value: _selectedRepeatType,
+                                              borderRadius:
+                                                  BorderRadius.circular(20.0),
+                                              onChanged: (newValue) {
+                                                setState(() {
+                                                  _selectedRepeatType =
+                                                      newValue ??
+                                                          RepeatTypeEnum.hourly;
+                                                });
+                                              },
+                                              items: RepeatTypeEnum.values.map<
+                                                  DropdownMenuItem<
+                                                      RepeatTypeEnum>>(
+                                                (RepeatTypeEnum value) {
+                                                  return DropdownMenuItem<
+                                                      RepeatTypeEnum>(
+                                                    value: value,
+                                                    child: Text(
+                                                      value.name,
+                                                      style: const TextStyle(
+                                                          color:
+                                                              ColorP.textColor),
+                                                    ),
+                                                  );
+                                                },
+                                              ).toList(),
+                                              decoration: InputDecoration(
+                                                border:
+                                                    const OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(
+                                                              25.0)),
+                                                ),
+                                                labelText:
+                                                    localizations?.translate(
+                                                            "repeat_type") ??
+                                                        "",
+                                                labelStyle: const TextStyle(
+                                                    color: ColorP.textColor),
+                                                filled: true,
+                                                iconColor: ColorP.textColor,
+                                                fillColor:
+                                                    ColorP.cardBackground,
+                                                focusedBorder:
+                                                    const OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(
+                                                              25.0)),
+                                                ),
+                                              ),
+                                              validator: (value) {
+                                                if (value == null) {
+                                                  return localizations
+                                                          ?.translate(
+                                                              "repeattypeadd") ??
+                                                      "";
+                                                }
+                                                return null;
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(
                                   height: 30,

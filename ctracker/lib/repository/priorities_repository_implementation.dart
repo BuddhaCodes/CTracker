@@ -1,10 +1,11 @@
 import 'package:ctracker/models/enums/action_type_enum.dart';
 import 'package:ctracker/models/priorities.dart';
 import 'package:ctracker/repository/priorities_repository.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:pocketbase/pocketbase.dart';
 
 class PrioritiesRepositoryImplementation extends PrioritiesRepository {
-  final PocketBase _pocketBase = PocketBase('http://127.0.0.1:8090');
+  final PocketBase _pocketBase = locator<PocketBase>();
 
   @override
   Future<List<Priorities>> getAllPriorities() async {
@@ -21,7 +22,7 @@ class PrioritiesRepositoryImplementation extends PrioritiesRepository {
           .toList();
     } catch (e) {
       final body = <String, dynamic>{
-        "user": "l1t6jwj73151zc3",
+        "user": _pocketBase.authStore.model.id,
         "description": "read all priorities",
         "entity_name": "priorities",
         "timestamp": DateTime.now().toString(),

@@ -129,98 +129,130 @@ class _IdeaAddPageState extends State<IdeaAddPage> {
                               mainAxisAlignment: MainAxisAlignment.start,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(
-                                    localizations?.translate(
-                                            'ideaValidationtTitle') ??
-                                        "",
-                                    style: const TextStyle(
-                                        color: ColorP.textColorSubtitle,
-                                        fontSize: 14),
-                                  ),
-                                ),
-                                TextFormField(
-                                  controller: titleController,
-                                  decoration: const InputDecoration(
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(25.0)),
-                                    ),
-                                    filled: true,
-                                    fillColor: ColorP.cardBackground,
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(25.0)),
-                                    ),
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return localizations?.translate(
-                                              'ideaValidationtTitle') ??
-                                          "";
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 30),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(
-                                    localizations?.translate("catselect") ?? "",
-                                    style: const TextStyle(
-                                        color: ColorP.textColorSubtitle,
-                                        fontSize: 14),
-                                  ),
-                                ),
-                                Theme(
-                                  data: Theme.of(context).copyWith(
-                                    canvasColor: ColorP.cardBackground,
-                                  ),
-                                  child: DropdownButtonFormField(
-                                    value: _ideaCategory,
-                                    borderRadius: BorderRadius.circular(20.0),
-                                    onChanged: (newValue) {
-                                      setState(() {
-                                        _ideaCategory =
-                                            newValue ?? _ideaCategories.first;
-                                      });
-                                    },
-                                    items: _ideaCategories
-                                        .map<DropdownMenuItem<Categories>>(
-                                      (Categories value) {
-                                        return DropdownMenuItem<Categories>(
-                                          value: value,
-                                          child: Text(
-                                            value.name,
-                                            style: const TextStyle(
-                                                color: ColorP.textColor),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                              localizations?.translate(
+                                                      'ideaValidationtTitle') ??
+                                                  "",
+                                              style: const TextStyle(
+                                                  color:
+                                                      ColorP.textColorSubtitle,
+                                                  fontSize: 14),
+                                            ),
                                           ),
-                                        );
-                                      },
-                                    ).toList(),
-                                    decoration: const InputDecoration(
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(25.0)),
-                                      ),
-                                      filled: true,
-                                      iconColor: ColorP.textColor,
-                                      fillColor: ColorP.cardBackground,
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(25.0)),
+                                          TextFormField(
+                                            controller: titleController,
+                                            decoration: const InputDecoration(
+                                              border: OutlineInputBorder(
+                                                borderRadius: BorderRadius.all(
+                                                    Radius.circular(25.0)),
+                                              ),
+                                              filled: true,
+                                              fillColor: ColorP.cardBackground,
+                                              focusedBorder: OutlineInputBorder(
+                                                borderRadius: BorderRadius.all(
+                                                    Radius.circular(25.0)),
+                                              ),
+                                            ),
+                                            validator: (value) {
+                                              if (value == null ||
+                                                  value.isEmpty) {
+                                                return localizations?.translate(
+                                                        'ideaValidationtTitle') ??
+                                                    "";
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    validator: (value) {
-                                      if (value == null) {
-                                        return localizations
-                                                ?.translate("catselect") ??
-                                            "";
-                                      }
-                                      return null;
-                                    },
-                                  ),
+                                    const SizedBox(width: 30),
+                                    Expanded(
+                                      child: Column(
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                              localizations?.translate(
+                                                      "catselect") ??
+                                                  "",
+                                              style: const TextStyle(
+                                                  color:
+                                                      ColorP.textColorSubtitle,
+                                                  fontSize: 14),
+                                            ),
+                                          ),
+                                          Theme(
+                                            data: Theme.of(context).copyWith(
+                                              canvasColor:
+                                                  ColorP.cardBackground,
+                                            ),
+                                            child: DropdownButtonFormField(
+                                              value: _ideaCategory,
+                                              borderRadius:
+                                                  BorderRadius.circular(20.0),
+                                              onChanged: (newValue) {
+                                                setState(() {
+                                                  _ideaCategory = newValue ??
+                                                      _ideaCategories.first;
+                                                });
+                                              },
+                                              items: _ideaCategories.map<
+                                                  DropdownMenuItem<Categories>>(
+                                                (Categories value) {
+                                                  return DropdownMenuItem<
+                                                      Categories>(
+                                                    value: value,
+                                                    child: Text(
+                                                      value.name,
+                                                      style: const TextStyle(
+                                                          color:
+                                                              ColorP.textColor),
+                                                    ),
+                                                  );
+                                                },
+                                              ).toList(),
+                                              decoration: const InputDecoration(
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(
+                                                              25.0)),
+                                                ),
+                                                filled: true,
+                                                iconColor: ColorP.textColor,
+                                                fillColor:
+                                                    ColorP.cardBackground,
+                                                focusedBorder:
+                                                    OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(
+                                                              25.0)),
+                                                ),
+                                              ),
+                                              validator: (value) {
+                                                if (value == null) {
+                                                  return localizations
+                                                          ?.translate(
+                                                              "catselect") ??
+                                                      "";
+                                                }
+                                                return null;
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  ],
                                 ),
                                 const SizedBox(height: 30),
                                 const Padding(

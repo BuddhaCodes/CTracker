@@ -14,6 +14,13 @@ class IconlyC {
 
   static const String ideaIdle = '${_assetPath}idea.png';
 
+  static const String contactsIdle = '${_assetPath}contacts.png';
+
+  static const String add = '${_assetPath}add.png';
+  static const String overview = '${_assetPath}overview.png';
+
+  static const String person = '${_assetPath}person.svg';
+  static const String contact = '${_assetPath}contact.png';
   static const String work = '${_assetPath}work.svg';
   static const String shortRest = '${_assetPath}rest.svg';
   static const String longRest = '${_assetPath}longrest.svg';

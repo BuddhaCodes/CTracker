@@ -2,10 +2,11 @@ import 'package:ctracker/models/board.dart';
 import 'package:ctracker/models/enums/action_type_enum.dart';
 import 'package:ctracker/models/sticky_notes.dart';
 import 'package:ctracker/repository/sticky_note_repository.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:pocketbase/pocketbase.dart';
 
 class StickyNoteRepositoryImplementation extends StickyNoteRepository {
-  final PocketBase _pocketBase = PocketBase('http://127.0.0.1:8090');
+  final PocketBase _pocketBase = locator<PocketBase>();
 
   @override
   Future<StickyNotes> addStickyNote(StickyNotes note) async {
@@ -14,8 +15,8 @@ class StickyNoteRepositoryImplementation extends StickyNoteRepository {
         "title": note.title,
         "content": note.content,
         "created_time": DateTime.now().toString(),
-        "created_by": "l1t6jwj73151zc3",
-        "updated_by": "l1t6jwj73151zc3",
+        "created_by": _pocketBase.authStore.model.id,
+        "updated_by": "",
         "board": note.board?.id
       };
       final createdNote =
@@ -29,8 +30,8 @@ class StickyNoteRepositoryImplementation extends StickyNoteRepository {
 
       final boardBody = {
         "title": boardRecord.data["title"],
-        "created_by": "l1t6jwj73151zc3",
-        "updated_by": "l1t6jwj73151zc3",
+        "created_by": _pocketBase.authStore.model.id,
+        "updated_by": "",
         "notes": notes
       };
       await _pocketBase
@@ -46,7 +47,7 @@ class StickyNoteRepositoryImplementation extends StickyNoteRepository {
       );
     } catch (e) {
       final body = <String, dynamic>{
-        "user": "l1t6jwj73151zc3",
+        "user": _pocketBase.authStore.model.id,
         "description": "add a sticky_notes",
         "entity_name": "sticky_notes",
         "timestamp": DateTime.now().toString(),
@@ -65,7 +66,7 @@ class StickyNoteRepositoryImplementation extends StickyNoteRepository {
       await _pocketBase.collection('sticky_notes').delete(id);
     } catch (e) {
       final body = <String, dynamic>{
-        "user": "l1t6jwj73151zc3",
+        "user": _pocketBase.authStore.model.id,
         "description": "delete a sticky_notes",
         "entity_name": "sticky_notes",
         "timestamp": DateTime.now().toString(),
@@ -81,14 +82,15 @@ class StickyNoteRepositoryImplementation extends StickyNoteRepository {
   @override
   Future<List<StickyNotes>> getAllStickyNotes() async {
     try {
-      final records = await _pocketBase
-          .collection('sticky_notes')
-          .getFullList(sort: '-created', expand: 'board');
+      final records = await _pocketBase.collection('sticky_notes').getFullList(
+          sort: '-created',
+          filter: "created_by='${_pocketBase.authStore.model.id}'",
+          expand: 'board');
 
       return records.map((record) => _mapToStickyNotes(record)).toList();
     } catch (e) {
       final body = <String, dynamic>{
-        "user": "l1t6jwj73151zc3",
+        "user": _pocketBase.authStore.model.id,
         "description": "read all sticky_notes",
         "entity_name": "sticky_notes",
         "timestamp": DateTime.now().toString(),
@@ -108,14 +110,14 @@ class StickyNoteRepositoryImplementation extends StickyNoteRepository {
         "title": note.title,
         "content": note.content,
         "created_time": note.createdTime.toString(),
-        "created_by": "l1t6jwj73151zc3",
-        "updated_by": "l1t6jwj73151zc3",
+        "created_by": _pocketBase.authStore.model.id,
+        "updated_by": _pocketBase.authStore.model.id,
         "board": note.board?.id
       };
       await _pocketBase.collection('sticky_notes').update(id, body: body);
     } catch (e) {
       final body = <String, dynamic>{
-        "user": "l1t6jwj73151zc3",
+        "user": _pocketBase.authStore.model.id,
         "description": "update a sticky_notes",
         "entity_name": "sticky_notes",
         "timestamp": DateTime.now().toString(),

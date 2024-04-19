@@ -1,4 +1,5 @@
 // ignore: file_names
+import 'package:ctracker/models/graphs/idea_graph.dart';
 import 'package:ctracker/models/idea.dart';
 import 'package:ctracker/models/tags.dart';
 
@@ -8,4 +9,5 @@ abstract class IdeaRepository {
   Future<void> addIdea(Idea idea);
   Future<void> deleteIdea(String id);
   Future<void> updateIdea(String id, Idea idea);
+  Future<IdeaTagsChart> getNumberByTags();
 }

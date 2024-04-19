@@ -4,18 +4,20 @@ import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/models/enums/status_enum.dart';
 import 'package:ctracker/models/reminder.dart';
 import 'package:ctracker/models/status.dart';
+import 'package:ctracker/pages/home_page.dart';
 import 'package:ctracker/repository/reminder_repository_implementation.dart';
-import 'package:ctracker/repository/tag_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
 import 'package:ctracker/utils/notification_controller.dart';
 import 'package:ctracker/utils/notification_manager.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:ctracker/utils/utils.dart';
 import 'package:ctracker/utils/work_keys.dart';
+import 'package:ctracker/views/login_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:get_it/get_it.dart';
+import 'package:pocketbase/pocketbase.dart';
 import 'package:workmanager/workmanager.dart';
-import 'pages/home_page.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 @pragma('vm:entry-point')
@@ -59,8 +61,9 @@ void callbackDispatcher() {
 }
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  setupLocator();
   if (!kIsWeb) {
-    WidgetsFlutterBinding.ensureInitialized();
     Workmanager().initialize(callbackDispatcher, isInDebugMode: true);
 
     await AwesomeNotifications().initialize(null, [
@@ -107,7 +110,8 @@ class _MyAppState extends State<MyApp> {
     super.initState();
   }
 
-  Locale _locale = Locale('en', 'US'); // Default locale
+  Locale _locale = Locale('en', 'US');
+  bool isAuth = false;
   void _changeLanguage(Locale locale) {
     setState(() {
       _locale = locale;
@@ -140,8 +144,19 @@ class _MyAppState extends State<MyApp> {
               displayColor: ColorP.textColor,
               fontFamily: 'Poppins'),
         ),
-        home: HomePage(changeLanguage: _changeLanguage),
+        home: isAuth
+            ? HomePage(changeLanguage: _changeLanguage)
+            : LoginPage(
+                checkStatus: handle,
+              ),
       ),
     );
+  }
+
+  void handle(bool isValid) {
+    setState(() {
+      isAuth = isValid;
+    });
+    // print(pb.authStore.isValid);
   }
 }

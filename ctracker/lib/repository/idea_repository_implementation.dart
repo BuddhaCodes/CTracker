@@ -1,19 +1,22 @@
 import 'package:ctracker/models/category.dart';
 import 'package:ctracker/models/enums/tags_enum.dart';
+import 'package:ctracker/models/graphs/idea_graph.dart';
 import 'package:ctracker/models/idea.dart';
 import 'package:ctracker/models/tags.dart';
 import 'package:ctracker/repository/idea_repository.dart';
 import 'package:ctracker/repository/task_repository_implementation.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:pocketbase/pocketbase.dart';
 
 class IdeaRepositoryImplementation implements IdeaRepository {
-  final PocketBase _pocketBase = PocketBase('http://127.0.0.1:8090');
+  final PocketBase _pocketBase = locator<PocketBase>();
   TaskRepositoryImplementation taskRepo = TaskRepositoryImplementation();
   @override
   Future<List<Idea>> getAllIdeas() async {
-    final records = await _pocketBase
-        .collection('ideas')
-        .getFullList(sort: '-created', expand: 'tag,category');
+    final records = await _pocketBase.collection('ideas').getFullList(
+        sort: '-created',
+        filter: "created_by='${_pocketBase.authStore.model.id}'",
+        expand: 'tag,category');
 
     List<Idea> ideas = records
         .map((e) => Idea(
@@ -42,13 +45,10 @@ class IdeaRepositoryImplementation implements IdeaRepository {
 
   @override
   Future<List<Idea>> getByTags(List<Tag> tags) async {
-    String searchCriteria = "";
+    String searchCriteria = "created_by='${_pocketBase.authStore.model.id}'";
 
     for (int i = 0; i < tags.length; i++) {
-      if (i > 0) {
-        searchCriteria += ' && ';
-      }
-      searchCriteria += "tag~'${tags[i].id}'";
+      searchCriteria += "&& tag~'${tags[i].id}'";
     }
 
     final records = await _pocketBase.collection('ideas').getFullList(
@@ -88,8 +88,8 @@ class IdeaRepositoryImplementation implements IdeaRepository {
       "description": idea.description,
       "tag": idea.tags.map((e) => e.id).toList(),
       "category": idea.category.id,
-      "created_by": "l1t6jwj73151zc3",
-      "updated_by": "l1t6jwj73151zc3"
+      "created_by": _pocketBase.authStore.model.id,
+      "updated_by": ""
     };
 
     await _pocketBase.collection('ideas').create(body: body);
@@ -126,8 +126,8 @@ class IdeaRepositoryImplementation implements IdeaRepository {
       "description": idea.description,
       "tag": idea.tags.map((e) => e.id).toList(),
       "category": idea.category.id,
-      "created_by": "l1t6jwj73151zc3",
-      "updated_by": "l1t6jwj73151zc3"
+      "created_by": _pocketBase.authStore.model.id,
+      "updated_by": _pocketBase.authStore.model.id
     };
     if (idea.tags
         .where((element) => element.id == TagsEnum.project.id)
@@ -150,5 +150,27 @@ class IdeaRepositoryImplementation implements IdeaRepository {
       }
     }
     await _pocketBase.collection('ideas').update(id, body: body);
+  }
+
+  @override
+  Future<IdeaTagsChart> getNumberByTags() async {
+    List<Idea> ideas = await getAllIdeas();
+    IdeaTagsChart toReturn = IdeaTagsChart(house: 0, innovative: 0, project: 0);
+
+    for (var idea in ideas) {
+      for (var tag in idea.tags) {
+        if (tag.id == TagsEnum.house.id) {
+          toReturn.house++;
+        }
+        if (tag.id == TagsEnum.innovative.id) {
+          toReturn.innovative++;
+        }
+        if (tag.id == TagsEnum.project.id) {
+          toReturn.project++;
+        }
+      }
+    }
+
+    return toReturn;
   }
 }

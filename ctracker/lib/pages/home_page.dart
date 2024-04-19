@@ -1,3 +1,7 @@
+import 'package:ctracker/constant/values.dart';
+import 'package:ctracker/views/contacts_page.dart';
+import 'package:ctracker/views/journal_overview.dart';
+import 'package:ctracker/views/task_overview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -154,6 +158,12 @@ class _HomePageState extends State<HomePage> {
         return IdeaPage();
       case 7:
         return SettingsView(changeLanguage: _changeLanguage);
+      case 8:
+        return const JournalOverview();
+      case 9:
+        return const TaskOverview();
+      case 10:
+        return ContactsPage();
       default:
         return Container();
     }
@@ -171,23 +181,80 @@ class _HomePageState extends State<HomePage> {
                   top: MediaQuery.of(context).padding.top + 40,
                 ),
                 children: [
+                  ExpansionTile(
+                    title: Text(localizations.translate("drawerTracker")),
+                    leading: const SizedBox(
+                      height: ValuesConst.tileSeparatorSize,
+                      width: ValuesConst.tileSeparatorSize,
+                    ),
+                    children: [
+                      _buildListTile(
+                        title: localizations.translate("manage"),
+                        icon: IconlyC.trackerIdle,
+                        onTap: () => _onItemTapped(1),
+                        selected: _selectedIndex == 1,
+                      ),
+                      _buildListTile(
+                        title: localizations.translate("overview"),
+                        icon: IconlyC.overview,
+                        onTap: () => _onItemTapped(9),
+                        selected: _selectedIndex == 9,
+                      ),
+                    ],
+                  ),
+                  ExpansionTile(
+                    title: Text(localizations.translate("meetings")),
+                    leading: const SizedBox(
+                      height: ValuesConst.tileSeparatorSize,
+                      width: ValuesConst.tileSeparatorSize,
+                    ),
+                    children: [
+                      _buildListTile(
+                        title: localizations.translate("manage"),
+                        icon: IconlyC.meetingIdle,
+                        onTap: () => _onItemTapped(2),
+                        selected: _selectedIndex == 2,
+                      ),
+                      _buildListTile(
+                        title: localizations.translate("overview"),
+                        icon: IconlyC.overview,
+                        onTap: () => _onItemTapped(8),
+                        selected: _selectedIndex == 8,
+                      ),
+                    ],
+                  ),
+                  ExpansionTile(
+                    title: Text(localizations.translate("journal")),
+                    leading: const SizedBox(
+                      height: ValuesConst.tileSeparatorSize,
+                      width: ValuesConst.tileSeparatorSize,
+                    ),
+                    children: [
+                      _buildListTile(
+                        title: localizations.translate("manage"),
+                        icon: IconlyC.journalIdle,
+                        onTap: () => _onItemTapped(4),
+                        selected: _selectedIndex == 4,
+                      ),
+                      _buildListTile(
+                        title: localizations.translate("overview"),
+                        icon: IconlyC.overview,
+                        onTap: () => _onItemTapped(8),
+                        selected: _selectedIndex == 8,
+                      ),
+                    ],
+                  ),
+                  _buildListTile(
+                    title: localizations.translate("idea"),
+                    icon: IconlyC.ideaIdle,
+                    onTap: () => _onItemTapped(6),
+                    selected: _selectedIndex == 6,
+                  ),
                   _buildListTile(
                     title: localizations.translate("reminders"),
                     icon: IconlyC.reminderIdle,
                     onTap: () => _onItemTapped(0),
                     selected: _selectedIndex == 0,
-                  ),
-                  _buildListTile(
-                    title: localizations.translate("drawerTracker"),
-                    icon: IconlyC.trackerIdle,
-                    onTap: () => _onItemTapped(1),
-                    selected: _selectedIndex == 1,
-                  ),
-                  _buildListTile(
-                    title: localizations.translate("meetings"),
-                    icon: IconlyC.meetingIdle,
-                    onTap: () => _onItemTapped(2),
-                    selected: _selectedIndex == 2,
                   ),
                   _buildListTile(
                     title: localizations.translate("drawerPomodoro"),
@@ -196,22 +263,16 @@ class _HomePageState extends State<HomePage> {
                     selected: _selectedIndex == 3,
                   ),
                   _buildListTile(
-                    title: localizations.translate("journal"),
-                    icon: IconlyC.journalIdle,
-                    onTap: () => _onItemTapped(4),
-                    selected: _selectedIndex == 4,
-                  ),
-                  _buildListTile(
                     title: "General Notes",
                     icon: IconlyC.note,
                     onTap: () => _onItemTapped(5),
                     selected: _selectedIndex == 5,
                   ),
                   _buildListTile(
-                    title: localizations.translate("idea"),
-                    icon: IconlyC.ideaIdle,
-                    onTap: () => _onItemTapped(6),
-                    selected: _selectedIndex == 6,
+                    title: localizations.translate("contact"),
+                    icon: IconlyC.contactsIdle,
+                    onTap: () => _onItemTapped(10),
+                    selected: _selectedIndex == 10,
                   ),
                   _buildListTile(
                     title: localizations.translate("drawerSettings"),

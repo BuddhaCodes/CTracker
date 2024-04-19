@@ -6,12 +6,13 @@ import 'package:ctracker/models/participants.dart';
 import 'package:ctracker/models/pomodoros.dart';
 import 'package:ctracker/models/status.dart';
 import 'package:ctracker/repository/meeting_repository.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:ctracker/utils/utils.dart';
 import 'package:intl/intl.dart';
 import 'package:pocketbase/pocketbase.dart';
 
 class MeetingRepositoryImplementation extends MeetingRepository {
-  final PocketBase _pocketBase = PocketBase('http://127.0.0.1:8090');
+  final PocketBase _pocketBase = locator<PocketBase>();
 
   @override
   Future<void> addMeeting(Meeting meeting) async {
@@ -19,8 +20,8 @@ class MeetingRepositoryImplementation extends MeetingRepository {
       List<String> actionItemIds = [];
       for (var actionItem in meeting.actions) {
         final pomodoroBody = {
-          "updated_by": "l1t6jwj73151zc3",
-          "created_by": "l1t6jwj73151zc3",
+          "updated_by": "",
+          "created_by": _pocketBase.authStore.model.id,
           "notes": "",
         };
 
@@ -31,10 +32,10 @@ class MeetingRepositoryImplementation extends MeetingRepository {
         final actionItemBody = {
           "name": actionItem.name,
           "status": StatusEnum.notDone.id,
-          "updated_by": "l1t6jwj73151zc3",
-          "created_by": "l1t6jwj73151zc3",
+          "updated_by": "",
+          "created_by": _pocketBase.authStore.model.id,
           "pomodoro": pomodoroRecord.id,
-          "description": actionItem.description ?? ""
+          "description": actionItem.description
         };
 
         final actionItemRecord = await _pocketBase
@@ -52,14 +53,14 @@ class MeetingRepositoryImplementation extends MeetingRepository {
         "participants":
             meeting.participants.map((participant) => participant.id).toList(),
         "action_items": actionItemIds,
-        "created_by": "l1t6jwj73151zc3",
-        "updated_by": "l1t6jwj73151zc3"
+        "created_by": _pocketBase.authStore.model.id,
+        "updated_by": ""
       };
 
       await _pocketBase.collection('meeting').create(body: body);
     } catch (e) {
       final body = <String, dynamic>{
-        "user": "l1t6jwj73151zc3",
+        "user": _pocketBase.authStore.model.id,
         "description": "adding a meeting",
         "entity_name": "meeting",
         "timestamp": DateTime.now().toString(),
@@ -93,7 +94,7 @@ class MeetingRepositoryImplementation extends MeetingRepository {
       await _pocketBase.collection('meeting').delete(id);
     } catch (e) {
       final body = <String, dynamic>{
-        "user": "l1t6jwj73151zc3",
+        "user": _pocketBase.authStore.model.id,
         "description": "deleting a meeting",
         "entity_name": "meeting",
         "timestamp": DateTime.now().toString(),
@@ -111,7 +112,7 @@ class MeetingRepositoryImplementation extends MeetingRepository {
     try {
       final records = await _pocketBase
           .collection('meeting')
-          .getFullList(sort: '-created', expand: 'participants,action_items');
+          .getFullList(sort: '-created', filter: "created_by='${_pocketBase.authStore.model.id}'", expand: 'participants,action_items');
 
       return records.map((record) {
         List<Participant> participants = record.expand["participants"]!
@@ -157,7 +158,7 @@ class MeetingRepositoryImplementation extends MeetingRepository {
       }).toList();
     } catch (e) {
       final body = <String, dynamic>{
-        "user": "l1t6jwj73151zc3",
+        "user": _pocketBase.authStore.model.id,
         "description": "read all meeting",
         "entity_name": "meeting",
         "timestamp": DateTime.now().toString(),
@@ -198,8 +199,8 @@ class MeetingRepositoryImplementation extends MeetingRepository {
       for (var actionItem
           in meeting.actions.where((actionItem) => actionItem.id == null)) {
         final pomodoroBody = {
-          "updated_by": "l1t6jwj73151zc3",
-          "created_by": "l1t6jwj73151zc3",
+          "updated_by": _pocketBase.authStore.model.id,
+          "created_by": _pocketBase.authStore.model.id,
           "notes": "",
         };
 
@@ -210,8 +211,8 @@ class MeetingRepositoryImplementation extends MeetingRepository {
         final actionItemBody = {
           "name": actionItem.name,
           "status": StatusEnum.notDone.id,
-          "updated_by": "l1t6jwj73151zc3",
-          "created_by": "l1t6jwj73151zc3",
+          "updated_by": _pocketBase.authStore.model.id,
+          "created_by": _pocketBase.authStore.model.id,
           "pomodoro": pomodoroRecord.id,
           "description": "",
         };
@@ -228,8 +229,8 @@ class MeetingRepositoryImplementation extends MeetingRepository {
         final actionItemBody = {
           "name": actionItem.name,
           "status": StatusEnum.notDone.id,
-          "updated_by": "l1t6jwj73151zc3",
-          "created_by": "l1t6jwj73151zc3",
+          "updated_by": _pocketBase.authStore.model.id,
+          "created_by": _pocketBase.authStore.model.id,
           "description": "",
           "pomodoro": actionItem.pomodoro?.id
         };
@@ -248,14 +249,14 @@ class MeetingRepositoryImplementation extends MeetingRepository {
         "participants":
             meeting.participants.map((participant) => participant.id).toList(),
         "action_items": actionItemIds,
-        "created_by": "l1t6jwj73151zc3",
-        "updated_by": "l1t6jwj73151zc3"
+        "created_by": _pocketBase.authStore.model.id,
+        "updated_by": _pocketBase.authStore.model.id
       };
 
       await _pocketBase.collection('meeting').update(id, body: body);
     } catch (e) {
       final body = <String, dynamic>{
-        "user": "l1t6jwj73151zc3",
+        "user": _pocketBase.authStore.model.id,
         "description": "update a meeting",
         "entity_name": "meeting",
         "timestamp": DateTime.now().toString(),
@@ -281,7 +282,7 @@ class MeetingRepositoryImplementation extends MeetingRepository {
           .format(Utils.getLastDayOfMonth(DateTime(year, month, 1)));
 
       String searchCriteria =
-          "start_date>='$startDate' && start_date <= '$endDate'";
+          "start_date>='$startDate' && start_date <= '$endDate' && created_by='${_pocketBase.authStore.model.id}'";
       ResultList<RecordModel> records = await _pocketBase
           .collection('meeting')
           .getList(
@@ -332,7 +333,7 @@ class MeetingRepositoryImplementation extends MeetingRepository {
       }).toList();
     } catch (e) {
       final body = <String, dynamic>{
-        "user": "l1t6jwj73151zc3",
+        "user": _pocketBase.authStore.model.id,
         "description": "read all meeting by year and month",
         "entity_name": "meeting",
         "timestamp": DateTime.now().toString(),
@@ -392,7 +393,7 @@ class MeetingRepositoryImplementation extends MeetingRepository {
       );
     } catch (e) {
       final body = <String, dynamic>{
-        "user": "l1t6jwj73151zc3",
+        "user": _pocketBase.authStore.model.id,
         "description": "read a meeting",
         "entity_name": "meeting",
         "timestamp": DateTime.now().toString(),

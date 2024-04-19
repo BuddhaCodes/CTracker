@@ -1,4 +1,7 @@
 import 'package:ctracker/models/enums/effort_enum.dart';
+import 'package:ctracker/models/graphs/defficulty_resume.dart';
+import 'package:ctracker/models/graphs/effort_resume.dart';
+import 'package:ctracker/models/graphs/spend_time_task.dart';
 import 'package:ctracker/models/task.dart';
 
 abstract class TaskRepository {
@@ -11,5 +14,8 @@ abstract class TaskRepository {
   Future<int> getAmountOfTask();
   Future<List<Task>> getCompletedTask();
   Future<List<Task>> getNoCompletedTask();
+  Future<List<DifficultyResume>> getAmountByMonthAndDifficulty(int year);
+  Future<List<EffortResume>> getAmountByMonthAndEffort(int year);
+  Future<SpendTimeTask> getAllDurationByMonth(int year);
   Future<List<Task>> getByEffort(Effort effort);
 }

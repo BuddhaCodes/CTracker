@@ -1,10 +1,11 @@
 import 'package:ctracker/models/enums/action_type_enum.dart';
 import 'package:ctracker/models/status.dart';
 import 'package:ctracker/repository/status_repository.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:pocketbase/pocketbase.dart';
 
 class StatusRepositoryImplementation implements StatusRepository {
-  final PocketBase _pocketBase = PocketBase('http://127.0.0.1:8090');
+  final PocketBase _pocketBase = locator<PocketBase>();
 
   @override
   Future<List<Status>> getAllStatus() async {
@@ -17,7 +18,7 @@ class StatusRepositoryImplementation implements StatusRepository {
           .toList();
     } catch (e) {
       final body = <String, dynamic>{
-        "user": "l1t6jwj73151zc3",
+        "user": _pocketBase.authStore.model.id,
         "description": "read all status",
         "entity_name": "status",
         "timestamp": DateTime.now().toString(),
@@ -39,7 +40,7 @@ class StatusRepositoryImplementation implements StatusRepository {
       return Status(id: record.id, name: record.data["name"]);
     } catch (e) {
       final body = <String, dynamic>{
-        "user": "l1t6jwj73151zc3",
+        "user": _pocketBase.authStore.model.id,
         "description": "read a status by id",
         "entity_name": "status",
         "timestamp": DateTime.now().toString(),

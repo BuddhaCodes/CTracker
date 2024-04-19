@@ -1,9 +1,10 @@
 import 'package:ctracker/models/category.dart';
 import 'package:ctracker/repository/category_repository.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:pocketbase/pocketbase.dart';
 
 class CategoryRepositoryImplementation implements CategoryRepository {
-  final PocketBase _pocketBase = PocketBase('http://127.0.0.1:8090');
+  final PocketBase _pocketBase = locator<PocketBase>();
 
   @override
   Future<List<Categories>> getAllCategories() async {

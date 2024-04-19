@@ -20,6 +20,7 @@ class Task {
   Status status;
   Reminder reminder;
   Pomodoro? pomodoro;
+  String? created;
   String? created_by;
   String? updated_by;
 
@@ -28,6 +29,7 @@ class Task {
     this.pomodoro,
     this.created_by,
     this.updated_by,
+    this.created,
     required this.title,
     required this.difficulty,
     required this.priority,

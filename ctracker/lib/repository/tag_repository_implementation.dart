@@ -1,10 +1,11 @@
 import 'package:ctracker/models/enums/action_type_enum.dart';
 import 'package:ctracker/models/tags.dart';
 import 'package:ctracker/repository/tag_repository.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:pocketbase/pocketbase.dart';
 
 class TagRepositoryImplementation implements TagRepository {
-  final PocketBase _pocketBase = PocketBase('http://127.0.0.1:8090');
+  final PocketBase _pocketBase = locator<PocketBase>();
 
   @override
   Future<List<Tag>> getAllTags() async {
@@ -17,7 +18,7 @@ class TagRepositoryImplementation implements TagRepository {
           .toList();
     } catch (e) {
       final body = <String, dynamic>{
-        "user": "l1t6jwj73151zc3",
+        "user": _pocketBase.authStore.model.id,
         "description": "read all tags",
         "entity_name": "tags",
         "timestamp": DateTime.now().toString(),
