@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class CustomText extends StatelessWidget {
   const CustomText({
-    Key? key,
+    super.key,
     @required this.title,
     this.fontSize,
     this.textAlign,
@@ -11,8 +11,7 @@ class CustomText extends StatelessWidget {
     this.maxLine,
     this.overflow,
     this.textDecoration,
-  })  : assert(title != null),
-        super(key: key);
+  })  : assert(title != null);
   final String? title;
   final Color? textColor;
   final double? fontSize;

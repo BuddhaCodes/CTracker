@@ -1,318 +1,331 @@
-import 'package:ctracker/constant/color.dart';
-import 'package:ctracker/constant/string.dart';
-import 'package:ctracker/constant/values.dart';
-import 'package:ctracker/models/idea.dart';
-import 'package:ctracker/models/item_types.dart';
-import 'package:ctracker/models/reminder.dart';
+import 'package:ctracker/components/circular_graph_painter.dart';
+import 'package:ctracker/components/menu_item.dart';
+import 'package:ctracker/components/task_card.dart';
+import 'package:ctracker/constant/color_palette.dart';
+import 'package:ctracker/models/enums/effort_enum.dart';
 import 'package:ctracker/models/task.dart';
-import 'package:ctracker/utils/utils.dart';
+import 'package:ctracker/repository/task_repository_implementation.dart';
+import 'package:ctracker/utils/localization.dart';
+import 'package:ctracker/views/task_add_page.dart';
 import 'package:flutter/material.dart';
 
 class TrackerPage extends StatefulWidget {
-  const TrackerPage({super.key});
+  final Function onReminderDeleted;
+  const TrackerPage({super.key, required this.onReminderDeleted});
 
   @override
-  _TrackerPageState createState() => _TrackerPageState();
+  TrackerPageState createState() => TrackerPageState();
 }
 
-class _TrackerPageState extends State<TrackerPage> {
-  bool _sortAscending = true;
-  int _sortColumnIndex = 0;
+class TrackerPageState extends State<TrackerPage> {
+  int _selectedIndex = 0;
+  MyLocalizations? localizations;
+  late List<Task> tasks;
+  int selectedTile = -1;
+  late TaskRepositoryImplementation taskRepo;
+  late bool isInitialized = false;
+  late int totalTaks = 0;
+  late int completedTasks = 0;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    localizations =
+        MyLocalizations.of(context); // Initialize localizations here
+  }
 
-  bool _sortAscendingtask = true;
-  int _sortColumnIndextaks = 0;
+  Future<void> _onMenuItemClicked(int index) async {
+    setState(() {
+      isInitialized = false;
+    });
+    List<Task> fetch = [];
+    setState(() {
+      _selectedIndex = index;
+      selectedTile = -1;
+    });
 
-  bool _sortAscendingrem = true;
-  int _sortColumnIndexrem = 0;
+    if (_selectedIndex == 0) {
+      try {
+        fetch = await taskRepo.getAllTasks();
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(localizations?.translate("error") ?? "",
+                    style: const TextStyle(
+                        color: Color.fromARGB(255, 255, 255, 255)))),
+          );
+        }
+      }
+    }
+    if (_selectedIndex == 1) {
+      try {
+        fetch = await taskRepo.getCompletedTask();
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(localizations?.translate("error") ?? "",
+                    style: const TextStyle(
+                        color: Color.fromARGB(255, 255, 255, 255)))),
+          );
+        }
+      }
+    }
+    if (_selectedIndex == 2) {
+      try {
+        fetch = await taskRepo.getByEffort(Effort.poco);
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(localizations?.translate("error") ?? "",
+                    style: const TextStyle(
+                        color: Color.fromARGB(255, 255, 255, 255)))),
+          );
+        }
+      }
+    }
+    if (_selectedIndex == 3) {
+      try {
+        fetch = await taskRepo.getByEffort(Effort.medio);
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(localizations?.translate("error") ?? "",
+                    style: const TextStyle(
+                        color: Color.fromARGB(255, 255, 255, 255)))),
+          );
+        }
+      }
+    }
+    if (_selectedIndex == 4) {
+      try {
+        fetch = await taskRepo.getByEffort(Effort.mucho);
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(localizations?.translate("error") ?? "",
+                    style: const TextStyle(
+                        color: Color.fromARGB(255, 255, 255, 255)))),
+          );
+        }
+      }
+    }
 
-  List<ItemType> types = ItemTypeData.getAllItemType();
-  List<Task> tasks = TaskData.getAllTasks();
-  List<Idea> ideas = IdeaData.getAllIdeas();
-  List<Reminder> reminders = ReminderData.getAllReminders();
+    setState(() {
+      tasks = fetch;
+      isInitialized = true;
+    });
+  }
 
-  ItemType _selectedTable = ItemTypeData.getAllItemType().first;
+  @override
+  void initState() {
+    super.initState();
+    taskRepo = TaskRepositoryImplementation();
+    tasks = [];
+    initializeData();
+  }
+
+  void initializeData() {
+    setState(() {
+      isInitialized = false;
+    });
+    _initializeGraph().whenComplete(() =>
+        _onMenuItemClicked(_selectedIndex).whenComplete(() => setState(() {
+              isInitialized = true;
+            })));
+  }
+
+  Future<void> _initializeGraph() async {
+    totalTaks = await taskRepo.getAmountOfTask();
+    completedTasks = await taskRepo.getAmountCompletedTasks();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: Center(
-          child: Column(
-            children: [
-              Container(
-                width: MediaQuery.of(context).size.width * 0.82,
-                alignment: Alignment.centerLeft,
-                child: SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.30,
-                  child: DropdownButton<ItemType>(
-                    value: _selectedTable,
-                    isExpanded: true,
-                    dropdownColor: ColorConst.drawerBG,
-                    borderRadius:
-                        BorderRadius.circular(ValuesConst.borderRadius),
-                    onChanged: (ItemType? newValue) {
-                      setState(() {
-                        _selectedTable = newValue ?? ItemType(id: -1, name: "");
-                      });
-                    },
-                    items:
-                        types.map<DropdownMenuItem<ItemType>>((ItemType value) {
-                      IconData iconData;
-                      Color iconColor;
-                      switch (value.name) {
-                        case 'Ideas':
-                          iconData = Icons.lightbulb;
-                          iconColor = ColorConst.chartColorYellow;
-                          break;
-                        case 'Reminders':
-                          iconData = Icons.notification_important;
-                          iconColor = ColorConst.chartColorGreen;
-                          break;
-                        case 'Tasks':
-                          iconData = Icons.assignment;
-                          iconColor = ColorConst.chartColorBlue;
-                          break;
-                        default:
-                          iconData = Icons.error;
-                          iconColor = ColorConst.lightRed;
-                      }
-                      return DropdownMenuItem<ItemType>(
-                        value: value,
-                        child: Row(
+      backgroundColor: ColorP.background,
+      body: !isInitialized
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(
+              child: Column(
+                children: <Widget>[
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      child: Center(
+                        child: Column(
                           children: [
-                            Icon(iconData, color: iconColor),
-                            const SizedBox(width: 10),
-                            Text(value.name,
-                                style: const TextStyle(
-                                    color: ColorConst.textColor)),
+                            Padding(
+                              padding: const EdgeInsets.all(15.0),
+                              child: Card(
+                                color: ColorP.cardBackground,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30.0),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(20.0),
+                                  child: SizedBox(
+                                    height: 300,
+                                    width: double.infinity,
+                                    child: Center(
+                                      child: CircularGraph(
+                                          totalTasks: totalTaks,
+                                          completedTasks: completedTasks),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Align(
+                                alignment: Alignment.center,
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    SizedBox(
+                                      height: 90,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            localizations?.translate('taskp') ??
+                                                "",
+                                            style: const TextStyle(
+                                              fontSize: 36.0,
+                                              color: ColorP.textColor,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8.0),
+                                          Text(
+                                            localizations
+                                                    ?.translate('taskpsub') ??
+                                                "",
+                                            style: const TextStyle(
+                                              fontSize: 20.0,
+                                              color: ColorP.textColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    Container(
+                                      width: 70,
+                                      height: 70,
+                                      decoration: const BoxDecoration(
+                                        color: ColorP.cardBackground,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: InkWell(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => TaskAddPage(
+                                                onTaskAdded: handleTaskAdded,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        borderRadius: BorderRadius.circular(25),
+                                        child: const Icon(
+                                          Icons.add,
+                                          size: 40,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 40,
+                              width: double.infinity,
+                              child: ListView(
+                                scrollDirection: Axis.horizontal,
+                                children: <Widget>[
+                                  MenuItem(
+                                    text: localizations?.translate('all') ?? "",
+                                    isSelected: _selectedIndex == 0,
+                                    onTap: () => _onMenuItemClicked(0),
+                                  ),
+                                  MenuItem(
+                                    text:
+                                        localizations?.translate('completed') ??
+                                            "",
+                                    isSelected: _selectedIndex == 1,
+                                    onTap: () => _onMenuItemClicked(1),
+                                  ),
+                                  MenuItem(
+                                    text: localizations?.translate('notmuch') ??
+                                        "",
+                                    isSelected: _selectedIndex == 2,
+                                    onTap: () => _onMenuItemClicked(2),
+                                  ),
+                                  MenuItem(
+                                    text: localizations?.translate('mid') ?? "",
+                                    isSelected: _selectedIndex == 3,
+                                    onTap: () => _onMenuItemClicked(3),
+                                  ),
+                                  MenuItem(
+                                    text: localizations?.translate('lot') ?? "",
+                                    isSelected: _selectedIndex == 4,
+                                    onTap: () => _onMenuItemClicked(4),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 40,
+                            ),
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.98,
+                              child: SizedBox(
+                                  height: 500,
+                                  child: ListView.builder(
+                                    itemCount: tasks.length,
+                                    itemBuilder:
+                                        (BuildContext context, int index) {
+                                      return TaskCard(
+                                        task: tasks[index],
+                                        selectedTile: selectedTile,
+                                        index: index,
+                                        onExpanded: (int sel) {
+                                          setState(() {
+                                            selectedTile = sel;
+                                          });
+                                        },
+                                        onDelete: () {
+                                          widget.onReminderDeleted();
+                                          initializeData();
+                                        },
+                                      );
+                                    },
+                                  )),
+                            ),
                           ],
                         ),
-                      );
-                    }).toList(),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(
-                height: 30,
-                width: 30,
-              ),
-              if (_selectedTable.name == 'Ideas') _buildDataTable(ideas),
-              if (_selectedTable.name == 'Reminders')
-                _buildDataTableReminder(reminders),
-              if (_selectedTable.name == 'Tasks') _buildDataTableTask(tasks),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDataTableReminder(List<Reminder> data) {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width * ValuesConst.tableWidth,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-                minWidth: MediaQuery.of(context).size.width * 0.82),
-            child: DataTable(
-              border: TableBorder.all(
-                  width: ValuesConst.tableBorderWidth,
-                  color: ColorConst.chartBorderColor,
-                  borderRadius: BorderRadius.circular(ValuesConst.tableRadius)),
-              sortAscending: _sortAscendingrem,
-              sortColumnIndex: _sortColumnIndexrem,
-              columns: [
-                Utils.buildColumn(Strings.title,
-                    onSort: (columnIndex, ascending) => setState(() {
-                          _sortAscendingrem = ascending;
-                          _sortColumnIndexrem = columnIndex;
-                          if (ascending) {
-                            data.sort((a, b) => a.title.compareTo(b.title));
-                          } else {
-                            data.sort((a, b) => b.title.compareTo(a.title));
-                          }
-                        })),
-                Utils.buildColumn(Strings.duedate),
-                Utils.buildColumn(Strings.description),
-                Utils.buildColumn(Strings.category),
-                Utils.buildColumn(Strings.actions),
-              ],
-              rows: data.map((item) {
-                return DataRow(
-                  cells: [
-                    Utils.buildCell(item.title),
-                    Utils.buildCell(item.duedate.toString()),
-                    Utils.buildCell(item.description),
-                    Utils.buildCell(item.categories.join(', ')),
-                    DataCell(Row(
-                      children: [
-                        Utils.updateIcon(onPressed: () {
-                          // Implement update functionality
-                        }),
-                        Utils.deleteIcon(onPressed: () {
-                          setState(() {
-                            ReminderData.delete(item.id);
-                            reminders = ReminderData.getAllReminders();
-                          });
-                        }),
-                      ],
-                    )),
-                  ],
-                );
-              }).toList(),
             ),
-          ),
-        ),
-      ),
     );
   }
 
-  Widget _buildDataTableTask(List<Task> data) {
-    return Container(
-      width: MediaQuery.of(context).size.width * ValuesConst.tableWidth,
-      padding: const EdgeInsets.all(ValuesConst.tablePadding),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-              minWidth: MediaQuery.of(context).size.width * 0.82),
-          child: DataTable(
-            border: TableBorder.all(
-                width: ValuesConst.tableBorderWidth,
-                color: ColorConst.chartBorderColor,
-                borderRadius: BorderRadius.circular(ValuesConst.tableRadius)),
-            sortAscending: _sortAscendingtask,
-            sortColumnIndex: _sortColumnIndextaks,
-            columns: [
-              Utils.buildColumn(Strings.title,
-                  onSort: (columnIndex, ascending) => setState(() {
-                        _sortAscendingtask = ascending;
-                        _sortColumnIndextaks = columnIndex;
-                        if (ascending) {
-                          data.sort((a, b) => a.title.compareTo(b.title));
-                        } else {
-                          data.sort((a, b) => b.title.compareTo(a.title));
-                        }
-                      })),
-              Utils.buildColumn(Strings.difficulty,
-                  onSort: (columnIndex, ascending) => setState(() {
-                        _sortAscendingtask = ascending;
-                        _sortColumnIndextaks = columnIndex;
-                        if (ascending) {
-                          data.sort(
-                              (a, b) => a.difficulty.compareTo(b.difficulty));
-                        } else {
-                          data.sort(
-                              (a, b) => b.difficulty.compareTo(a.difficulty));
-                        }
-                      })),
-              Utils.buildColumn(Strings.priority),
-              Utils.buildColumn(Strings.effort),
-              Utils.buildColumn(Strings.category),
-              Utils.buildColumn(Strings.description),
-              Utils.buildColumn(Strings.effort),
-              Utils.buildColumn(Strings.actions)
-            ],
-            rows: data.map((item) {
-              return DataRow(
-                cells: [
-                  Utils.buildCell(item.title),
-                  Utils.buildCell(item.difficulty),
-                  Utils.buildCell(item.priority),
-                  Utils.buildCell(item.effort),
-                  Utils.buildCell(item.categories.join(', ')),
-                  Utils.buildCell(item.description),
-                  Utils.buildCell(item.project),
-                  DataCell(Row(
-                    children: [
-                      Utils.updateIcon(onPressed: () {}),
-                      Utils.deleteIcon(onPressed: () {
-                        setState(() {
-                          TaskData.delete(item.id);
-                          tasks = TaskData.getAllTasks();
-                        });
-                      }),
-                    ],
-                  )),
-                ],
-              );
-            }).toList(),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDataTable(List<Idea> data) {
-    return Container(
-      width: MediaQuery.of(context).size.width * ValuesConst.tableWidth,
-      padding: const EdgeInsets.all(ValuesConst.tablePadding),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-              minWidth: MediaQuery.of(context).size.width * 0.82),
-          child: DataTable(
-            sortAscending: _sortAscending,
-            sortColumnIndex: _sortColumnIndex,
-            border: TableBorder.all(
-                width: ValuesConst.tableBorderWidth,
-                color: ColorConst.chartBorderColor,
-                borderRadius: BorderRadius.circular(ValuesConst.tableRadius)),
-            columns: [
-              Utils.buildColumn(Strings.title,
-                  onSort: (columnIndex, ascending) => setState(() {
-                        _sortAscending = ascending;
-                        _sortColumnIndex = columnIndex;
-                        if (ascending) {
-                          data.sort((a, b) => a.title.compareTo(b.title));
-                        } else {
-                          data.sort((a, b) => b.title.compareTo(a.title));
-                        }
-                      })),
-              Utils.buildColumn(Strings.tags,
-                  onSort: (columnIndex, ascending) => setState(() {
-                        _sortAscending = ascending;
-                        _sortColumnIndex = columnIndex;
-                        if (ascending) {
-                          data.sort(
-                              (a, b) => a.tags.length.compareTo(b.tags.length));
-                        } else {
-                          data.sort(
-                              (a, b) => b.tags.length.compareTo(a.tags.length));
-                        }
-                      })),
-              Utils.buildColumn(Strings.description),
-              Utils.buildColumn(Strings.category),
-              Utils.buildColumn(Strings.actions),
-            ],
-            rows: data.map((item) {
-              return DataRow(
-                cells: [
-                  Utils.buildCell(item.title),
-                  Utils.buildCell(item.tags.join(', ')),
-                  Utils.buildCell(item.description),
-                  Utils.buildCell(item.category),
-                  DataCell(Row(
-                    children: [
-                      Utils.updateIcon(onPressed: () {}),
-                      Utils.deleteIcon(onPressed: () {
-                        setState(() {
-                          IdeaData.delete(item.id);
-                          ideas = IdeaData.getAllIdeas();
-                        });
-                      }),
-                    ],
-                  )),
-                ],
-              );
-            }).toList(),
-          ),
-        ),
-      ),
-    );
+  void handleTaskAdded(bool success) {
+    initializeData();
   }
 }

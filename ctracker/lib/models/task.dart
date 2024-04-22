@@ -1,61 +1,44 @@
+import 'package:ctracker/models/category.dart';
+import 'package:ctracker/models/enums/difficulty_enum.dart';
+import 'package:ctracker/models/enums/effort_enum.dart';
+import 'package:ctracker/models/idea.dart';
+import 'package:ctracker/models/pomodoros.dart';
+import 'package:ctracker/models/priorities.dart';
+import 'package:ctracker/models/reminder.dart';
+import 'package:ctracker/models/status.dart';
+
 class Task {
-  final int id;
+  final String? id;
   final String title;
-  final String difficulty;
-  final String priority;
-  final String effort;
-  final List<String> categories;
-  final String project;
   final String description;
-  final List<String> images;
-  final String note;
+  Duration timeSpend;
+  final DifficultyEnum difficulty;
+  final Priorities priority;
+  final Effort effort;
+  final Idea project;
+  final Categories category;
+  Status status;
+  Reminder reminder;
+  Pomodoro? pomodoro;
+  String? created;
+  String? created_by;
+  String? updated_by;
 
   Task({
-    required this.id,
+    this.id,
+    this.pomodoro,
+    this.created_by,
+    this.updated_by,
+    this.created,
     required this.title,
     required this.difficulty,
     required this.priority,
+    required this.status,
     required this.effort,
-    required this.categories,
+    required this.category,
     required this.project,
+    required this.reminder,
     required this.description,
-    required this.images,
-    required this.note,
+    required this.timeSpend,
   });
-}
-
-class TaskData {
-  static final List<Task> _data = [
-    Task(
-        id: 1,
-        title: 'Notes for Task 1',
-        difficulty: 'Task 1',
-        priority: 'Priority A',
-        effort: 'Description of Task 1',
-        categories: ['Category 1'],
-        description: 'Description A',
-        project: 'Project A',
-        images: ['Image A', 'Image B'],
-        note: 'Note A'),
-    Task(
-        id: 2,
-        title: 'Notes for Task 2',
-        difficulty: 'Task 2',
-        priority: 'Priority B',
-        effort: 'Description of Task 2',
-        categories: ['Category 2'],
-        description: 'Description B',
-        project: 'Project A',
-        images: ['Image A', 'Image B'],
-        note: 'Note A'),
-    // Add more data as needed
-  ];
-
-  static List<Task> getAllTasks() {
-    return _data;
-  }
-
-  static void delete(int id) {
-    _data.removeWhere((element) => element.id == id);
-  }
 }

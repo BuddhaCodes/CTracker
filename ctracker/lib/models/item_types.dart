@@ -12,19 +12,20 @@ class ItemTypeData {
   static final List<ItemType> _data = [
     ItemType(
       id: 1,
-      name: 'Ideas',
-    ),
-    ItemType(
-      id: 2,
       name: 'Reminders',
     ),
     ItemType(
-      id: 3,
+      id: 2,
       name: 'Tasks',
-    )
+    ),
+    ItemType(id: 3, name: 'All')
   ];
 
   static List<ItemType> getAllItemType() {
     return _data;
+  }
+
+  static ItemType getById(int id) {
+    return _data.firstWhere((element) => element.id == id);
   }
 }
