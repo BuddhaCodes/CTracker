@@ -27,7 +27,7 @@ class ParticipantRepositoryImplementation extends ParticipantRepository {
         "description": "get all participants",
         "entity_name": "tasks",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -54,7 +54,7 @@ class ParticipantRepositoryImplementation extends ParticipantRepository {
         "description": "add a participants",
         "entity_name": "participants",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.create.id
       };
 
@@ -73,7 +73,7 @@ class ParticipantRepositoryImplementation extends ParticipantRepository {
         "description": "delete a participants",
         "entity_name": "participants",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.delete.id
       };
 
@@ -92,16 +92,14 @@ class ParticipantRepositoryImplementation extends ParticipantRepository {
         "number": participant.number,
         "updated_by": _pocketBase.authStore.model.id,
       };
-
-      final record =
-          await _pocketBase.collection('participants').update(id, body: body);
+      await _pocketBase.collection('participants').update(id, body: body);
     } catch (e) {
       final body = <String, dynamic>{
         "user": _pocketBase.authStore.model.id,
         "description": "update a participant",
         "entity_name": "participant",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.update.id
       };
 

@@ -7,6 +7,7 @@ import 'package:ctracker/models/graphs/jounralbymonth.dart';
 import 'package:ctracker/models/graphs/journalbymood.dart';
 import 'package:ctracker/repository/journal_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:ctracker/utils/utils.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -134,7 +135,7 @@ class JournalOverviewState extends State<JournalOverview> {
   }
 
   Future<void> initializeData() async {
-    journalRepo = JournalRepositoryImplementation();
+    journalRepo = locator<JournalRepositoryImplementation>();
     await initializeMonth();
     await initializeByYear();
 
@@ -671,8 +672,8 @@ class JournalOverviewState extends State<JournalOverview> {
                                       });
                                       await initializeByYear();
                                     },
-                                    items:
-                                        Utils.buildYearDropdownItems(), // Call a method to build the list of year dropdown items
+                                    items: Utils
+                                        .buildYearDropdownItems(), // Call a method to build the list of year dropdown items
                                     decoration: const InputDecoration(
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(

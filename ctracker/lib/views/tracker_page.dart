@@ -6,12 +6,12 @@ import 'package:ctracker/models/enums/effort_enum.dart';
 import 'package:ctracker/models/task.dart';
 import 'package:ctracker/repository/task_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:ctracker/views/task_add_page.dart';
 import 'package:flutter/material.dart';
 
 class TrackerPage extends StatefulWidget {
-  final Function onReminderDeleted;
-  const TrackerPage({super.key, required this.onReminderDeleted});
+  const TrackerPage({super.key});
 
   @override
   TrackerPageState createState() => TrackerPageState();
@@ -48,6 +48,7 @@ class TrackerPageState extends State<TrackerPage> {
         fetch = await taskRepo.getAllTasks();
       } catch (e) {
         if (context.mounted) {
+          print("error");
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
                 content: Text(localizations?.translate("error") ?? "",
@@ -123,7 +124,7 @@ class TrackerPageState extends State<TrackerPage> {
   @override
   void initState() {
     super.initState();
-    taskRepo = TaskRepositoryImplementation();
+    taskRepo = locator<TaskRepositoryImplementation>();
     tasks = [];
     initializeData();
   }
@@ -307,7 +308,6 @@ class TrackerPageState extends State<TrackerPage> {
                                           });
                                         },
                                         onDelete: () {
-                                          widget.onReminderDeleted();
                                           initializeData();
                                         },
                                       );

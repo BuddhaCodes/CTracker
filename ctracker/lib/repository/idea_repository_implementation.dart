@@ -1,16 +1,13 @@
 import 'package:ctracker/models/category.dart';
 import 'package:ctracker/models/enums/tags_enum.dart';
-import 'package:ctracker/models/graphs/idea_graph.dart';
 import 'package:ctracker/models/idea.dart';
 import 'package:ctracker/models/tags.dart';
 import 'package:ctracker/repository/idea_repository.dart';
-import 'package:ctracker/repository/task_repository_implementation.dart';
 import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:pocketbase/pocketbase.dart';
 
 class IdeaRepositoryImplementation implements IdeaRepository {
   final PocketBase _pocketBase = locator<PocketBase>();
-  TaskRepositoryImplementation taskRepo = TaskRepositoryImplementation();
   @override
   Future<List<Idea>> getAllIdeas() async {
     final records = await _pocketBase.collection('ideas').getFullList(
@@ -150,27 +147,5 @@ class IdeaRepositoryImplementation implements IdeaRepository {
       }
     }
     await _pocketBase.collection('ideas').update(id, body: body);
-  }
-
-  @override
-  Future<IdeaTagsChart> getNumberByTags() async {
-    List<Idea> ideas = await getAllIdeas();
-    IdeaTagsChart toReturn = IdeaTagsChart(house: 0, innovative: 0, project: 0);
-
-    for (var idea in ideas) {
-      for (var tag in idea.tags) {
-        if (tag.id == TagsEnum.house.id) {
-          toReturn.house++;
-        }
-        if (tag.id == TagsEnum.innovative.id) {
-          toReturn.innovative++;
-        }
-        if (tag.id == TagsEnum.project.id) {
-          toReturn.project++;
-        }
-      }
-    }
-
-    return toReturn;
   }
 }

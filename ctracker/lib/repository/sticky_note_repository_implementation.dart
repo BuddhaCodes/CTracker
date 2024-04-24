@@ -51,7 +51,7 @@ class StickyNoteRepositoryImplementation extends StickyNoteRepository {
         "description": "add a sticky_notes",
         "entity_name": "sticky_notes",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.create.id
       };
 
@@ -70,7 +70,7 @@ class StickyNoteRepositoryImplementation extends StickyNoteRepository {
         "description": "delete a sticky_notes",
         "entity_name": "sticky_notes",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.delete.id
       };
 
@@ -94,7 +94,7 @@ class StickyNoteRepositoryImplementation extends StickyNoteRepository {
         "description": "read all sticky_notes",
         "entity_name": "sticky_notes",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -121,7 +121,7 @@ class StickyNoteRepositoryImplementation extends StickyNoteRepository {
         "description": "update a sticky_notes",
         "entity_name": "sticky_notes",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.update.id
       };
 

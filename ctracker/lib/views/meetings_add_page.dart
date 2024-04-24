@@ -5,6 +5,7 @@ import 'package:ctracker/models/participants.dart';
 import 'package:ctracker/repository/meeting_repository_implementation.dart';
 import 'package:ctracker/repository/participant_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:ctracker/utils/utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -57,7 +58,7 @@ class _MeetingAddPageState extends State<MeetingsAddPage> {
       isInit = false;
     });
     participantRepo = ParticipantRepositoryImplementation();
-    meetingRepo = MeetingRepositoryImplementation();
+    meetingRepo = locator<MeetingRepositoryImplementation>();
     _dateController = TextEditingController();
     _enddateController = TextEditingController();
     _participantController = MultiSelectController();

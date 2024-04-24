@@ -26,7 +26,7 @@ class PrioritiesRepositoryImplementation extends PrioritiesRepository {
         "description": "read all priorities",
         "entity_name": "priorities",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 

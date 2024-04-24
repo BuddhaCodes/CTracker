@@ -30,7 +30,7 @@ class JournalRepositoryImplementation extends JournalRepository {
         "description": "adding a journal",
         "entity_name": "journal",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.create.id
       };
 
@@ -49,7 +49,7 @@ class JournalRepositoryImplementation extends JournalRepository {
         "description": "deleting a journal",
         "entity_name": "journal",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.delete.id
       };
 
@@ -81,7 +81,7 @@ class JournalRepositoryImplementation extends JournalRepository {
         "description": "read all journal",
         "entity_name": "journal",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -108,7 +108,7 @@ class JournalRepositoryImplementation extends JournalRepository {
         "description": "update a journal",
         "entity_name": "journal",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.update.id
       };
 
@@ -134,7 +134,7 @@ class JournalRepositoryImplementation extends JournalRepository {
         "description": "read a journal",
         "entity_name": "journal",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -190,7 +190,7 @@ class JournalRepositoryImplementation extends JournalRepository {
         "description": "read all journal",
         "entity_name": "journal",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -243,7 +243,7 @@ class JournalRepositoryImplementation extends JournalRepository {
         "description": "read all journal",
         "entity_name": "journal",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 

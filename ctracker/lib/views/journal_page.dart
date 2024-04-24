@@ -3,6 +3,7 @@ import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/models/journal.dart';
 import 'package:ctracker/repository/journal_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:ctracker/utils/utils.dart';
 import 'package:ctracker/views/jounral_entry_page.dart';
 import 'package:flutter/material.dart';
@@ -22,14 +23,13 @@ class JournalPageState extends State<JournalPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    localizations =
-        MyLocalizations.of(context); // Initialize localizations here
+    localizations = MyLocalizations.of(context);
   }
 
   @override
   void initState() {
     super.initState();
-    journalRepo = JournalRepositoryImplementation();
+    journalRepo = locator<JournalRepositoryImplementation>();
     _journalFuture = fetchReminderFromDatabase();
   }
 
@@ -63,7 +63,7 @@ class JournalPageState extends State<JournalPage> {
                   builder: (context, constraints) {
                     return Center(
                       child: SizedBox(
-                        width: width * 0.7,
+                        width: width * 0.95,
                         child: MonthView(
                           headerStyle: const HeaderStyle(
                             decoration: BoxDecoration(
@@ -169,45 +169,6 @@ class JournalPageState extends State<JournalPage> {
                                                                       0),
                                                                   height: 36,
                                                                   width: 36,
-                                                                ),
-                                                              ),
-                                                              Expanded(
-                                                                child:
-                                                                    Container(
-                                                                  decoration:
-                                                                      BoxDecoration(
-                                                                    color: Colors
-                                                                        .white70,
-                                                                    borderRadius:
-                                                                        BorderRadius.circular(
-                                                                            10),
-                                                                    border:
-                                                                        Border
-                                                                            .all(
-                                                                      color: Colors
-                                                                          .white70,
-                                                                    ),
-                                                                  ),
-                                                                  child: Utils.deleteIcon(
-                                                                      onPressed:
-                                                                          () async {
-                                                                    try {
-                                                                      journalRepo
-                                                                          .deleteJournal(journals[index].id ??
-                                                                              "")
-                                                                          .whenComplete(() =>
-                                                                              refreshState());
-                                                                    } catch (e) {
-                                                                      if (context
-                                                                          .mounted) {
-                                                                        ScaffoldMessenger.of(context)
-                                                                            .showSnackBar(
-                                                                          SnackBar(
-                                                                              content: Text(localizations?.translate("error") ?? "", style: const TextStyle(color: Color.fromARGB(255, 255, 255, 255)))),
-                                                                        );
-                                                                      }
-                                                                    }
-                                                                  }),
                                                                 ),
                                                               ),
                                                             ],

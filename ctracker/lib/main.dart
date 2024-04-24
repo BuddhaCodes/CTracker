@@ -6,6 +6,7 @@ import 'package:ctracker/models/reminder.dart';
 import 'package:ctracker/models/status.dart';
 import 'package:ctracker/pages/home_page.dart';
 import 'package:ctracker/repository/reminder_repository_implementation.dart';
+import 'package:ctracker/utils/auth_service.dart';
 import 'package:ctracker/utils/localization.dart';
 import 'package:ctracker/utils/notification_controller.dart';
 import 'package:ctracker/utils/notification_manager.dart';
@@ -15,8 +16,6 @@ import 'package:ctracker/utils/work_keys.dart';
 import 'package:ctracker/views/login_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:get_it/get_it.dart';
-import 'package:pocketbase/pocketbase.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -24,7 +23,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     if (task == WorkKeys.sound) {
-      ReminderRepositoryImplementation rm = ReminderRepositoryImplementation();
+      ReminderRepositoryImplementation rm =
+          locator<ReminderRepositoryImplementation>();
       Reminder reminder = await rm.getById(inputData?["key"] as String);
       reminder.status =
           Status(id: StatusEnum.done.id, name: StatusEnum.done.name);
@@ -110,8 +110,8 @@ class _MyAppState extends State<MyApp> {
     super.initState();
   }
 
-  Locale _locale = Locale('en', 'US');
-  bool isAuth = false;
+  Locale _locale = const Locale('en', 'US');
+  bool isAuthenticated = false;
   void _changeLanguage(Locale locale) {
     setState(() {
       _locale = locale;
@@ -120,6 +120,8 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = locator<AuthService>();
+    bool isAuthenticated = authService.isAuth;
     if (!kIsWeb) Utils.checkNotificationPermission();
     return CalendarControllerProvider(
       controller: EventController(),
@@ -144,7 +146,7 @@ class _MyAppState extends State<MyApp> {
               displayColor: ColorP.textColor,
               fontFamily: 'Poppins'),
         ),
-        home: isAuth
+        home: isAuthenticated
             ? HomePage(changeLanguage: _changeLanguage)
             : LoginPage(
                 checkStatus: handle,
@@ -155,7 +157,7 @@ class _MyAppState extends State<MyApp> {
 
   void handle(bool isValid) {
     setState(() {
-      isAuth = isValid;
+      isAuthenticated = isValid;
     });
     // print(pb.authStore.isValid);
   }

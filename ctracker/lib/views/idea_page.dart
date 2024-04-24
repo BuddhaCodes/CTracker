@@ -8,6 +8,7 @@ import 'package:ctracker/models/tags.dart';
 import 'package:ctracker/repository/idea_repository_implementation.dart';
 import 'package:ctracker/repository/tag_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:ctracker/views/idea_add_page.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -27,11 +28,10 @@ class IdeaPageState extends State<IdeaPage> {
   MyLocalizations? localizations;
   List<Tag> ideaTags = [];
   late List<Tag> tags;
-  late List<Idea> ideas;
+  late List<Idea> ideas = [];
   late MultiSelectController _tagsController;
   late IdeaRepositoryImplementation ideaRepo;
   late TagRepositoryImplementation tagRepo;
-  late List<BarChartGroupData> chartData;
 
   int selectedTile = -1;
   int touchedIndex = -1;
@@ -48,9 +48,8 @@ class IdeaPageState extends State<IdeaPage> {
   }
 
   void initializeData() async {
-    ideaRepo = IdeaRepositoryImplementation();
-    tagRepo = TagRepositoryImplementation();
-    chartData = [];
+    ideaRepo = locator<IdeaRepositoryImplementation>();
+    tagRepo = locator<TagRepositoryImplementation>();
     widget.isInit = false;
     try {
       ideaRepo.getAllIdeas().then((ideasResult) {
@@ -60,47 +59,6 @@ class IdeaPageState extends State<IdeaPage> {
       });
     } catch (e) {
       ideas = [];
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(localizations!.translate("error"),
-                  style: const TextStyle(
-                      color: Color.fromARGB(255, 255, 255, 255)))),
-        );
-      }
-    }
-
-    try {
-      IdeaTagsChart fetch = await ideaRepo.getNumberByTags();
-
-      chartData = List.generate(3, (i) {
-        switch (i) {
-          case 0:
-            return makeGroupData(0, fetch.house.toDouble(),
-                isTouched: i == touchedIndex);
-          case 1:
-            return makeGroupData(1, fetch.innovative.toDouble(),
-                isTouched: i == touchedIndex);
-          case 2:
-            return makeGroupData(2, fetch.project.toDouble(),
-                isTouched: i == touchedIndex);
-          default:
-            return throw Error();
-        }
-      });
-    } catch (e) {
-      chartData = List.generate(3, (i) {
-        switch (i) {
-          case 0:
-            return makeGroupData(0, 0, isTouched: i == touchedIndex);
-          case 1:
-            return makeGroupData(1, 0, isTouched: i == touchedIndex);
-          case 2:
-            return makeGroupData(2, 0, isTouched: i == touchedIndex);
-          default:
-            return throw Error();
-        }
-      });
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -140,7 +98,8 @@ class IdeaPageState extends State<IdeaPage> {
     final String translateIdeaP = localizations?.translate("ideap") ?? "";
     final String translateIdeapsub1 =
         localizations?.translate("ideapsub1") ?? "";
-    final String translateIdeasub2 = localizations?.translate("ideasub2") ?? "";
+    final String translateIdeasub2 =
+        localizations?.translate("ideapsub2") ?? "";
     return Scaffold(
       backgroundColor: ColorP.background,
       body: !widget.isInit
@@ -153,61 +112,6 @@ class IdeaPageState extends State<IdeaPage> {
                       scrollDirection: Axis.vertical,
                       child: Center(
                         child: Column(children: [
-                          Padding(
-                            padding: const EdgeInsets.all(15.0),
-                            child: Card(
-                              color: ColorP.cardBackground,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30.0),
-                              ),
-                              child: Column(
-                                children: [
-                                  SizedBox(
-                                    height: 400,
-                                    width: MediaQuery.of(context).size.width,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(24),
-                                      child: AspectRatio(
-                                        aspectRatio: 1.4,
-                                        child: AspectRatio(
-                                          aspectRatio: 1,
-                                          child: Stack(
-                                            children: <Widget>[
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.all(16),
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment
-                                                          .stretch,
-                                                  children: <Widget>[
-                                                    Expanded(
-                                                      child: Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .symmetric(
-                                                                horizontal: 8),
-                                                        child: BarChart(
-                                                          mainBarData(),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    const SizedBox(
-                                                      height: 12,
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
                           Container(
                             padding: const EdgeInsets.all(16.0),
                             child: Align(
@@ -229,7 +133,7 @@ class IdeaPageState extends State<IdeaPage> {
                                   Text(
                                     translateIdeaP,
                                     style: const TextStyle(
-                                      fontSize: 64.0,
+                                      fontSize: 58.0,
                                       fontWeight: FontWeight.bold,
                                       color: ColorP.textColor,
                                     ),
@@ -406,90 +310,6 @@ class IdeaPageState extends State<IdeaPage> {
     );
   }
 
-  BarChartData mainBarData() {
-    return BarChartData(
-      barTouchData: BarTouchData(
-        touchTooltipData: BarTouchTooltipData(
-          getTooltipColor: (_) => Colors.blueGrey,
-          tooltipHorizontalAlignment: FLHorizontalAlignment.right,
-          tooltipMargin: -10,
-          getTooltipItem: (group, groupIndex, rod, rodIndex) {
-            String weekDay;
-            switch (group.x) {
-              case 0:
-                weekDay = TagsEnum.house.name;
-                break;
-              case 1:
-                weekDay = TagsEnum.innovative.name;
-                break;
-              case 2:
-                weekDay = TagsEnum.project.name;
-                break;
-              default:
-                weekDay = TagsEnum.house.name;
-                break;
-            }
-            return BarTooltipItem(
-              '$weekDay\n',
-              const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-              children: <TextSpan>[
-                TextSpan(
-                  text: (rod.toY).toString(),
-                  style: const TextStyle(
-                    color: Colors.white, //widget.touchedBarColor,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-        touchCallback: (FlTouchEvent event, barTouchResponse) {
-          setState(() {
-            if (!event.isInterestedForInteractions ||
-                barTouchResponse == null ||
-                barTouchResponse.spot == null) {
-              touchedIndex = -1;
-              return;
-            }
-            touchedIndex = barTouchResponse.spot!.touchedBarGroupIndex;
-          });
-        },
-      ),
-      titlesData: FlTitlesData(
-        show: true,
-        rightTitles: const AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-        topTitles: const AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-        bottomTitles: AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: true,
-            getTitlesWidget: getTitles,
-            reservedSize: 38,
-          ),
-        ),
-        leftTitles: const AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: false,
-          ),
-        ),
-      ),
-      borderData: FlBorderData(
-        show: false,
-      ),
-      barGroups: chartData,
-      gridData: const FlGridData(show: false),
-    );
-  }
-
   BarChartGroupData makeGroupData(
     int x,
     double y, {
@@ -517,34 +337,6 @@ class IdeaPageState extends State<IdeaPage> {
         ),
       ],
       showingTooltipIndicators: showTooltips,
-    );
-  }
-
-  Widget getTitles(double value, TitleMeta meta) {
-    const style = TextStyle(
-      color: Colors.white,
-      fontWeight: FontWeight.bold,
-      fontSize: 14,
-    );
-    Widget text;
-    switch (value.toInt()) {
-      case 0:
-        text = Text(TagsEnum.house.name, style: style);
-        break;
-      case 1:
-        text = Text(TagsEnum.innovative.name, style: style);
-        break;
-      case 2:
-        text = Text(TagsEnum.project.name, style: style);
-        break;
-      default:
-        text = const Text('', style: style);
-        break;
-    }
-    return SideTitleWidget(
-      axisSide: meta.axisSide,
-      space: 16,
-      child: text,
     );
   }
 

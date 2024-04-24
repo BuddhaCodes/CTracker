@@ -64,7 +64,7 @@ class MeetingRepositoryImplementation extends MeetingRepository {
         "description": "adding a meeting",
         "entity_name": "meeting",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.create.id
       };
 
@@ -98,7 +98,7 @@ class MeetingRepositoryImplementation extends MeetingRepository {
         "description": "deleting a meeting",
         "entity_name": "meeting",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.delete.id
       };
 
@@ -110,9 +110,10 @@ class MeetingRepositoryImplementation extends MeetingRepository {
   @override
   Future<List<Meeting>> getAllMeetings() async {
     try {
-      final records = await _pocketBase
-          .collection('meeting')
-          .getFullList(sort: '-created', filter: "created_by='${_pocketBase.authStore.model.id}'", expand: 'participants,action_items');
+      final records = await _pocketBase.collection('meeting').getFullList(
+          sort: '-created',
+          filter: "created_by='${_pocketBase.authStore.model.id}'",
+          expand: 'participants,action_items');
 
       return records.map((record) {
         List<Participant> participants = record.expand["participants"]!
@@ -162,7 +163,7 @@ class MeetingRepositoryImplementation extends MeetingRepository {
         "description": "read all meeting",
         "entity_name": "meeting",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -260,7 +261,7 @@ class MeetingRepositoryImplementation extends MeetingRepository {
         "description": "update a meeting",
         "entity_name": "meeting",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.update.id
       };
 
@@ -288,56 +289,61 @@ class MeetingRepositoryImplementation extends MeetingRepository {
           .getList(
               expand: 'participants,action_items',
               filter: searchCriteria.isNotEmpty ? "($searchCriteria)" : "");
+      return records.items.isNotEmpty
+          ? records.items.map((record) {
+              List<Participant> participants =
+                  record.expand["participants"] != null
+                      ? record.expand["participants"]!
+                          .map((participantData) => Participant(
+                              id: participantData.id,
+                              name: participantData.data["name"]))
+                          .toList()
+                      : [];
 
-      return records.items.map((record) {
-        List<Participant> participants = record.expand["participants"]!
-            .map((participantData) => Participant(
-                id: participantData.id, name: participantData.data["name"]))
-            .toList();
+              List<ActionItem> actionItems =
+                  record.expand["action_items"]!.map((actionItemData) {
+                return ActionItem(
+                  id: actionItemData.id,
+                  name: actionItemData.data["name"],
+                  description: actionItemData.data["description"],
+                  status: Status(
+                      id: actionItemData.data["status"],
+                      name: StatusEnum.values
+                          .firstWhere((status) =>
+                              status.id == actionItemData.data["status"])
+                          .name),
+                  pomodoro: actionItemData.expand["pomodoro"] != null
+                      ? Pomodoro(
+                          id: actionItemData.expand["pomodoro"]!.first.id,
+                          started_time: DateTime.tryParse(actionItemData
+                              .expand["pomodoro"]!.first.data["start_time"]),
+                          end_time: DateTime.tryParse(actionItemData
+                              .expand["pomodoro"]!.first.data["end_time"]),
+                          note: actionItemData
+                              .expand["pomodoro"]!.first.data["notes"],
+                        )
+                      : null,
+                );
+              }).toList();
 
-        List<ActionItem> actionItems =
-            record.expand["action_items"]!.map((actionItemData) {
-          return ActionItem(
-            id: actionItemData.id,
-            name: actionItemData.data["name"],
-            description: actionItemData.data["description"],
-            status: Status(
-                id: actionItemData.data["status"],
-                name: StatusEnum.values
-                    .firstWhere(
-                        (status) => status.id == actionItemData.data["status"])
-                    .name),
-            pomodoro: actionItemData.expand["pomodoro"] != null
-                ? Pomodoro(
-                    id: actionItemData.expand["pomodoro"]!.first.id,
-                    started_time: DateTime.tryParse(actionItemData
-                        .expand["pomodoro"]!.first.data["start_time"]),
-                    end_time: DateTime.tryParse(actionItemData
-                        .expand["pomodoro"]!.first.data["end_time"]),
-                    note:
-                        actionItemData.expand["pomodoro"]!.first.data["notes"],
-                  )
-                : null,
-          );
-        }).toList();
-
-        return Meeting(
-          id: record.id,
-          title: record.data["title"],
-          participants: participants,
-          content: record.data["content"],
-          start_date: DateTime.parse(record.data["start_date"]),
-          end_date: DateTime.parse(record.data["end_date"]),
-          actions: actionItems,
-        );
-      }).toList();
+              return Meeting(
+                id: record.id,
+                title: record.data["title"],
+                participants: participants,
+                content: record.data["content"],
+                start_date: DateTime.parse(record.data["start_date"]),
+                end_date: DateTime.parse(record.data["end_date"]),
+                actions: actionItems,
+              );
+            }).toList()
+          : [];
     } catch (e) {
       final body = <String, dynamic>{
         "user": _pocketBase.authStore.model.id,
         "description": "read all meeting by year and month",
         "entity_name": "meeting",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -351,11 +357,13 @@ class MeetingRepositoryImplementation extends MeetingRepository {
     try {
       final record = await _pocketBase.collection('meeting').getOne(id,
           expand: 'participants,action_items,action_items.pomodoro');
-
-      List<Participant> participants = record.expand["participants"]!
-          .map((participantData) => Participant(
-              id: participantData.id, name: participantData.data["name"]))
-          .toList();
+      List<Participant> participants = [];
+      if (record.expand["participants"] != null) {
+        participants = record.expand["participants"]!
+            .map((participantData) => Participant(
+                id: participantData.id, name: participantData.data["name"]))
+            .toList();
+      }
 
       List<ActionItem> actionItems =
           record.expand["action_items"]!.map((actionItemData) {
@@ -397,7 +405,7 @@ class MeetingRepositoryImplementation extends MeetingRepository {
         "description": "read a meeting",
         "entity_name": "meeting",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 

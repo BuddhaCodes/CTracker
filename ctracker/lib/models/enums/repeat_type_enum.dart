@@ -4,7 +4,7 @@ extension RepeatTypeExtension on RepeatTypeEnum {
   String get name {
     switch (this) {
       case RepeatTypeEnum.never:
-        return 'Never';
+        return 'Not repeat';
       case RepeatTypeEnum.hourly:
         return 'Hourly';
       case RepeatTypeEnum.daily:

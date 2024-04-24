@@ -29,7 +29,7 @@ class ReminderRepositoryImplementation implements ReminderRepository {
         "description": "read all reminder",
         "entity_name": "reminder",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -54,7 +54,7 @@ class ReminderRepositoryImplementation implements ReminderRepository {
         "description": "read all reminder by status",
         "entity_name": "reminder",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -70,6 +70,7 @@ class ReminderRepositoryImplementation implements ReminderRepository {
         "title": reminder.title,
         "reminder_time": reminder.duedate.toString(),
         "updated_by": "",
+        "of_task": reminder.of_task,
         "created_by": _pocketBase.authStore.model.id,
         "frequency": reminder.type.id,
         "status": reminder.status?.id
@@ -93,7 +94,7 @@ class ReminderRepositoryImplementation implements ReminderRepository {
         "description": "create a reminder",
         "entity_name": "reminder",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.create.id
       };
 
@@ -116,7 +117,7 @@ class ReminderRepositoryImplementation implements ReminderRepository {
         "description": "delete a reminder",
         "entity_name": "reminder",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.delete.id
       };
 
@@ -133,6 +134,7 @@ class ReminderRepositoryImplementation implements ReminderRepository {
         "reminder_time": reminder.duedate.toString(),
         "updated_by": _pocketBase.authStore.model.id,
         "created_by": _pocketBase.authStore.model.id,
+        "of_task": reminder.of_task,
         "frequency": reminder.type.id,
         "status": reminder.status?.id
       };
@@ -153,7 +155,7 @@ class ReminderRepositoryImplementation implements ReminderRepository {
         "description": "update a reminder",
         "entity_name": "reminder",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.update.id
       };
 
@@ -188,7 +190,7 @@ class ReminderRepositoryImplementation implements ReminderRepository {
         "description": "read all reminder from date range",
         "entity_name": "reminder",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -211,7 +213,7 @@ class ReminderRepositoryImplementation implements ReminderRepository {
         "description": "read a reminder by id",
         "entity_name": "reminder",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -224,6 +226,7 @@ class ReminderRepositoryImplementation implements ReminderRepository {
     return Reminder(
       id: record.id,
       title: record.data["title"],
+      of_task: record.data["of_task"],
       duedate: DateTime.parse(record.data["reminder_time"]),
       status: record.expand["status"] != null
           ? Status(

@@ -11,6 +11,7 @@ import 'package:ctracker/models/task.dart';
 import 'package:ctracker/repository/pomodoro_repository_implementation.dart';
 import 'package:ctracker/repository/task_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -32,7 +33,7 @@ class PomodoroScreen extends StatefulWidget {
 }
 
 class PomodoroScreenState extends State<PomodoroScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late TaskRepositoryImplementation taskRepo;
   late PomodoroRepositoryImplementation pomoRepo;
   late int workTime;
@@ -73,8 +74,7 @@ class PomodoroScreenState extends State<PomodoroScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    localizations =
-        MyLocalizations.of(context); // Initialize localizations here
+    localizations = MyLocalizations.of(context);
   }
 
   void initializeData() async {
@@ -85,8 +85,9 @@ class PomodoroScreenState extends State<PomodoroScreen>
     shortRestTime = ValuesConst.shortRestMinutes;
     longRestTime = ValuesConst.longRestMinutes;
     _controller = QuillController.basic();
-    taskRepo = TaskRepositoryImplementation();
-    pomoRepo = PomodoroRepositoryImplementation();
+    taskRepo = locator<TaskRepositoryImplementation>();
+
+    pomoRepo = locator<PomodoroRepositoryImplementation>();
     List<Task> fetch = [];
     fetch = await taskRepo.getNoCompletedTask();
     setState(() {
@@ -529,7 +530,7 @@ class PomodoroScreenState extends State<PomodoroScreen>
                           elevation: 2,
                           color: ColorP.cardBackground,
                           child: SizedBox(
-                            height: 300,
+                            height: 400,
                             child: Column(
                               children: [
                                 Padding(
@@ -620,6 +621,7 @@ class PomodoroScreenState extends State<PomodoroScreen>
                 ],
               ),
             ),
+          const SizedBox(height: 20 * 2),
         ],
       ),
     );

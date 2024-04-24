@@ -3,6 +3,7 @@ import 'package:ctracker/models/meeting.dart';
 import 'package:ctracker/models/participants.dart';
 import 'package:ctracker/repository/meeting_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:ctracker/utils/utils.dart';
 import 'package:ctracker/views/meeting_details.dart';
 import 'package:ctracker/views/meetings_add_page.dart';
@@ -43,7 +44,7 @@ class MeetingsPageState extends State<MeetingsPage> {
     setState(() {
       isInitialized = false;
     });
-    meetingRepo = MeetingRepositoryImplementation();
+    meetingRepo = locator<MeetingRepositoryImplementation>();
     List<Meeting> fetch = [];
 
     try {
@@ -238,86 +239,87 @@ class MeetingsPageState extends State<MeetingsPage> {
                                                 children: [
                                                   Text(events[index].summary,
                                                       style: const TextStyle(
-                                                          color:
-                                                              ColorP.ColorC)),
+                                                          color: ColorP.ColorC,
+                                                          fontWeight:
+                                                              FontWeight.bold)),
                                                   const SizedBox(
                                                     height: 10.0,
                                                   ),
-                                                  Row(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(
-                                                        localizations?.translate(
-                                                                'participants') ??
-                                                            "",
-                                                        style: const TextStyle(
-                                                          color: ColorP.ColorC,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(width: 4),
-                                                      Expanded(
-                                                        child: Wrap(
-                                                          children: [
-                                                            for (Participant participant
-                                                                in events[index]
-                                                                            .metadata?[
-                                                                        'participants']
-                                                                    as List<
-                                                                        Participant>)
-                                                              Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                        .only(
-                                                                        right:
-                                                                            8.0),
-                                                                child: Text(
-                                                                  participant
-                                                                      .name,
-                                                                  style: const TextStyle(
-                                                                      color: ColorP
-                                                                          .ColorC),
-                                                                ),
-                                                              ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
+                                                  // Row(
+                                                  //   crossAxisAlignment:
+                                                  //       CrossAxisAlignment
+                                                  //           .start,
+                                                  //   children: [
+                                                  //     Text(
+                                                  //       localizations?.translate(
+                                                  //               'participants') ??
+                                                  //           "",
+                                                  //       style: const TextStyle(
+                                                  //         color: ColorP.ColorC,
+                                                  //         fontWeight:
+                                                  //             FontWeight.bold,
+                                                  //       ),
+                                                  //     ),
+                                                  //     const SizedBox(width: 4),
+                                                  //     Expanded(
+                                                  //       child: Wrap(
+                                                  //         children: [
+                                                  //           for (Participant participant
+                                                  //               in events[index]
+                                                  //                           .metadata?[
+                                                  //                       'participants']
+                                                  //                   as List<
+                                                  //                       Participant>)
+                                                  //             Padding(
+                                                  //               padding:
+                                                  //                   const EdgeInsets
+                                                  //                       .only(
+                                                  //                       right:
+                                                  //                           8.0),
+                                                  //               child: Text(
+                                                  //                 participant
+                                                  //                     .name,
+                                                  //                 style: const TextStyle(
+                                                  //                     color: ColorP
+                                                  //                         .ColorC),
+                                                  //               ),
+                                                  //             ),
+                                                  //         ],
+                                                  //       ),
+                                                  //     ),
+                                                  //   ],
+                                                  // ),
                                                 ],
                                               ),
                                             ),
                                           ),
+                                          // Expanded(
+                                          //   flex: 30,
+                                          //   child: Padding(
+                                          //     padding:
+                                          //         const EdgeInsets.all(8.0),
+                                          //     child: Column(
+                                          //       crossAxisAlignment:
+                                          //           CrossAxisAlignment.end,
+                                          //       mainAxisAlignment:
+                                          //           MainAxisAlignment.center,
+                                          //       children: [
+                                          //         Text(
+                                          //             "${localizations?.translate('startdate') ?? ""} $start",
+                                          //             style: const TextStyle(
+                                          //                 color:
+                                          //                     ColorP.ColorC)),
+                                          //         Text(
+                                          //             "${localizations?.translate('enddate') ?? ""} $end",
+                                          //             style: const TextStyle(
+                                          //                 color:
+                                          //                     ColorP.ColorC)),
+                                          //       ],
+                                          //     ),
+                                          //   ),
+                                          // ),
                                           Expanded(
-                                            flex: 30,
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.end,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  Text(
-                                                      "${localizations?.translate('startdate') ?? ""} $start",
-                                                      style: const TextStyle(
-                                                          color:
-                                                              ColorP.ColorC)),
-                                                  Text(
-                                                      "${localizations?.translate('enddate') ?? ""} $end",
-                                                      style: const TextStyle(
-                                                          color:
-                                                              ColorP.ColorC)),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 30,
+                                            flex: 70,
                                             child: Padding(
                                               padding:
                                                   const EdgeInsets.all(8.0),

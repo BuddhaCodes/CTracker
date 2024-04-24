@@ -2,6 +2,7 @@ import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/constant/icons.dart';
 import 'package:ctracker/models/reminder.dart';
 import 'package:ctracker/repository/reminder_repository_implementation.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:ctracker/utils/utils.dart';
 import 'package:ctracker/views/reminder_add_page.dart';
 import 'package:date_picker_timeline/date_picker_widget.dart';
@@ -32,7 +33,7 @@ class ReminderCardState extends State<ReminderCard> {
   late ReminderRepositoryImplementation reminderRepo;
   @override
   void initState() {
-    reminderRepo = ReminderRepositoryImplementation();
+    reminderRepo = locator<ReminderRepositoryImplementation>();
     super.initState();
   }
 
@@ -73,11 +74,12 @@ class ReminderCardState extends State<ReminderCard> {
                 ),
               ).then((value) => widget.onDelete());
             }),
-            Utils.deleteIcon(onPressed: () async {
-              await reminderRepo
-                  .deleteReminder(widget.reminder.id ?? "")
-                  .whenComplete(() => widget.onDelete());
-            }),
+            if (!widget.reminder.of_task)
+              Utils.deleteIcon(onPressed: () async {
+                await reminderRepo
+                    .deleteReminder(widget.reminder.id ?? "")
+                    .whenComplete(() => widget.onDelete());
+              }),
           ],
         ),
         children: [

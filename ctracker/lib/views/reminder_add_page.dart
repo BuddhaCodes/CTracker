@@ -1,7 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/models/enums/repeat_type_enum.dart';
 import 'package:ctracker/models/enums/status_enum.dart';
@@ -10,11 +6,10 @@ import 'package:ctracker/models/repeat_types.dart';
 import 'package:ctracker/models/status.dart';
 import 'package:ctracker/repository/reminder_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 // ignore: depend_on_referenced_packages
-import 'package:path_provider/path_provider.dart';
 
 // ignore: must_be_immutable
 class ReminderAddPage extends StatefulWidget {
@@ -53,7 +48,7 @@ class _ReminderAddPageState extends State<ReminderAddPage> {
   void initializeData() async {
     _dateController = TextEditingController();
     titleController = TextEditingController();
-    reminderRepo = ReminderRepositoryImplementation();
+    reminderRepo = locator<ReminderRepositoryImplementation>();
 
     setState(() {
       if (widget.uReminder != null) {
@@ -347,6 +342,7 @@ class _ReminderAddPageState extends State<ReminderAddPage> {
 
       Reminder newReminder = Reminder(
         title: title,
+        of_task: false,
         type: RepeatType(
             id: _selectedRepeatType.id, name: _selectedRepeatType.name),
         duedate: DateFormat('yyyy-MM-dd hh:mm a').parse(_dateController.text),
@@ -360,6 +356,7 @@ class _ReminderAddPageState extends State<ReminderAddPage> {
         });
       } else {
         newReminder.status = widget.uReminder?.status;
+        newReminder.of_task = widget.uReminder!.of_task;
         await reminderRepo
             .updateReminder(widget.uReminder?.id ?? "", newReminder)
             .whenComplete(() {
@@ -367,40 +364,6 @@ class _ReminderAddPageState extends State<ReminderAddPage> {
         });
       }
     }
-  }
-
-  _selectFile(bool imageFrom) async {
-    var fileResult = await FilePicker.platform
-        .pickFiles(allowMultiple: true, type: FileType.image);
-
-    if (fileResult != null) {
-      for (var element in fileResult.files) {
-        Uint8List bytes = element.bytes ?? Uint8List(0);
-
-        if (_isImageFile(element.name)) {
-          await _saveImageToFolder(bytes, element.name);
-          setState(() {
-            selectedImages.add(element.path!); // Store selected image path
-            imageCounts += 1;
-          });
-        }
-      }
-    }
-  }
-
-  bool _isImageFile(String fileName) {
-    final imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp'];
-    return imageExtensions
-        .any((extension) => fileName.toLowerCase().endsWith(extension));
-  }
-
-  Future<void> _saveImageToFolder(Uint8List bytes, String fileName) async {
-    Directory directory = await getApplicationDocumentsDirectory();
-
-    File destinationFile = File(
-        '${directory.path}/${DateTime.now().millisecondsSinceEpoch}-$fileName');
-
-    await destinationFile.writeAsBytes(bytes);
   }
 
   Future<DateTime?> showDateTimePicker({

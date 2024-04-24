@@ -6,6 +6,7 @@ import 'package:ctracker/models/sticky_notes.dart';
 import 'package:ctracker/repository/board_repository_implementation.dart';
 import 'package:ctracker/repository/sticky_note_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:ctracker/utils/text_item.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -16,11 +17,11 @@ class NoteBoard extends StatefulWidget {
   final Function onUpdate;
 
   const NoteBoard({
-    Key? key,
+    super.key,
     required this.board,
     required this.controller,
     required this.onUpdate,
-  }) : super(key: key);
+  });
 
   @override
   NoteBoardState createState() => NoteBoardState();
@@ -35,8 +36,8 @@ class NoteBoardState extends State<NoteBoard> {
   void initState() {
     super.initState();
     boardController = AppFlowyBoardScrollController();
-    boardRepo = BoardRepositoryImplementation();
-    stickyRepo = StickyNoteRepositoryImplementation();
+    boardRepo = locator<BoardRepositoryImplementation>();
+    stickyRepo = locator<StickyNoteRepositoryImplementation>();
 
     _setupBoard();
   }
@@ -195,6 +196,7 @@ class NoteBoardState extends State<NoteBoard> {
         width: 140,
         child: TextField(
           style: const TextStyle(color: ColorP.ColorC),
+          enabled: false,
           controller: TextEditingController()
             ..text = columnData.headerData.groupName,
           onSubmitted: (val) async {

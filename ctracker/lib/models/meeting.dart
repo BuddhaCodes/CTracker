@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'package:ctracker/models/action_items.dart';
 import 'package:ctracker/models/participants.dart';
 

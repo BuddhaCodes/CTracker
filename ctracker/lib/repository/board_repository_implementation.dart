@@ -25,7 +25,7 @@ class BoardRepositoryImplementation extends BoardRepository {
         "description": "adding a board",
         "entity_name": "boards",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.create.id
       };
 
@@ -44,7 +44,7 @@ class BoardRepositoryImplementation extends BoardRepository {
         "description": "delete a board",
         "entity_name": "boards",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.delete.id
       };
 
@@ -87,7 +87,7 @@ class BoardRepositoryImplementation extends BoardRepository {
         "description": "get all boards",
         "entity_name": "boards",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -112,7 +112,7 @@ class BoardRepositoryImplementation extends BoardRepository {
         "description": "update a board",
         "entity_name": "boards",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.update.id
       };
 

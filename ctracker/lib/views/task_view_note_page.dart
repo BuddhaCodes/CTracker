@@ -29,7 +29,7 @@ class TaskViewNoteState extends State<TaskViewNote> {
     QuillController controller = QuillController.basic();
     if (widget.uTask.pomodoro!.note.isNotEmpty) {
       Document doc =
-          Document.fromJson(jsonDecode(widget.uTask.pomodoro!.note ?? ""));
+          Document.fromJson(jsonDecode(widget.uTask.pomodoro!.note));
       controller.document = doc;
     }
     return Scaffold(

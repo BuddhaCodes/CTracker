@@ -4,11 +4,13 @@ import 'package:ctracker/models/enums/status_enum.dart';
 import 'package:ctracker/models/task.dart';
 import 'package:ctracker/repository/task_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:ctracker/utils/utils.dart';
 import 'package:ctracker/views/task_add_page.dart';
 import 'package:ctracker/views/task_view_note_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:pocketbase/pocketbase.dart';
 
 // ignore: must_be_immutable
 class TaskCard extends StatefulWidget {
@@ -34,15 +36,14 @@ class TaskCardState extends State<TaskCard> {
   MyLocalizations? localizations;
   @override
   void initState() {
-    taskRepo = TaskRepositoryImplementation();
+    taskRepo = locator<TaskRepositoryImplementation>();
     super.initState();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    localizations =
-        MyLocalizations.of(context); // Initialize localizations here
+    localizations = MyLocalizations.of(context);
   }
 
   @override

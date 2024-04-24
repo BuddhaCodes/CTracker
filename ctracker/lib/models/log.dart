@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'package:ctracker/models/enums/action_type_enum.dart';
 
 class Log {

@@ -41,6 +41,7 @@ dependencies:
   shared_preferences: ^2.2.2
   numberpicker: ^2.1.2
   fl_chart: ^0.67.0
+  flutter_secure_storage: ^9.0.0
   calendar_view: ^1.1.0
   appflowy_board: ^0.1.1
   flutter_neat_and_clean_calendar: ^0.3.18+40

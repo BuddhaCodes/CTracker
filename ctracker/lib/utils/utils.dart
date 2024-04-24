@@ -3,6 +3,7 @@ import 'package:ctracker/constant/icons.dart';
 import 'package:ctracker/constant/values.dart';
 import 'package:ctracker/models/reminder.dart';
 import 'package:ctracker/repository/reminder_repository_implementation.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_neat_and_clean_calendar/neat_and_clean_calendar_event.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -150,7 +151,7 @@ class Utils {
 
   static IconButton deleteIcon({Function()? onPressed}) {
     return IconButton(
-      icon: const Icon(Icons.delete, color: ColorP.ColorD),
+      icon: const Icon(Icons.delete, color: ColorP.contentColorRed),
       onPressed: onPressed,
     );
   }
@@ -198,7 +199,8 @@ class Utils {
   }
 
   static Future<int> getDueRemindersCount() async {
-    ReminderRepositoryImplementation rd = ReminderRepositoryImplementation();
+    ReminderRepositoryImplementation rd =
+        locator<ReminderRepositoryImplementation>();
     DateTime present =
         DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
     List<Reminder> reminders = await rd.getAllRemindersOfDateToDate(present,
@@ -211,9 +213,6 @@ class Utils {
 
     List<String> secondsAndMilliseconds = parts[2].split(".");
     int seconds = int.parse(secondsAndMilliseconds[0]);
-    int milliseconds = secondsAndMilliseconds.length > 1
-        ? int.parse(secondsAndMilliseconds[1].padRight(3, '0'))
-        : 0;
 
     int hours = int.parse(parts[0]);
     int minutes = int.parse(parts[1]);
