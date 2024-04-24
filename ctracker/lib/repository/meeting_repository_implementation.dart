@@ -64,7 +64,7 @@ class MeetingRepositoryImplementation extends MeetingRepository {
         "description": "adding a meeting",
         "entity_name": "meeting",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.create.id
       };
 
@@ -98,7 +98,7 @@ class MeetingRepositoryImplementation extends MeetingRepository {
         "description": "deleting a meeting",
         "entity_name": "meeting",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.delete.id
       };
 
@@ -163,7 +163,7 @@ class MeetingRepositoryImplementation extends MeetingRepository {
         "description": "read all meeting",
         "entity_name": "meeting",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -261,7 +261,7 @@ class MeetingRepositoryImplementation extends MeetingRepository {
         "description": "update a meeting",
         "entity_name": "meeting",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.update.id
       };
 
@@ -343,7 +343,7 @@ class MeetingRepositoryImplementation extends MeetingRepository {
         "description": "read all meeting by year and month",
         "entity_name": "meeting",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -405,7 +405,7 @@ class MeetingRepositoryImplementation extends MeetingRepository {
         "description": "read a meeting",
         "entity_name": "meeting",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 

@@ -22,7 +22,7 @@ class TagRepositoryImplementation implements TagRepository {
         "description": "read all tags",
         "entity_name": "tags",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 

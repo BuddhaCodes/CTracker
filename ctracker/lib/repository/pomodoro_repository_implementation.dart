@@ -25,7 +25,7 @@ class PomodoroRepositoryImplementation extends PomodoroRepository {
         "description": "add a pomodoro",
         "entity_name": "pomodoros",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.create.id
       };
 
@@ -37,9 +37,10 @@ class PomodoroRepositoryImplementation extends PomodoroRepository {
   @override
   Future<List<Pomodoro>> getAllPomodoros() async {
     try {
-      final records = await _pocketBase
-          .collection('pomodoros')
-          .getFullList(sort: '-created', filter: "created_by='${_pocketBase.authStore.model.id}'",);
+      final records = await _pocketBase.collection('pomodoros').getFullList(
+            sort: '-created',
+            filter: "created_by='${_pocketBase.authStore.model.id}'",
+          );
 
       return records
           .map((record) => Pomodoro(
@@ -55,7 +56,7 @@ class PomodoroRepositoryImplementation extends PomodoroRepository {
         "description": "read all pomodoros",
         "entity_name": "pomodoros",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -81,7 +82,7 @@ class PomodoroRepositoryImplementation extends PomodoroRepository {
         "description": "read a pomodoro",
         "entity_name": "pomodoros",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -114,7 +115,7 @@ class PomodoroRepositoryImplementation extends PomodoroRepository {
         "description": "update a pomodoro",
         "entity_name": "pomodoros",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.update.id
       };
 

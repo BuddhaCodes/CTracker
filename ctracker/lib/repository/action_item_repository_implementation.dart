@@ -27,7 +27,7 @@ class ActionItemRepositoryImplementation extends ActionItemRepository {
         "description": "updating an action",
         "entity_name": "action_item",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.update.id
       };
 

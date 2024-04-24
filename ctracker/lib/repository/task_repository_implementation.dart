@@ -81,7 +81,7 @@ class TaskRepositoryImplementation extends TaskRepository {
         "description": "add a task",
         "entity_name": "tasks",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.create.id
       };
 
@@ -114,7 +114,7 @@ class TaskRepositoryImplementation extends TaskRepository {
         "description": "delete a task",
         "entity_name": "tasks",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.delete.id
       };
 
@@ -213,7 +213,7 @@ class TaskRepositoryImplementation extends TaskRepository {
         "description": "read all task",
         "entity_name": "tasks",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -310,7 +310,7 @@ class TaskRepositoryImplementation extends TaskRepository {
         "description": "read a task by id",
         "entity_name": "tasks",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -372,7 +372,7 @@ class TaskRepositoryImplementation extends TaskRepository {
         "description": "update a task",
         "entity_name": "tasks",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.update.id
       };
 
@@ -497,7 +497,7 @@ class TaskRepositoryImplementation extends TaskRepository {
         "description": "read all completed tasks",
         "entity_name": "tasks",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -600,7 +600,7 @@ class TaskRepositoryImplementation extends TaskRepository {
         "description": "read all task by effort",
         "entity_name": "tasks",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -703,7 +703,7 @@ class TaskRepositoryImplementation extends TaskRepository {
         "description": "read all task no completed",
         "entity_name": "tasks",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -834,7 +834,7 @@ class TaskRepositoryImplementation extends TaskRepository {
         "description": "read all task no completed",
         "entity_name": "tasks",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -965,7 +965,7 @@ class TaskRepositoryImplementation extends TaskRepository {
         "description": "read all task no completed",
         "entity_name": "tasks",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
@@ -1089,7 +1089,7 @@ class TaskRepositoryImplementation extends TaskRepository {
         "description": "read all task no completed",
         "entity_name": "tasks",
         "timestamp": DateTime.now().toString(),
-        "message": e as String,
+        "message": e.toString(),
         "action_type": ActionTypeEnum.read.id
       };
 
