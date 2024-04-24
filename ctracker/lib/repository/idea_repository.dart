@@ -9,5 +9,4 @@ abstract class IdeaRepository {
   Future<void> addIdea(Idea idea);
   Future<void> deleteIdea(String id);
   Future<void> updateIdea(String id, Idea idea);
-  Future<IdeaTagsChart> getNumberByTags();
 }

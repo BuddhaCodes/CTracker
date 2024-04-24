@@ -29,14 +29,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  bool isInit = false;
   int _selectedIndex = 0;
-  String amountNoted = Utils.getDueRemindersCount().toString();
 
   @override
   void initState() {
     super.initState();
-    _reminderDeleteHandler();
   }
 
   void _onItemTapped(int index) {
@@ -47,24 +44,14 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _reminderDeleteHandler() async {
-    final total = await Utils.getDueRemindersCount();
-    setState(() {
-      amountNoted = total.toString();
-      isInit = true;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    return !isInit
-        ? const Center(child: CircularProgressIndicator())
-        : Scaffold(
-            backgroundColor: ColorP.background,
-            appBar: _buildAppBar(context),
-            body: _getBodyWidget(),
-            drawer: _buildDrawer(context),
-          );
+    return Scaffold(
+      backgroundColor: ColorP.background,
+      appBar: _buildAppBar(context),
+      body: _getBodyWidget(),
+      drawer: _buildDrawer(context),
+    );
   }
 
   AppBar _buildAppBar(BuildContext context) {
@@ -87,52 +74,7 @@ class _HomePageState extends State<HomePage> {
           ),
         );
       }),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 20.0),
-          child: Stack(
-            children: [
-              IconButton(
-                onPressed: () {
-                  _navigateToAllRemindersPage();
-                },
-                icon: const Icon(
-                  Icons.notifications,
-                  color: ColorP.white,
-                ),
-              ),
-              Positioned(
-                right: 5,
-                top: 5,
-                child: CircleAvatar(
-                  backgroundColor: Colors.red,
-                  radius: 8,
-                  child: Text(
-                    amountNoted,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
       backgroundColor: ColorP.background,
-    );
-  }
-
-  void _navigateToAllRemindersPage() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AllRemindersPage(
-          selectedIndex: 2,
-          onReminderDeleted: () {},
-        ),
-      ),
     );
   }
 
@@ -143,9 +85,9 @@ class _HomePageState extends State<HomePage> {
   Widget _getBodyWidget() {
     switch (_selectedIndex) {
       case 0:
-        return ReminderPage(onReminderDeleted: _reminderDeleteHandler);
+        return ReminderPage();
       case 1:
-        return TrackerPage(onReminderDeleted: _reminderDeleteHandler);
+        return const TrackerPage();
       case 2:
         return const MeetingsPage();
       case 3:
@@ -203,27 +145,6 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   ExpansionTile(
-                    title: Text(localizations.translate("meetings")),
-                    leading: const SizedBox(
-                      height: ValuesConst.tileSeparatorSize,
-                      width: ValuesConst.tileSeparatorSize,
-                    ),
-                    children: [
-                      _buildListTile(
-                        title: localizations.translate("manage"),
-                        icon: IconlyC.meetingIdle,
-                        onTap: () => _onItemTapped(2),
-                        selected: _selectedIndex == 2,
-                      ),
-                      _buildListTile(
-                        title: localizations.translate("overview"),
-                        icon: IconlyC.overview,
-                        onTap: () => _onItemTapped(8),
-                        selected: _selectedIndex == 8,
-                      ),
-                    ],
-                  ),
-                  ExpansionTile(
                     title: Text(localizations.translate("journal")),
                     leading: const SizedBox(
                       height: ValuesConst.tileSeparatorSize,
@@ -243,6 +164,12 @@ class _HomePageState extends State<HomePage> {
                         selected: _selectedIndex == 8,
                       ),
                     ],
+                  ),
+                  _buildListTile(
+                    title: localizations.translate("meetings"),
+                    icon: IconlyC.meetingIdle,
+                    onTap: () => _onItemTapped(2),
+                    selected: _selectedIndex == 2,
                   ),
                   _buildListTile(
                     title: localizations.translate("idea"),

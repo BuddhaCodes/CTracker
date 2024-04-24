@@ -42,6 +42,7 @@ class TaskRepositoryImplementation extends TaskRepository {
         "updated_by": "",
         "created_by": _pocketBase.authStore.model.id,
         "frequency": task.reminder.type.id,
+        "of_task": task.reminder.of_task,
         "status": StatusEnum.notDone.id,
         "title": task.reminder.title
       };
@@ -65,7 +66,7 @@ class TaskRepositoryImplementation extends TaskRepository {
         "priority": task.priority.id,
         "pomodoro": pomoRecord.id,
         "effort": task.effort.id,
-        "project": task.project.id,
+        "project": task.project?.id,
         "category": task.category.id,
         "status": task.status.id,
         "reminder": rem.id,
@@ -95,17 +96,18 @@ class TaskRepositoryImplementation extends TaskRepository {
       final record = await _pocketBase.collection('tasks').getOne(id,
           expand:
               'difficulty,status,priority,effort,project,category,reminder,pomodoro,reminder.status,reminder.frequency,project.tag,project.category');
-      if (!kIsWeb) {
-        await Workmanager()
-            .cancelByUniqueName(record.expand["reminder"]!.first.id);
+      if (record.expand["reminder"] != null) {
+        if (!kIsWeb) {
+          await Workmanager()
+              .cancelByUniqueName(record.expand["reminder"]!.first.id);
+        }
+        await _pocketBase
+            .collection('reminder')
+            .delete(record.expand["reminder"]!.first.id);
       }
-      await _pocketBase
-          .collection('reminder')
-          .delete(record.expand["reminder"]!.first.id);
       await _pocketBase
           .collection('pomodoros')
           .delete(record.expand["pomodoro"]!.first.id);
-      await _pocketBase.collection('tasks').delete(id);
     } catch (e) {
       final body = <String, dynamic>{
         "user": _pocketBase.authStore.model.id,
@@ -166,6 +168,7 @@ class TaskRepositoryImplementation extends TaskRepository {
           ),
           reminder: Reminder(
             id: e.expand["reminder"]!.first.id,
+            of_task: e.expand["reminder"]!.first.data["of_task"],
             title: e.expand["reminder"]!.first.data["title"],
             duedate: DateTime.parse(
                 e.expand["reminder"]!.first.data["reminder_time"]),
@@ -180,25 +183,27 @@ class TaskRepositoryImplementation extends TaskRepository {
                   .data["name"],
             ),
           ),
-          project: Idea(
-            id: e.expand["project"]!.first.id,
-            title: e.expand["project"]!.first.data["title"],
-            description: e.expand["project"]!.first.data["description"],
-            tags: e.expand["project"]!.first.expand["tag"]
-                    ?.map((y) => Tag(
-                          id: y.id,
-                          title: y.data["title"],
-                        ))
-                    .toList() ??
-                [],
-            category: Categories(
-              id: e.expand["project"]!.first.expand["category"]!.first.id,
-              name: e.expand["project"]!.first.expand["category"]!.first
-                  .data["name"],
-              description: e.expand["project"]!.first.expand["category"]!.first
-                  .data["description"],
-            ),
-          ),
+          project: e.expand["project"] != null
+              ? Idea(
+                  id: e.expand["project"]!.first.id,
+                  title: e.expand["project"]!.first.data["title"],
+                  description: e.expand["project"]!.first.data["description"],
+                  tags: e.expand["project"]!.first.expand["tag"]
+                          ?.map((y) => Tag(
+                                id: y.id,
+                                title: y.data["title"],
+                              ))
+                          .toList() ??
+                      [],
+                  category: Categories(
+                    id: e.expand["project"]!.first.expand["category"]!.first.id,
+                    name: e.expand["project"]!.first.expand["category"]!.first
+                        .data["name"],
+                    description: e.expand["project"]!.first.expand["category"]!
+                        .first.data["description"],
+                  ),
+                )
+              : null,
         );
       }).toList();
       return tasks;
@@ -257,6 +262,7 @@ class TaskRepositoryImplementation extends TaskRepository {
           description: record.expand["category"]!.first.data["description"],
         ),
         reminder: Reminder(
+          of_task: record.expand["reminder"]!.first.data["of_task"],
           id: record.expand["reminder"]!.first.id,
           title: record.expand["reminder"]!.first.data["title"],
           duedate: DateTime.parse(
@@ -272,25 +278,29 @@ class TaskRepositoryImplementation extends TaskRepository {
                 .expand["reminder"]!.first.expand["status"]!.first.data["name"],
           ),
         ),
-        project: Idea(
-          id: record.expand["project"]!.first.id,
-          title: record.expand["project"]!.first.data["title"],
-          description: record.expand["project"]!.first.data["description"],
-          tags: record.expand["project"]!.first.expand["tag"]
-                  ?.map((y) => Tag(
-                        id: y.id,
-                        title: y.data["title"],
-                      ))
-                  .toList() ??
-              [],
-          category: Categories(
-            id: record.expand["project"]!.first.expand["category"]!.first.id,
-            name: record.expand["project"]!.first.expand["category"]!.first
-                .data["name"],
-            description: record.expand["project"]!.first.expand["category"]!
-                .first.data["description"],
-          ),
-        ),
+        project: record.expand["project"] != null
+            ? Idea(
+                id: record.expand["project"]!.first.id,
+                title: record.expand["project"]!.first.data["title"],
+                description:
+                    record.expand["project"]!.first.data["description"],
+                tags: record.expand["project"]!.first.expand["tag"]
+                        ?.map((y) => Tag(
+                              id: y.id,
+                              title: y.data["title"],
+                            ))
+                        .toList() ??
+                    [],
+                category: Categories(
+                  id: record
+                      .expand["project"]!.first.expand["category"]!.first.id,
+                  name: record.expand["project"]!.first.expand["category"]!
+                      .first.data["name"],
+                  description: record.expand["project"]!.first
+                      .expand["category"]!.first.data["description"],
+                ),
+              )
+            : null,
       );
 
       return task;
@@ -318,6 +328,7 @@ class TaskRepositoryImplementation extends TaskRepository {
         "created_by": _pocketBase.authStore.model.id,
         "frequency": task.reminder.type.id,
         "status": StatusEnum.notDone.id,
+        "of_task": task.reminder.of_task,
         "title": task.reminder.title
       };
       final rem = await _pocketBase
@@ -346,7 +357,7 @@ class TaskRepositoryImplementation extends TaskRepository {
         "difficulty": task.difficulty.id,
         "priority": task.priority.id,
         "effort": task.effort.id,
-        "project": task.project.id,
+        "project": task.project?.id,
         "category": task.category.id,
         "status": task.status.id,
         "reminder": rem.id,
@@ -354,9 +365,7 @@ class TaskRepositoryImplementation extends TaskRepository {
         "created_by": _pocketBase.authStore.model.id,
         "updated_by": _pocketBase.authStore.model.id
       };
-
-      final record =
-          await _pocketBase.collection('tasks').update(id, body: body);
+      await _pocketBase.collection('tasks').update(id, body: body);
     } catch (e) {
       final body = <String, dynamic>{
         "user": _pocketBase.authStore.model.id,
@@ -443,6 +452,7 @@ class TaskRepositoryImplementation extends TaskRepository {
           ),
           reminder: Reminder(
             id: e.expand["reminder"]!.first.id,
+            of_task: e.expand["reminder"]!.first.data["of_task"],
             title: e.expand["reminder"]!.first.data["title"],
             duedate: DateTime.parse(
                 e.expand["reminder"]!.first.data["reminder_time"]),
@@ -457,25 +467,27 @@ class TaskRepositoryImplementation extends TaskRepository {
                   .data["name"],
             ),
           ),
-          project: Idea(
-            id: e.expand["project"]!.first.id,
-            title: e.expand["project"]!.first.data["title"],
-            description: e.expand["project"]!.first.data["description"],
-            tags: e.expand["project"]!.first.expand["tag"]
-                    ?.map((y) => Tag(
-                          id: y.id,
-                          title: y.data["title"],
-                        ))
-                    .toList() ??
-                [],
-            category: Categories(
-              id: e.expand["project"]!.first.expand["category"]!.first.id,
-              name: e.expand["project"]!.first.expand["category"]!.first
-                  .data["name"],
-              description: e.expand["project"]!.first.expand["category"]!.first
-                  .data["description"],
-            ),
-          ),
+          project: e.expand["project"] != null
+              ? Idea(
+                  id: e.expand["project"]!.first.id,
+                  title: e.expand["project"]!.first.data["title"],
+                  description: e.expand["project"]!.first.data["description"],
+                  tags: e.expand["project"]!.first.expand["tag"]
+                          ?.map((y) => Tag(
+                                id: y.id,
+                                title: y.data["title"],
+                              ))
+                          .toList() ??
+                      [],
+                  category: Categories(
+                    id: e.expand["project"]!.first.expand["category"]!.first.id,
+                    name: e.expand["project"]!.first.expand["category"]!.first
+                        .data["name"],
+                    description: e.expand["project"]!.first.expand["category"]!
+                        .first.data["description"],
+                  ),
+                )
+              : null,
         );
       }).toList();
       return tasks;
@@ -543,6 +555,7 @@ class TaskRepositoryImplementation extends TaskRepository {
           ),
           reminder: Reminder(
             id: e.expand["reminder"]!.first.id,
+            of_task: e.expand["reminder"]!.first.data["of_task"],
             title: e.expand["reminder"]!.first.data["title"],
             duedate: DateTime.parse(
                 e.expand["reminder"]!.first.data["reminder_time"]),
@@ -557,25 +570,27 @@ class TaskRepositoryImplementation extends TaskRepository {
                   .data["name"],
             ),
           ),
-          project: Idea(
-            id: e.expand["project"]!.first.id,
-            title: e.expand["project"]!.first.data["title"],
-            description: e.expand["project"]!.first.data["description"],
-            tags: e.expand["project"]!.first.expand["tag"]
-                    ?.map((y) => Tag(
-                          id: y.id,
-                          title: y.data["title"],
-                        ))
-                    .toList() ??
-                [],
-            category: Categories(
-              id: e.expand["project"]!.first.expand["category"]!.first.id,
-              name: e.expand["project"]!.first.expand["category"]!.first
-                  .data["name"],
-              description: e.expand["project"]!.first.expand["category"]!.first
-                  .data["description"],
-            ),
-          ),
+          project: e.expand["project"] != null
+              ? Idea(
+                  id: e.expand["project"]!.first.id,
+                  title: e.expand["project"]!.first.data["title"],
+                  description: e.expand["project"]!.first.data["description"],
+                  tags: e.expand["project"]!.first.expand["tag"]
+                          ?.map((y) => Tag(
+                                id: y.id,
+                                title: y.data["title"],
+                              ))
+                          .toList() ??
+                      [],
+                  category: Categories(
+                    id: e.expand["project"]!.first.expand["category"]!.first.id,
+                    name: e.expand["project"]!.first.expand["category"]!.first
+                        .data["name"],
+                    description: e.expand["project"]!.first.expand["category"]!
+                        .first.data["description"],
+                  ),
+                )
+              : null,
         );
       }).toList();
       return tasks;
@@ -642,6 +657,7 @@ class TaskRepositoryImplementation extends TaskRepository {
           ),
           reminder: Reminder(
             id: e.expand["reminder"]!.first.id,
+            of_task: e.expand["reminder"]!.first.data["of_task"],
             title: e.expand["reminder"]!.first.data["title"],
             duedate: DateTime.parse(
                 e.expand["reminder"]!.first.data["reminder_time"]),
@@ -656,25 +672,27 @@ class TaskRepositoryImplementation extends TaskRepository {
                   .data["name"],
             ),
           ),
-          project: Idea(
-            id: e.expand["project"]!.first.id,
-            title: e.expand["project"]!.first.data["title"],
-            description: e.expand["project"]!.first.data["description"],
-            tags: e.expand["project"]!.first.expand["tag"]
-                    ?.map((y) => Tag(
-                          id: y.id,
-                          title: y.data["title"],
-                        ))
-                    .toList() ??
-                [],
-            category: Categories(
-              id: e.expand["project"]!.first.expand["category"]!.first.id,
-              name: e.expand["project"]!.first.expand["category"]!.first
-                  .data["name"],
-              description: e.expand["project"]!.first.expand["category"]!.first
-                  .data["description"],
-            ),
-          ),
+          project: e.expand["project"] != null
+              ? Idea(
+                  id: e.expand["project"]!.first.id,
+                  title: e.expand["project"]!.first.data["title"],
+                  description: e.expand["project"]!.first.data["description"],
+                  tags: e.expand["project"]!.first.expand["tag"]
+                          ?.map((y) => Tag(
+                                id: y.id,
+                                title: y.data["title"],
+                              ))
+                          .toList() ??
+                      [],
+                  category: Categories(
+                    id: e.expand["project"]!.first.expand["category"]!.first.id,
+                    name: e.expand["project"]!.first.expand["category"]!.first
+                        .data["name"],
+                    description: e.expand["project"]!.first.expand["category"]!
+                        .first.data["description"],
+                  ),
+                )
+              : null,
         );
       }).toList();
 
@@ -752,6 +770,7 @@ class TaskRepositoryImplementation extends TaskRepository {
           ),
           reminder: Reminder(
             id: e.expand["reminder"]!.first.id,
+            of_task: e.expand["reminder"]!.first.data["of_task"],
             title: e.expand["reminder"]!.first.data["title"],
             duedate: DateTime.parse(
                 e.expand["reminder"]!.first.data["reminder_time"]),
@@ -766,25 +785,27 @@ class TaskRepositoryImplementation extends TaskRepository {
                   .data["name"],
             ),
           ),
-          project: Idea(
-            id: e.expand["project"]!.first.id,
-            title: e.expand["project"]!.first.data["title"],
-            description: e.expand["project"]!.first.data["description"],
-            tags: e.expand["project"]!.first.expand["tag"]
-                    ?.map((y) => Tag(
-                          id: y.id,
-                          title: y.data["title"],
-                        ))
-                    .toList() ??
-                [],
-            category: Categories(
-              id: e.expand["project"]!.first.expand["category"]!.first.id,
-              name: e.expand["project"]!.first.expand["category"]!.first
-                  .data["name"],
-              description: e.expand["project"]!.first.expand["category"]!.first
-                  .data["description"],
-            ),
-          ),
+          project: e.expand["project"] != null
+              ? Idea(
+                  id: e.expand["project"]!.first.id,
+                  title: e.expand["project"]!.first.data["title"],
+                  description: e.expand["project"]!.first.data["description"],
+                  tags: e.expand["project"]!.first.expand["tag"]
+                          ?.map((y) => Tag(
+                                id: y.id,
+                                title: y.data["title"],
+                              ))
+                          .toList() ??
+                      [],
+                  category: Categories(
+                    id: e.expand["project"]!.first.expand["category"]!.first.id,
+                    name: e.expand["project"]!.first.expand["category"]!.first
+                        .data["name"],
+                    description: e.expand["project"]!.first.expand["category"]!
+                        .first.data["description"],
+                  ),
+                )
+              : null,
         );
       }).toList();
 
@@ -880,6 +901,7 @@ class TaskRepositoryImplementation extends TaskRepository {
           ),
           reminder: Reminder(
             id: e.expand["reminder"]!.first.id,
+            of_task: e.expand["reminder"]!.first.data["of_task"],
             title: e.expand["reminder"]!.first.data["title"],
             duedate: DateTime.parse(
                 e.expand["reminder"]!.first.data["reminder_time"]),
@@ -894,25 +916,27 @@ class TaskRepositoryImplementation extends TaskRepository {
                   .data["name"],
             ),
           ),
-          project: Idea(
-            id: e.expand["project"]!.first.id,
-            title: e.expand["project"]!.first.data["title"],
-            description: e.expand["project"]!.first.data["description"],
-            tags: e.expand["project"]!.first.expand["tag"]
-                    ?.map((y) => Tag(
-                          id: y.id,
-                          title: y.data["title"],
-                        ))
-                    .toList() ??
-                [],
-            category: Categories(
-              id: e.expand["project"]!.first.expand["category"]!.first.id,
-              name: e.expand["project"]!.first.expand["category"]!.first
-                  .data["name"],
-              description: e.expand["project"]!.first.expand["category"]!.first
-                  .data["description"],
-            ),
-          ),
+          project: e.expand["project"] != null
+              ? Idea(
+                  id: e.expand["project"]!.first.id,
+                  title: e.expand["project"]!.first.data["title"],
+                  description: e.expand["project"]!.first.data["description"],
+                  tags: e.expand["project"]!.first.expand["tag"]
+                          ?.map((y) => Tag(
+                                id: y.id,
+                                title: y.data["title"],
+                              ))
+                          .toList() ??
+                      [],
+                  category: Categories(
+                    id: e.expand["project"]!.first.expand["category"]!.first.id,
+                    name: e.expand["project"]!.first.expand["category"]!.first
+                        .data["name"],
+                    description: e.expand["project"]!.first.expand["category"]!
+                        .first.data["description"],
+                  ),
+                )
+              : null,
         );
       }).toList();
 
@@ -1017,6 +1041,7 @@ class TaskRepositoryImplementation extends TaskRepository {
           ),
           reminder: Reminder(
             id: e.expand["reminder"]!.first.id,
+            of_task: e.expand["reminder"]!.first.data["of_task"],
             title: e.expand["reminder"]!.first.data["title"],
             duedate: DateTime.parse(
                 e.expand["reminder"]!.first.data["reminder_time"]),
@@ -1031,25 +1056,27 @@ class TaskRepositoryImplementation extends TaskRepository {
                   .data["name"],
             ),
           ),
-          project: Idea(
-            id: e.expand["project"]!.first.id,
-            title: e.expand["project"]!.first.data["title"],
-            description: e.expand["project"]!.first.data["description"],
-            tags: e.expand["project"]!.first.expand["tag"]
-                    ?.map((y) => Tag(
-                          id: y.id,
-                          title: y.data["title"],
-                        ))
-                    .toList() ??
-                [],
-            category: Categories(
-              id: e.expand["project"]!.first.expand["category"]!.first.id,
-              name: e.expand["project"]!.first.expand["category"]!.first
-                  .data["name"],
-              description: e.expand["project"]!.first.expand["category"]!.first
-                  .data["description"],
-            ),
-          ),
+          project: e.expand["project"] != null
+              ? Idea(
+                  id: e.expand["project"]!.first.id,
+                  title: e.expand["project"]!.first.data["title"],
+                  description: e.expand["project"]!.first.data["description"],
+                  tags: e.expand["project"]!.first.expand["tag"]
+                          ?.map((y) => Tag(
+                                id: y.id,
+                                title: y.data["title"],
+                              ))
+                          .toList() ??
+                      [],
+                  category: Categories(
+                    id: e.expand["project"]!.first.expand["category"]!.first.id,
+                    name: e.expand["project"]!.first.expand["category"]!.first
+                        .data["name"],
+                    description: e.expand["project"]!.first.expand["category"]!
+                        .first.data["description"],
+                  ),
+                )
+              : null,
         );
       }).toList();
 

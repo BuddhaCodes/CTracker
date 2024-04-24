@@ -4,6 +4,7 @@ import 'package:ctracker/models/enums/status_enum.dart';
 import 'package:ctracker/models/reminder.dart';
 import 'package:ctracker/repository/reminder_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:ctracker/utils/utils.dart';
 import 'package:ctracker/views/all_reminders_page.dart';
 import 'package:ctracker/views/reminder_add_page.dart';
@@ -12,12 +13,11 @@ import 'package:intl/intl.dart';
 
 // ignore: must_be_immutable
 class ReminderPage extends StatefulWidget {
-  final Function onReminderDeleted;
   late List<Reminder> reminderCompleted;
   late List<Reminder> reminderRemaining;
   late List<Reminder> reminderOfDay;
   bool isInit = false;
-  ReminderPage({super.key, required this.onReminderDeleted});
+  ReminderPage({super.key});
   @override
   State<ReminderPage> createState() => _ReminderPageState();
 }
@@ -43,7 +43,7 @@ class _ReminderPageState extends State<ReminderPage> {
     widget.isInit = false;
     DateTime present = DateTime.now();
 
-    reminderRepo = ReminderRepositoryImplementation();
+    reminderRepo = locator<ReminderRepositoryImplementation>();
     List<Reminder> nextReminders = [];
     List<Reminder> completed = [];
     List<Reminder> remaining = [];
@@ -218,9 +218,7 @@ class _ReminderPageState extends State<ReminderPage> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => AllRemindersPage(
-                                        onReminderDeleted:
-                                            widget.onReminderDeleted,
-                                      ),
+                                          onReminderDeleted: () {}),
                                     ),
                                   );
                                 },

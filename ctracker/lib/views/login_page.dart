@@ -1,9 +1,12 @@
 import 'package:ctracker/constant/color_palette.dart';
+import 'package:ctracker/utils/auth_service.dart';
+import 'package:ctracker/utils/auth_service.dart';
 import 'package:ctracker/utils/localization.dart';
 import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:pocketbase/pocketbase.dart';
 
+// ignore: must_be_immutable
 class LoginPage extends StatelessWidget {
   Function(bool) checkStatus;
   LoginPage({super.key, required this.checkStatus});
@@ -11,17 +14,18 @@ class LoginPage extends StatelessWidget {
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
   final PocketBase pb = locator<PocketBase>();
+  final _auth = locator<AuthService>();
 
   Future<void> _login(BuildContext context) async {
     MyLocalizations? localizations = MyLocalizations.of(context);
     try {
-      final authData = await pb.collection('users').authWithPassword(
-            usernameController.text,
-            passwordController.text,
-          );
+      // final authData = await pb.collection('users').authWithPassword(
+      //       usernameController.text,
+      //       passwordController.text,
+      //     );
 
-      pb.authStore.save(authData.token, authData.record);
-
+      // pb.authStore.save(authData.token, authData.record);
+      await _auth.login(usernameController.text, passwordController.text);
       checkStatus(pb.authStore.isValid);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -201,7 +205,7 @@ class SquareTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         border: Border.all(color: Colors.white),
         borderRadius: BorderRadius.circular(16),

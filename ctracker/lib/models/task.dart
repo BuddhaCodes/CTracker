@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'package:ctracker/models/category.dart';
 import 'package:ctracker/models/enums/difficulty_enum.dart';
 import 'package:ctracker/models/enums/effort_enum.dart';
@@ -15,7 +17,7 @@ class Task {
   final DifficultyEnum difficulty;
   final Priorities priority;
   final Effort effort;
-  final Idea project;
+  Idea? project;
   final Categories category;
   Status status;
   Reminder reminder;
@@ -36,7 +38,7 @@ class Task {
     required this.status,
     required this.effort,
     required this.category,
-    required this.project,
+    this.project,
     required this.reminder,
     required this.description,
     required this.timeSpend,

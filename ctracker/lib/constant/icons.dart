@@ -13,6 +13,7 @@ class IconlyC {
   static const String journalIdle = '${_assetPath}journal.png';
 
   static const String ideaIdle = '${_assetPath}idea.png';
+  static const String routineIdle = '${_assetPath}routine.png';
 
   static const String contactsIdle = '${_assetPath}contacts.png';
 

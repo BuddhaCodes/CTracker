@@ -176,11 +176,15 @@ class MyLocalizationsDelegate extends LocalizationsDelegate<MyLocalizations> {
     'pnumber': 'Phone number',
     'pnumberValidation': 'Phone number is required',
     'emailValidator': 'Email is required',
-    'contact': 'Contactos',
-    'people': 'Contacts'
+    'contact': 'Contact',
+    'routine': 'Routine',
+    'people': 'Contacts',
+    'ideasub2': 'I am'
   };
   static const Map<String, String> _localizedStringsSpanish = {
     'all': 'Todos',
+    'ideasub2': 'I am',
+    'routine': 'Rutina',
     'nameValidation': 'El nombre es requerido',
     'contact': 'Contactos',
     'emailValidator': 'Correo es requerido',

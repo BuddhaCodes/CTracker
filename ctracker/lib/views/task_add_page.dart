@@ -21,6 +21,7 @@ import 'package:ctracker/repository/priorities_repository_implementation.dart';
 import 'package:ctracker/repository/tag_repository_implementation.dart';
 import 'package:ctracker/repository/task_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -80,11 +81,11 @@ class _TaskAddPageState extends State<TaskAddPage> {
     setState(() {
       isInit = false;
     });
-    catRepo = CategoryRepositoryImplementation();
-    takRepo = TaskRepositoryImplementation();
-    ideaRepo = IdeaRepositoryImplementation();
-    tagRepo = TagRepositoryImplementation();
-    prioRepo = PrioritiesRepositoryImplementation();
+    catRepo = locator<CategoryRepositoryImplementation>();
+    takRepo = locator<TaskRepositoryImplementation>();
+    ideaRepo = locator<IdeaRepositoryImplementation>();
+    tagRepo = locator<TagRepositoryImplementation>();
+    prioRepo = locator<PrioritiesRepositoryImplementation>();
 
     selectedImages = [];
     imageCounts = 0;
@@ -101,7 +102,7 @@ class _TaskAddPageState extends State<TaskAddPage> {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(localizations?.translate("error")??"",
+                content: Text(localizations?.translate("error") ?? "",
                     style: const TextStyle(
                         color: Color.fromARGB(255, 255, 255, 255)))),
           );
@@ -110,6 +111,14 @@ class _TaskAddPageState extends State<TaskAddPage> {
       }
       _taskProjects = await ideaRepo.getByTags(
           [Tag(id: TagsEnum.project.id, title: TagsEnum.project.name)]);
+      _taskProjects.insert(
+          0,
+          Idea(
+              id: "placeholder",
+              title: "Select a project",
+              tags: [],
+              description: "",
+              category: Categories(id: "", name: "", description: "")));
     } catch (e) {
       if (context.mounted) {
         Navigator.pop(context);
@@ -119,15 +128,23 @@ class _TaskAddPageState extends State<TaskAddPage> {
     if (widget.uTask != null) {
       titleController.text = widget.uTask!.title;
       descriptionController.text = widget.uTask!.description;
-      reminderController.text = widget.uTask!.reminder.title;
-      _dateController.text = DateFormat('yyyy-MM-dd hh:mm a')
-          .format(widget.uTask!.reminder.duedate);
+      reminderController.text = widget.uTask!.reminder?.title ?? "";
+      _dateController.text = DateFormat('yyyy-MM-dd hh:mm a').format(
+          widget.uTask!.reminder?.duedate ??
+              DateTime.now().add(Duration(days: 1)));
       _selectedRepeatType = RepeatTypeEnum.values
-          .where((element) => element.id == widget.uTask!.reminder.type.id)
+          .where((element) =>
+              element.id ==
+              (widget.uTask!.reminder?.type.id ??
+                  RepeatTypeEnum.values.first.id))
           .first;
-      _taskProject = _taskProjects
-          .where((element) => element.id == widget.uTask?.project.id)
-          .first;
+      if (widget.uTask?.project != null) {
+        _taskProject = _taskProjects
+            .where((element) => element.id == widget.uTask?.project?.id)
+            .first;
+      } else {
+        _taskProject = _taskProjects.first;
+      }
       _taskCategory = _taskCategories
           .where((element) => element.id == widget.uTask!.category.id)
           .first;
@@ -135,9 +152,7 @@ class _TaskAddPageState extends State<TaskAddPage> {
           .where((element) => element.id == widget.uTask?.priority.id)
           .first;
       _taskDifficulty = widget.uTask!.difficulty;
-      _selectedRepeatType = RepeatTypeEnum.values
-          .where((element) => element.id == widget.uTask!.reminder.type.id)
-          .first;
+
       _selectedEffort = widget.uTask?.effort ?? Effort.poco;
     } else {
       imageCounts = 0;
@@ -464,7 +479,7 @@ class _TaskAddPageState extends State<TaskAddPage> {
                             height: 30,
                           ),
                           Padding(
-                            padding: EdgeInsets.all(8.0),
+                            padding: const EdgeInsets.all(8.0),
                             child: Text(
                               localizations?.translate('proselect') ?? "",
                               style: const TextStyle(
@@ -518,14 +533,14 @@ class _TaskAddPageState extends State<TaskAddPage> {
                                       BorderRadius.all(Radius.circular(25.0)),
                                 ),
                               ),
-                              validator: (value) {
-                                if (value == null) {
-                                  return localizations
-                                          ?.translate('proselect') ??
-                                      "";
-                                }
-                                return null;
-                              },
+                              // validator: (value) {
+                              //   if (value == null) {
+                              //     return localizations
+                              //             ?.translate('proselect') ??
+                              //         "";
+                              //   }
+                              //   return null;
+                              // },
                             ),
                           ),
                           const SizedBox(
@@ -660,7 +675,7 @@ class _TaskAddPageState extends State<TaskAddPage> {
                           //   },
                           // ),
                           Padding(
-                            padding: EdgeInsets.all(8.0),
+                            padding: const EdgeInsets.all(8.0),
                             child: Container(
                               decoration: BoxDecoration(
                                 border: Border.all(color: Colors.grey),
@@ -903,7 +918,7 @@ class _TaskAddPageState extends State<TaskAddPage> {
             priority: _selectedPriority,
             effort: _selectedEffort,
             category: _taskCategory,
-            project: _taskProject,
+            project: _taskProject.id == "placeholder" ? null : _taskProject,
             description: description,
             pomodoro: widget.uTask?.pomodoro,
             status: widget.uTask!.status,
@@ -911,6 +926,7 @@ class _TaskAddPageState extends State<TaskAddPage> {
             reminder: Reminder(
                 id: widget.uTask!.reminder.id,
                 title: reminderController.text,
+                of_task: true,
                 duedate: DateFormat('yyyy-MM-dd hh:mm a')
                     .parse(_dateController.text),
                 type: RepeatType(
@@ -918,18 +934,18 @@ class _TaskAddPageState extends State<TaskAddPage> {
                     name: _selectedRepeatType.name)));
         try {
           await takRepo.updateTask(widget.uTask?.id ?? "", newTask);
+          Navigator.pop(context);
         } catch (e) {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                  content: Text(localizations?.translate("error")??"",
+                  content: Text(localizations?.translate("error") ?? "",
                       style: const TextStyle(
                           color: Color.fromARGB(255, 255, 255, 255)))),
             );
           }
-          // widget.onTaskAdded(true);
-          Navigator.pop(context);
         }
+        // widget.onTaskAdded(true);
       } else {
         String title = titleController.text;
         String description = descriptionController.text;
@@ -940,13 +956,14 @@ class _TaskAddPageState extends State<TaskAddPage> {
             priority: _selectedPriority,
             effort: _selectedEffort,
             category: _taskCategory,
-            project: _taskProject,
+            project: _taskProject.id == "placeholder" ? null : _taskProject,
             description: description,
             pomodoro: null,
             status: Status(
                 id: StatusEnum.notDone.id, name: StatusEnum.notDone.name),
             timeSpend: Duration.zero,
             reminder: Reminder(
+                of_task: true,
                 title: reminderController.text,
                 duedate: DateFormat('yyyy-MM-dd hh:mm a')
                     .parse(_dateController.text),
@@ -962,50 +979,16 @@ class _TaskAddPageState extends State<TaskAddPage> {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                  content: Text(localizations?.translate("error")??"",
+                  content: Text(localizations?.translate("error") ?? "",
                       style: const TextStyle(
                           color: Color.fromARGB(255, 255, 255, 255)))),
             );
           }
-          widget.onTaskAdded(true);
-          Navigator.pop(context);
+          // widget.onTaskAdded(true);
+          // Navigator.pop(context);
         }
       }
     }
-  }
-
-  _selectFile(bool imageFrom) async {
-    var fileResult = await FilePicker.platform
-        .pickFiles(allowMultiple: true, type: FileType.image);
-
-    if (fileResult != null) {
-      for (var element in fileResult.files) {
-        Uint8List bytes = element.bytes ?? Uint8List(0);
-
-        if (_isImageFile(element.name)) {
-          await _saveImageToFolder(bytes, element.name);
-          setState(() {
-            selectedImages.add(element.path!); // Store selected image path
-            imageCounts += 1;
-          });
-        }
-      }
-    }
-  }
-
-  bool _isImageFile(String fileName) {
-    final imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp'];
-    return imageExtensions
-        .any((extension) => fileName.toLowerCase().endsWith(extension));
-  }
-
-  Future<void> _saveImageToFolder(Uint8List bytes, String fileName) async {
-    Directory directory = await getApplicationDocumentsDirectory();
-
-    File destinationFile = File(
-        '${directory.path}/${DateTime.now().millisecondsSinceEpoch}-$fileName');
-
-    await destinationFile.writeAsBytes(bytes);
   }
 
   Future<DateTime?> showDateTimePicker({

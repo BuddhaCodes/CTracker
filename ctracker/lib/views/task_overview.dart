@@ -8,6 +8,7 @@ import 'package:ctracker/models/graphs/effort_resume.dart';
 import 'package:ctracker/models/graphs/spend_time_task.dart';
 import 'package:ctracker/repository/task_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:ctracker/utils/utils.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -133,7 +134,7 @@ class TaskOverviewState extends State<TaskOverview> {
   }
 
   Future<void> initializeData() async {
-    taskRepo = TaskRepositoryImplementation();
+    taskRepo = locator<TaskRepositoryImplementation>();
     await initializeDifficulty(DateTime.now().year);
     await initializeByEffort(DateTime.now().year);
     await initializeBySpendTime(DateTime.now().year);

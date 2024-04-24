@@ -13,9 +13,13 @@ import 'package:ctracker/repository/action_item_repository_implementation.dart';
 import 'package:ctracker/repository/meeting_repository_implementation.dart';
 import 'package:ctracker/repository/pomodoro_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:intl/intl.dart';
 
 class MeetingDetailsPage extends StatefulWidget {
   final String meetingId;
@@ -73,9 +77,9 @@ class MeetingDetailsPageState extends State<MeetingDetailsPage>
   }
 
   Future<void> initializeData() async {
-    meetingRepo = MeetingRepositoryImplementation();
-    pomoRepo = PomodoroRepositoryImplementation();
-    actionRepo = ActionItemRepositoryImplementation();
+    meetingRepo = locator<MeetingRepositoryImplementation>();
+    pomoRepo = locator<PomodoroRepositoryImplementation>();
+    actionRepo = locator<ActionItemRepositoryImplementation>();
     workTime = ValuesConst.workingMinutes;
     shortRestTime = ValuesConst.shortRestMinutes;
     longRestTime = ValuesConst.longRestMinutes;
@@ -288,6 +292,10 @@ class MeetingDetailsPageState extends State<MeetingDetailsPage>
       backgroundColor: ColorP.background,
       appBar: AppBar(
         backgroundColor: ColorP.background,
+        title: Text(
+          DateFormat('MM/dd/yyyy hh:mm a').format(_meeting.start_date),
+          style: const TextStyle(color: ColorP.textColor),
+        ),
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back,
@@ -419,6 +427,41 @@ class MeetingDetailsPageState extends State<MeetingDetailsPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(localizations?.translate("participants") ?? ""),
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Wrap(
+                    spacing: 8.0, // Horizontal space between chips
+                    runSpacing: 4.0, // Vertical space between chips
+                    children: _meeting.participants
+                        .map((participant) => Chip(
+                              backgroundColor: ColorP.cardBackground,
+                              label: Text(participant.name),
+                              avatar: CircleAvatar(
+                                backgroundColor: Colors.blue.shade800,
+                                child: Text(
+                                  participant.name[0],
+                                ), // Display the first letter of the name
+                              ),
+                            ))
+                        .toList(),
+                  ),
+                ),
+                // Padding(
+                //   padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                //   child: SizedBox(
+                //     width: MediaQuery.of(context).size.width - 135,
+                //     child: Text("${localizations?.translate("participants")}: ${_meeting.participants.map((e) => e.name)}"),
+                //   ),
+                // ),
+              ],
+            ),
+          ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -568,7 +611,7 @@ class MeetingDetailsPageState extends State<MeetingDetailsPage>
                           elevation: 2,
                           color: ColorP.cardBackground,
                           child: SizedBox(
-                            height: 300,
+                            height: 400,
                             child: Column(
                               children: [
                                 Padding(
@@ -659,6 +702,7 @@ class MeetingDetailsPageState extends State<MeetingDetailsPage>
                 ],
               ),
             ),
+          const SizedBox(height: 20 * 2),
         ],
       ),
     );

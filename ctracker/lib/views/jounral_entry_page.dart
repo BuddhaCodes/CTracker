@@ -6,6 +6,8 @@ import 'package:ctracker/constant/values.dart';
 import 'package:ctracker/models/journal.dart';
 import 'package:ctracker/repository/journal_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
+import 'package:ctracker/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_reaction_button/flutter_reaction_button.dart';
@@ -47,7 +49,7 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
 
   void initializeData() async {
     isLoading = true;
-    journalRepo = JournalRepositoryImplementation();
+    journalRepo = locator<JournalRepositoryImplementation>();
     flagsReactions = [
       Reaction<String>(
         value: IconlyC.angry,
@@ -227,6 +229,28 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    if (journalEntry != null)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 0, 20, 20),
+                        child: Utils.deleteIcon(onPressed: () async {
+                          try {
+                            journalRepo
+                                .deleteJournal(journalEntry?.id ?? "")
+                                .whenComplete(() => Navigator.pop(context));
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(
+                                        localizations?.translate("error") ?? "",
+                                        style: const TextStyle(
+                                            color: Color.fromARGB(
+                                                255, 255, 255, 255)))),
+                              );
+                            }
+                          }
+                        }),
+                      ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(0, 0, 20, 20),
                       child: SizedBox.square(

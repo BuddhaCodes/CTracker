@@ -4,6 +4,7 @@ import 'package:ctracker/constant/color_palette.dart';
 import 'package:ctracker/models/reminder.dart';
 import 'package:ctracker/repository/reminder_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:ctracker/utils/utils.dart';
 import 'package:flutter/material.dart';
 
@@ -41,7 +42,7 @@ class _AllRemindersPageState extends State<AllRemindersPage> {
     super.initState();
     widget.isInit = false;
     reminders = [];
-    reminderRepo = ReminderRepositoryImplementation();
+    reminderRepo = locator<ReminderRepositoryImplementation>();
     _onMenuItemClicked(widget.selectedIndex);
     widget.isInit = true;
   }

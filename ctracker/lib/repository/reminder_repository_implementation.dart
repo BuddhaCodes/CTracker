@@ -70,6 +70,7 @@ class ReminderRepositoryImplementation implements ReminderRepository {
         "title": reminder.title,
         "reminder_time": reminder.duedate.toString(),
         "updated_by": "",
+        "of_task": reminder.of_task,
         "created_by": _pocketBase.authStore.model.id,
         "frequency": reminder.type.id,
         "status": reminder.status?.id
@@ -133,6 +134,7 @@ class ReminderRepositoryImplementation implements ReminderRepository {
         "reminder_time": reminder.duedate.toString(),
         "updated_by": _pocketBase.authStore.model.id,
         "created_by": _pocketBase.authStore.model.id,
+        "of_task": reminder.of_task,
         "frequency": reminder.type.id,
         "status": reminder.status?.id
       };
@@ -224,6 +226,7 @@ class ReminderRepositoryImplementation implements ReminderRepository {
     return Reminder(
       id: record.id,
       title: record.data["title"],
+      of_task: record.data["of_task"],
       duedate: DateTime.parse(record.data["reminder_time"]),
       status: record.expand["status"] != null
           ? Status(

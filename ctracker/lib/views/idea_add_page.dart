@@ -10,6 +10,7 @@ import 'package:ctracker/repository/category_repository_implementation.dart';
 import 'package:ctracker/repository/idea_repository_implementation.dart';
 import 'package:ctracker/repository/tag_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
@@ -63,9 +64,9 @@ class _IdeaAddPageState extends State<IdeaAddPage> {
   void initializeData() async {
     isInit = false;
 
-    ideaRepo = IdeaRepositoryImplementation();
-    tagRepo = TagRepositoryImplementation();
-    catRepo = CategoryRepositoryImplementation();
+    ideaRepo = locator<IdeaRepositoryImplementation>();
+    tagRepo = locator<TagRepositoryImplementation>();
+    catRepo = locator<CategoryRepositoryImplementation>();
     try {
       _ideaCategories = await catRepo.getAllCategories();
     } catch (e) {

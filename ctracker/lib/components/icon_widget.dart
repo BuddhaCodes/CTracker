@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class IconWidget extends ImplicitlyAnimatedWidget {
-  const IconWidget({
+  const IconWidget({super.key, 
     required this.icon,
     required this.color,
     required this.isSelected,

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:ctracker/utils/localization.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 
@@ -39,7 +40,7 @@ class IdeaCardState extends State<IdeaCard> {
   void initState() {
     super.initState();
     _controller = QuillController.basic();
-    ideaRepo = IdeaRepositoryImplementation();
+    ideaRepo = locator<IdeaRepositoryImplementation>();
   }
 
   @override

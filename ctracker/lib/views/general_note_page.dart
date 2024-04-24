@@ -6,6 +6,7 @@ import 'package:ctracker/models/board.dart';
 import 'package:ctracker/repository/board_repository_implementation.dart';
 import 'package:ctracker/repository/sticky_note_repository_implementation.dart';
 import 'package:ctracker/utils/localization.dart';
+import 'package:ctracker/utils/pocketbase_provider.dart';
 import 'package:flutter/material.dart';
 
 class GeneralNotes extends StatefulWidget {
@@ -38,9 +39,12 @@ class _GeneralNotesState extends State<GeneralNotes> {
   }
 
   void initializeData() async {
-    isInitialized = false;
-    stickyRepo = StickyNoteRepositoryImplementation();
-    boardRepo = BoardRepositoryImplementation();
+    setState(() {
+      isInitialized = false;
+    });
+
+    stickyRepo = locator<StickyNoteRepositoryImplementation>();
+    boardRepo = locator<BoardRepositoryImplementation>();
     controller = AppFlowyBoardController();
 
     try {

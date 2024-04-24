@@ -92,9 +92,7 @@ class ParticipantRepositoryImplementation extends ParticipantRepository {
         "number": participant.number,
         "updated_by": _pocketBase.authStore.model.id,
       };
-
-      final record =
-          await _pocketBase.collection('participants').update(id, body: body);
+      await _pocketBase.collection('participants').update(id, body: body);
     } catch (e) {
       final body = <String, dynamic>{
         "user": _pocketBase.authStore.model.id,
